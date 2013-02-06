@@ -30,6 +30,7 @@ private:
     // Kinect vars
     HANDLE colorStream;
     HANDLE depthStream;
+    HANDLE nextSkeletonEvent;
 
     int numSensors;
     INuiSensor *sensor;
@@ -65,7 +66,16 @@ private:
 
     // Kinect methods
     bool initKinect();
-    void getKinectData(GLubyte *data, const EKinectDataType &dataType);
+
     void drawKinectData();
-     
+    void getKinectData(GLubyte *data, const EKinectDataType &dataType);
+
+    void updateSkeleton();
+    void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
+    void drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
+    void drawSkeletonPosition(const Vector4& position);
+    void drawBone(const NUI_SKELETON_DATA& skeleton
+                , NUI_SKELETON_POSITION_INDEX jointFrom
+                , NUI_SKELETON_POSITION_INDEX jointTo);
+
 };
