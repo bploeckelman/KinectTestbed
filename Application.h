@@ -1,11 +1,15 @@
 #pragma once
+#include <Windows.h>
+#include <Ole2.h>
+#define WIN32_LEAN_AND_MEAN
+
+#include <NuiApi.h>
+#include <NuiSensor.h>
+
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "UserInterface.h"
 #include "Config.h"
-
-#include <NuiApi.h>
-#include <NuiSensor.h>
 
 
 class Application
@@ -20,7 +24,6 @@ private:
     // OpenGL vars
     GLuint colorTextureId;
     GLuint depthTextureId;
-
     GLubyte *colorData;
     GLubyte *depthData;
 
@@ -33,11 +36,22 @@ private:
 
     enum EKinectDataType { COLOR, DEPTH };
 
-public:
+private:
+    // Singleton
     Application();
+    Application(const Application& application);
+    Application& operator=(const Application& application);
+
+public:
+    // Singleton
+    static Application& request() { static Application application; return application; }
+
     ~Application();
 
-    void run();
+    void startup();
+    void shutdown();
+
+    int getNumSensors() const { return numSensors; }
 
 private:
     // Main methods

@@ -13,7 +13,9 @@ private:
     sfg::Window::Ptr window;
 
     // Widgets...
-    sfg::Button::Ptr button;
+    sfg::Box::Ptr box;
+    sfg::Button::Ptr quitButton;
+    sfg::Label::Ptr infoLabel;
 
 public:
     UserInterface();
@@ -21,12 +23,14 @@ public:
     void draw(sf::RenderWindow &renderWindow);
     void handleEvent(sf::Event &event);
 
+    void setInfo(const std::string &info) { infoLabel->SetText(sf::String(info)); }
+
 private:
     void setupWidgetHandlers();
     void setupWindowConfiguration();
 
     // Widget handlers...
-    void onButtonClick();
+    void onQuitButtonClick();
 
 };
 

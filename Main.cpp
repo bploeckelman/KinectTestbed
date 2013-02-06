@@ -6,7 +6,6 @@
 
 int main()
 {
-    Application app;
-    app.run();
+    Application::request().startup();
     return 0;
 }

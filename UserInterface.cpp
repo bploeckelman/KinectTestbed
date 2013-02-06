@@ -1,14 +1,21 @@
 #include "UserInterface.h"
 
+#include <SFGUI/SFGUI.hpp>
+
+#include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
+
+#include "Application.h"
 
 
 UserInterface::UserInterface()
     : sfgui()
     , desktop()
     , window(sfg::Window::Create())
-    , button(sfg::Button::Create("Hello"))
+    , box(sfg::Box::Create(sfg::Box::HORIZONTAL, 20.f))
+    , quitButton(sfg::Button::Create("Quit"))
+    , infoLabel(sfg::Label::Create())
 {
     setupWidgetHandlers();
     setupWindowConfiguration();
@@ -32,19 +39,28 @@ void UserInterface::handleEvent(sf::Event &event)
 
 void UserInterface::setupWidgetHandlers()
 {
-    button->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onButtonClick, this);
+    quitButton->GetSignal(sfg::Button::OnLeftClick)
+	       .Connect(&UserInterface::onQuitButtonClick, this);
     // TODO: hook up other widget handlers as needed
 }
 
 void UserInterface::setupWindowConfiguration()
 {
+    infoLabel->SetText("Sensors = ??");
+
+    sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
+    fixed->Put(quitButton, sf::Vector2f(0,0));
+    fixed->Put(infoLabel, sf::Vector2f(40,5));
+    box->Pack(fixed);
+
     window->SetTitle("Hello SF-GUI Example");
-    window->Add(button);
+    window->SetStyle(sfg::Window::Style::NO_STYLE);
+    window->Add(box);
     desktop.Add(window);
 }
 
-void UserInterface::onButtonClick()
+void UserInterface::onQuitButtonClick()
 {
-    if      (button->GetLabel() == "Hello") button->SetLabel("World");
-    else if (button->GetLabel() == "World") button->SetLabel("Hello");
+    Application::request().shutdown();    
 }
+

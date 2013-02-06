@@ -12,6 +12,7 @@
 #include <NuiImageCamera.h>
 
 #include <iostream>
+#include <sstream>
 
 #include "Application.h"
 #include "Config.h"
@@ -19,10 +20,6 @@
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 
-// Note: these can't be member vars of Application b/c it causes a 
-// stackoverflow on startup before main() is entered
-//GLubyte colorData[STREAM_WIDTH * STREAM_HEIGHT * 4];
-//GLubyte depthData[STREAM_WIDTH * STREAM_HEIGHT * 4];
 
 // ----------------------------------------------------------------------------
 Application::Application()
@@ -44,7 +41,7 @@ Application::~Application()
     delete[] depthData;
 }
 
-void Application::run()
+void Application::startup()
 {
     if (!initKinect()) {
         std::cerr << "Unable to initialize Kinect." << std::endl;
@@ -54,6 +51,11 @@ void Application::run()
     initOpenGL();
     mainLoop();
     shutdownOpenGL();
+}
+
+void Application::shutdown()
+{
+    window.close();
 }
 
 
@@ -156,6 +158,9 @@ bool Application::initKinect() {
         std::cerr << "Unable to find Kinect sensors." << std::endl;
         return false;
     }
+    std::stringstream ss;
+    ss << "Sensors = " << numSensors;
+    gui.setInfo(ss.str());
 
     NuiCreateSensorByIndex(0, &sensor);
     if (sensor < 0) {
