@@ -368,10 +368,12 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
     static const float Z = 1.f;
 
     // Don't draw if both points are inferred
+
+    // TODO: draw thinner lines if either side is inferred
     if (jointFromState == NUI_SKELETON_POSITION_INFERRED || jointToState == NUI_SKELETON_POSITION_INFERRED) {
-        // TODO: draw thinner lines if either side is inferred
         glColor3f(1.f, 0.f, 0.f);
-        glBegin(GL_POINTS);
+        //glBegin(GL_POINTS);
+        glBegin(GL_LINES);
             glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointFromPosition.z);
             glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointToPosition.z);
         glEnd();
@@ -382,7 +384,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
     if (jointFromState == NUI_SKELETON_POSITION_TRACKED && jointToState == NUI_SKELETON_POSITION_TRACKED) {
         // TODO: draw thick lines between joints
         glColor3f(0.f, 1.f, 0.f);
-        glBegin(GL_POINTS);
+        //glBegin(GL_POINTS);
+        glBegin(GL_LINES);
             glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointFromPosition.z);
             glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointToPosition.z);
         glEnd();
