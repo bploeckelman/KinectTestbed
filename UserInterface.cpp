@@ -42,11 +42,11 @@ void UserInterface::handleEvent(sf::Event &event)
 void UserInterface::setupWidgetHandlers()
 {
     quitButton->GetSignal(sfg::Button::OnLeftClick)
-	       .Connect(&UserInterface::onQuitButtonClick, this);
+           .Connect(&UserInterface::onQuitButtonClick, this);
     openButton->GetSignal(sfg::Button::OnLeftClick)
-	       .Connect(&UserInterface::onOpenButtonClick, this);
+           .Connect(&UserInterface::onOpenButtonClick, this);
     saveButton->GetSignal(sfg::Button::OnLeftClick)
-	       .Connect(&UserInterface::onSaveButtonClick, this);
+           .Connect(&UserInterface::onSaveButtonClick, this);
     // TODO: hook up other widget handlers as needed
 }
 
