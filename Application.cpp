@@ -1,7 +1,10 @@
 #include <Windows.h>
+#include <shlobj.h>
+#include <objbase.h>
 #include <Ole2.h>
 
 #define WIN32_LEAN_AND_MEAN
+#define _WIN32_DCOM
 
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
@@ -13,10 +16,12 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <stdio.h>
+#include <tchar.h>
 
 #include "Application.h"
 #include "Config.h"
-
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 
@@ -44,11 +49,11 @@ Application::~Application()
 
 void Application::startup()
 {
-    if (!initKinect()) {
-        std::cerr << "Unable to initialize Kinect." << std::endl;
-        exit(1);
-    }
-    
+    //if (!initKinect()) {
+    //    std::cerr << "Unable to initialize Kinect." << std::endl;
+    //    exit(1);
+    //}
+
     initOpenGL();
     mainLoop();
     shutdownOpenGL();
@@ -87,7 +92,7 @@ void Application::draw()
     window.setActive();
 
     // Get kinect frame and update textures
-    drawKinectData();
+    //drawKinectData();
 
     // Draw color and depth images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -112,7 +117,7 @@ void Application::draw()
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Draw the skeleton bones
-    updateSkeleton();
+    //updateSkeleton();
 
     gui.draw(window);
 
@@ -121,6 +126,56 @@ void Application::draw()
 
 
 // ----------------------------------------------------------------------------
+std::wstring Application::showFileChooser() {
+    BROWSEINFO      bi;
+    char            pszBuffer[MAX_PATH]; 
+    LPWSTR          buffer = (LPWSTR)pszBuffer;
+    LPITEMIDLIST    pidl; 
+    LPMALLOC        lpMalloc;
+
+    // Initialize COM
+    if(CoInitializeEx(0,COINIT_APARTMENTTHREADED) != S_OK)
+    {
+        MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
+        CoUninitialize();
+        return std::wstring();
+    }
+
+    // Get a pointer to the shell memory allocator
+    if(SHGetMalloc(&lpMalloc) != S_OK)
+    {
+        MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
+        CoUninitialize();
+        return std::wstring();
+    }
+
+    bi.hwndOwner        =   NULL; 
+    bi.pidlRoot         =   NULL;
+    bi.pszDisplayName   =   buffer;
+    bi.lpszTitle        =   _T("Select a joint data file"); 
+    bi.ulFlags          =   BIF_BROWSEINCLUDEFILES;
+    bi.lpfn             =   NULL; 
+    bi.lParam           =   0;
+
+    if(pidl = SHBrowseForFolder(&bi))
+    {
+        // Copy the path directory to the buffer
+        if(SHGetPathFromIDList(pidl, buffer))
+        {
+            // buf now holds the directory path
+            std::wstringstream ss;
+            ss << _T("You selected the directory: ") << std::endl << _T("\t") << buffer << std::endl;
+            MessageBox(NULL, (LPWSTR)(ss.str().c_str()), _T("Selection"), MB_OK);
+        }
+
+        lpMalloc->Free(pidl);
+    }
+    lpMalloc->Release();
+    CoUninitialize();
+
+    return buffer;
+}
+
 void Application::initOpenGL(){
     glGenTextures(1, &colorTextureId);
     glBindTexture(GL_TEXTURE_2D, colorTextureId);

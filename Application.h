@@ -52,6 +52,8 @@ public:
     void startup();
     void shutdown();
 
+    std::wstring showFileChooser();
+
     int getNumSensors() const { return numSensors; }
 
 private:

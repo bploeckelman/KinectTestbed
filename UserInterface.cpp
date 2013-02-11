@@ -14,6 +14,7 @@ UserInterface::UserInterface()
     , desktop()
     , window(sfg::Window::Create())
     , box(sfg::Box::Create(sfg::Box::HORIZONTAL, 20.f))
+    , openButton(sfg::Button::Create("Open"))
     , quitButton(sfg::Button::Create("Quit"))
     , infoLabel(sfg::Label::Create())
 {
@@ -41,6 +42,8 @@ void UserInterface::setupWidgetHandlers()
 {
     quitButton->GetSignal(sfg::Button::OnLeftClick)
 	       .Connect(&UserInterface::onQuitButtonClick, this);
+    openButton->GetSignal(sfg::Button::OnLeftClick)
+	       .Connect(&UserInterface::onOpenButtonClick, this);
     // TODO: hook up other widget handlers as needed
 }
 
@@ -50,6 +53,7 @@ void UserInterface::setupWindowConfiguration()
 
     sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
     fixed->Put(quitButton, sf::Vector2f(0,0));
+    fixed->Put(openButton, sf::Vector2f(0, 30));
     fixed->Put(infoLabel, sf::Vector2f(40,5));
     box->Pack(fixed);
 
@@ -64,3 +68,10 @@ void UserInterface::onQuitButtonClick()
     Application::request().shutdown();    
 }
 
+void UserInterface::onOpenButtonClick()
+{
+    //Application::request().showFileOpenDialog();
+    std::wstring filename(Application::request().showFileChooser());
+    std::wcout << "Selected file: " << filename << std::endl;
+    // TODO: open file
+}
