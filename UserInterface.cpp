@@ -13,9 +13,10 @@ UserInterface::UserInterface()
     : sfgui()
     , desktop()
     , window(sfg::Window::Create())
-    , box(sfg::Box::Create(sfg::Box::HORIZONTAL, 20.f))
-    , openButton(sfg::Button::Create("Open"))
+    , box(sfg::Box::Create(sfg::Box::HORIZONTAL, 0.f))
     , quitButton(sfg::Button::Create("Quit"))
+    , openButton(sfg::Button::Create("Open"))
+    , saveButton(sfg::Button::Create("Save"))
     , infoLabel(sfg::Label::Create())
 {
     setupWidgetHandlers();
@@ -44,20 +45,24 @@ void UserInterface::setupWidgetHandlers()
 	       .Connect(&UserInterface::onQuitButtonClick, this);
     openButton->GetSignal(sfg::Button::OnLeftClick)
 	       .Connect(&UserInterface::onOpenButtonClick, this);
+    saveButton->GetSignal(sfg::Button::OnLeftClick)
+	       .Connect(&UserInterface::onSaveButtonClick, this);
     // TODO: hook up other widget handlers as needed
 }
 
 void UserInterface::setupWindowConfiguration()
 {
-    infoLabel->SetText("Sensors = ??");
+    infoLabel->SetText("Sensor [?] : ?");
+    infoLabel->SetLineWrap(true);
 
     sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
-    fixed->Put(quitButton, sf::Vector2f(0,0));
-    fixed->Put(openButton, sf::Vector2f(0, 30));
-    fixed->Put(infoLabel, sf::Vector2f(40,5));
+    fixed->Put(infoLabel, sf::Vector2f(0,0));
+    fixed->Put(quitButton, sf::Vector2f(0, 25));
+    fixed->Put(openButton, sf::Vector2f(50, 25));
+    fixed->Put(saveButton, sf::Vector2f(100, 25));
     box->Pack(fixed);
 
-    window->SetTitle("Hello SF-GUI Example");
+    window->SetTitle("Kinect Testbed");
     window->SetStyle(sfg::Window::Style::NO_STYLE);
     window->Add(box);
     desktop.Add(window);
@@ -70,8 +75,15 @@ void UserInterface::onQuitButtonClick()
 
 void UserInterface::onOpenButtonClick()
 {
-    //Application::request().showFileOpenDialog();
-    std::wstring filename(Application::request().showFileChooser());
-    std::wcout << "Selected file: " << filename << std::endl;
+    std::wstring wfilename(Application::request().showFileChooser());
+    std::string filename;
+    filename.assign(wfilename.begin(), wfilename.end());
+    std::cout << "Selected file: " << filename << std::endl;
+
     // TODO: open file
+}
+
+void UserInterface::onSaveButtonClick()
+{
+    Application::request().toggleSave();
 }

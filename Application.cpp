@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 #include <stdio.h>
 #include <tchar.h>
 
@@ -39,6 +40,7 @@ Application::Application()
     , nextSkeletonEvent()
     , numSensors(-1)
     , sensor(nullptr)
+    , saving(false)
 {}
 
 Application::~Application()
@@ -49,10 +51,10 @@ Application::~Application()
 
 void Application::startup()
 {
-    //if (!initKinect()) {
-    //    std::cerr << "Unable to initialize Kinect." << std::endl;
-    //    exit(1);
-    //}
+    if (!initKinect()) {
+        std::cerr << "Unable to initialize Kinect." << std::endl;
+        exit(1);
+    }
 
     initOpenGL();
     mainLoop();
@@ -64,6 +66,16 @@ void Application::shutdown()
     window.close();
 }
 
+void Application::toggleSave()
+{
+    if (saving) {
+        std::cout << "Stopped saving joint data." << std::endl;
+    } else {
+        std::cout << "Started saving joint data." << std::endl;
+    }
+
+    saving = !saving; 
+}
 
 // ----------------------------------------------------------------------------
 void Application::mainLoop()
@@ -92,7 +104,7 @@ void Application::draw()
     window.setActive();
 
     // Get kinect frame and update textures
-    //drawKinectData();
+    drawKinectData();
 
     // Draw color and depth images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -117,7 +129,7 @@ void Application::draw()
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Draw the skeleton bones
-    //updateSkeleton();
+    updateSkeleton();
 
     gui.draw(window);
 
@@ -268,6 +280,16 @@ bool Application::initKinect() {
         if (!SUCCEEDED(hr)) {
             std::cerr << "Unable to enable KInect skeleton tracking." << std::endl;
         }
+
+        // Get sensor device data
+        BSTR bs = sensor->NuiDeviceConnectionId();
+        const std::wstring wstr(bs, SysStringLen(bs));
+        std::string deviceId;
+        deviceId.assign(wstr.begin(), wstr.end());
+        std::stringstream ss;
+        ss << "Sensor [" << numSensors << "] : '" << deviceId << "'" << std::endl;
+        gui.setInfo(ss.str());
+        std::cout << "Kinect Device Id: " << deviceId << std::endl;
     } else {
         std::cerr << "Unable to initialize Kinect NUI." << std::endl;
     }
@@ -446,9 +468,11 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
 
-        //const Vector4& f(jointFromPosition);
-        //const Vector4& t(jointToPosition);
-        //std::cout << "From: " << f.x << "," << f.y << "," << f.z << std::endl
-        //          << "To  : " << t.x << "," << t.y << "," << t.z << std::endl;
+        if (saving) {
+            const Vector4& f(jointFromPosition);
+            const Vector4& t(jointToPosition);
+            std::cout << "From: " << f.x << "," << f.y << "," << f.z << std::endl
+                      << "To  : " << t.x << "," << t.y << "," << t.z << std::endl;
+        }
     }
 }

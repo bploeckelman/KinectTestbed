@@ -31,6 +31,7 @@ private:
     HANDLE colorStream;
     HANDLE depthStream;
     HANDLE nextSkeletonEvent;
+    bool saving;
 
     int numSensors;
     INuiSensor *sensor;
@@ -52,8 +53,10 @@ public:
     void startup();
     void shutdown();
 
+    void toggleSave();
     std::wstring showFileChooser();
 
+    bool isSaving() const { return saving; }
     int getNumSensors() const { return numSensors; }
 
 private:

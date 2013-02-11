@@ -16,6 +16,7 @@ private:
     sfg::Box::Ptr box;
     sfg::Button::Ptr quitButton;
     sfg::Button::Ptr openButton;
+    sfg::Button::Ptr saveButton;
     sfg::Label::Ptr infoLabel;
 
 public:
@@ -33,6 +34,7 @@ private:
     // Widget handlers...
     void onQuitButtonClick();
     void onOpenButtonClick();
+    void onSaveButtonClick();
 
 };
 
