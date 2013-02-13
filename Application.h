@@ -86,9 +86,11 @@ public:
     void toggleShowJoints() { showJoints = !showJoints; }
 
     void loadFile();
+    void setJointIndex(const float fraction);
 
     bool isSaving() const { return saving; }
     int getNumSensors() const { return numSensors; }
+    const sf::Vector2i getMousePosition() const { return sf::Mouse::getPosition(window); }
 
 private:
     // Main methods

@@ -109,6 +109,16 @@ void Application::toggleSave()
     }
 }
 
+void Application::setJointIndex(const float fraction)
+{
+    if (!loaded) return;
+    assert(fraction >= 0.f && fraction <= 1.f);
+
+    const int frameIndex = static_cast<int>(floor(fraction * jointPositionFrames.size()));
+    jointFrameVis = &jointPositionFrames[frameIndex];
+    gui.setIndex(frameIndex);
+}
+
 // ----------------------------------------------------------------------------
 void Application::mainLoop()
 {
@@ -133,7 +143,6 @@ void Application::processEvents()
             if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToNextFrame();
             else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
         }
-            
     }
 }
 

@@ -59,6 +59,8 @@ void UserInterface::setupWidgetHandlers()
            .Connect(&UserInterface::onShowDepthButtonClick, this);
     showJointsButton->GetSignal(sfg::Button::OnLeftClick)
            .Connect(&UserInterface::onShowJointsButtonClick, this);
+    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove)//OnLeftClick)
+           .Connect(&UserInterface::onProgressBarMouseMove, this);
     // TODO: hook up other widget handlers as needed
 }
 
@@ -129,4 +131,20 @@ void UserInterface::onShowDepthButtonClick()
 void UserInterface::onShowJointsButtonClick()
 {
     Application::request().toggleShowJoints();
+}
+
+void UserInterface::onProgressBarMouseMove()
+{
+    // Get mouse position
+    if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        return;
+
+    const sf::Vector2i pos = Application::request().getMousePosition();
+    const sf::Vector2f bounds(jointFramesProgress->GetAbsolutePosition().x
+                            , jointFramesProgress->GetAbsolutePosition().x + jointFramesProgress->GetRequisition().x);
+    if (pos.x >= bounds.x && pos.x <= bounds.y) {
+        const float fraction = (float) (pos.x - bounds.x) / (bounds.y - bounds.x);
+        jointFramesProgress->SetFraction(fraction);
+        Application::request().setJointIndex(fraction);
+    }
 }

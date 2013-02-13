@@ -56,5 +56,6 @@ private:
     void onShowColorButtonClick();
     void onShowDepthButtonClick();
     void onShowJointsButtonClick();
+    void onProgressBarMouseMove();
 };
 
