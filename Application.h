@@ -15,6 +15,16 @@
 #include "Config.h"
 
 
+struct joint {
+    float timestamp; // in seconds
+    sf::Vector3f position;
+    _NUI_SKELETON_POSITION_INDEX index;
+};
+
+typedef std::map<_NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
+typedef std::vector<JointPosFrame> JointPositionFrames;
+
+
 class Application
 {
 private:
@@ -30,26 +40,25 @@ private:
     GLuint depthTextureId;
     GLubyte *colorData;
     GLubyte *depthData;
-    bool showColor;
-    bool showDepth;
 
     // Kinect vars
     HANDLE colorStream;
     HANDLE depthStream;
     HANDLE nextSkeletonEvent;
-    bool saving;
-
-    struct joint {
-        _NUI_SKELETON_POSITION_INDEX index;
-        sf::Vector3f position;
-        float timestamp; // in seconds
-    };
-    std::map<_NUI_SKELETON_POSITION_INDEX, struct joint> joints;
-
-    int numSensors;
     INuiSensor *sensor;
-
+    int numSensors;
+    int jointFrameIndex;
+    JointPosFrame *jointFrameVis;
+    JointPosFrame currentJoints;
+    JointPositionFrames jointPositionFrames;
     enum EKinectDataType { COLOR, DEPTH };
+
+    // State
+    bool loaded;
+    bool saving;
+    bool showColor;
+    bool showDepth;
+    bool showJoints;
 
     // File
     static const std::string saveFileName;
@@ -72,10 +81,11 @@ public:
     void shutdown();
 
     void toggleSave();
-    void toggleShowColor() { showColor = !showColor; }
-    void toggleShowDepth() { showDepth = !showDepth; }
+    void toggleShowColor()  { showColor  = !showColor; }
+    void toggleShowDepth()  { showDepth  = !showDepth; }
+    void toggleShowJoints() { showJoints = !showJoints; }
 
-    std::wstring showFileChooser();
+    void loadFile();
 
     bool isSaving() const { return saving; }
     int getNumSensors() const { return numSensors; }
@@ -86,16 +96,20 @@ private:
     void processEvents();
     void draw();
 
+    std::wstring showFileChooser();
+
     // OpenGL methods
     void initOpenGL();
     void shutdownOpenGL();
 
-    // Kinect methods
+    // Kinect methods -------------------------------------
     bool initKinect();
 
+    // Kinect image methods
     void drawKinectData();
     void getKinectData(GLubyte *data, const EKinectDataType &dataType);
 
+    // Kinect skeleton methods
     void initJointMap();
     void updateSkeleton();
     void updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
@@ -106,4 +120,6 @@ private:
                 , NUI_SKELETON_POSITION_INDEX jointFrom
                 , NUI_SKELETON_POSITION_INDEX jointTo);
     void drawJoints();
+    void moveToNextFrame();
+    void moveToPreviousFrame();
 };

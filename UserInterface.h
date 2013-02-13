@@ -14,12 +14,13 @@ private:
 
     // Widgets...
     sfg::Box::Ptr box;
+    sfg::Label::Ptr infoLabel;
     sfg::Button::Ptr quitButton;
     sfg::Button::Ptr openButton;
     sfg::ToggleButton::Ptr saveButton;
     sfg::CheckButton::Ptr showColorButton;
     sfg::CheckButton::Ptr showDepthButton;
-    sfg::Label::Ptr infoLabel;
+    sfg::CheckButton::Ptr showJointsButton;
 
 public:
     UserInterface();
@@ -39,6 +40,7 @@ private:
     void onSaveButtonClick();
     void onShowColorButtonClick();
     void onShowDepthButtonClick();
+    void onShowJointsButtonClick();
 
 };
 

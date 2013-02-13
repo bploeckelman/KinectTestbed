@@ -20,6 +20,7 @@ UserInterface::UserInterface()
     , infoLabel(sfg::Label::Create())
     , showColorButton(sfg::CheckButton::Create("Color"))
     , showDepthButton(sfg::CheckButton::Create("Depth"))
+    , showJointsButton(sfg::CheckButton::Create("Joints"))
 {
     setupWidgetHandlers();
     setupWindowConfiguration();
@@ -53,6 +54,8 @@ void UserInterface::setupWidgetHandlers()
            .Connect(&UserInterface::onShowColorButtonClick, this);
     showDepthButton->GetSignal(sfg::Button::OnLeftClick)
            .Connect(&UserInterface::onShowDepthButtonClick, this);
+    showJointsButton->GetSignal(sfg::Button::OnLeftClick)
+           .Connect(&UserInterface::onShowJointsButtonClick, this);
     // TODO: hook up other widget handlers as needed
 }
 
@@ -60,16 +63,18 @@ void UserInterface::setupWindowConfiguration()
 {
     showColorButton->SetActive(true);
     showDepthButton->SetActive(true);
+    showJointsButton->SetActive(true);
     infoLabel->SetText("Sensor [?] : ?");
     infoLabel->SetLineWrap(true);
 
     sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
     fixed->Put(infoLabel, sf::Vector2f(0,0));
-    fixed->Put(quitButton, sf::Vector2f(0, 25));
-    fixed->Put(openButton, sf::Vector2f(50, 25));
-    fixed->Put(saveButton, sf::Vector2f(100, 25));
-    fixed->Put(showColorButton, sf::Vector2f(0, 65));
+    fixed->Put(quitButton, sf::Vector2f(0  , 20));
+    fixed->Put(openButton, sf::Vector2f(50 , 20));
+    fixed->Put(saveButton, sf::Vector2f(100, 20));
+    fixed->Put(showColorButton, sf::Vector2f(0, 60));
     fixed->Put(showDepthButton, sf::Vector2f(0, 100));
+    fixed->Put(showJointsButton, sf::Vector2f(0, 140));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");
@@ -85,12 +90,7 @@ void UserInterface::onQuitButtonClick()
 
 void UserInterface::onOpenButtonClick()
 {
-    std::wstring wfilename(Application::request().showFileChooser());
-    std::string filename;
-    filename.assign(wfilename.begin(), wfilename.end());
-    std::cout << "Selected file: " << filename << std::endl;
-
-    // TODO: open file
+    Application::request().loadFile();
 }
 
 void UserInterface::onSaveButtonClick()
@@ -106,4 +106,9 @@ void UserInterface::onShowColorButtonClick()
 void UserInterface::onShowDepthButtonClick()
 {
     Application::request().toggleShowDepth();
+}
+
+void UserInterface::onShowJointsButtonClick()
+{
+    Application::request().toggleShowJoints();
 }

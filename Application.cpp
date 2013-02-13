@@ -27,7 +27,7 @@
 #include "Config.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
-const std::string Application::saveFileName("joints.txt");
+const std::string Application::saveFileName("joint_frames.bin");
 
 
 // ----------------------------------------------------------------------------
@@ -39,14 +39,20 @@ Application::Application()
     , depthTextureId(0)
     , colorData(new GLubyte[STREAM_WIDTH * STREAM_HEIGHT * 4])
     , depthData(new GLubyte[STREAM_WIDTH * STREAM_HEIGHT * 4])
-    , showColor(true)
-    , showDepth(true)
     , colorStream()
     , depthStream()
     , nextSkeletonEvent()
     , numSensors(-1)
     , sensor(nullptr)
+    , jointFrameIndex(0)
+    , jointFrameVis(&currentJoints)
+    , currentJoints()
+    , jointPositionFrames()
+    , loaded(false)
     , saving(false)
+    , showColor(true)
+    , showDepth(true)
+    , showJoints(true)
     , saveStream()
     , loadStream()
 {}
@@ -96,7 +102,7 @@ void Application::toggleSave()
 
     if (saving) {
         if (!saveStream.is_open())
-            saveStream.open(saveFileName, std::ios::app);
+            saveStream.open(saveFileName, std::ios::binary | std::ios::app);
     } else {
         if (saveStream.is_open())
             saveStream.close();
@@ -122,6 +128,12 @@ void Application::processEvents()
          || (event.type == sf::Event::Closed)) {
             window.close();
         }
+
+        if (event.type == sf::Event::KeyPressed) {
+            if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToNextFrame();
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToPreviousFrame();
+        }
+            
     }
 }
 
@@ -130,44 +142,45 @@ void Application::draw()
     window.setActive();
 
     // Get kinect frame and update textures
-    drawKinectData();
+    if (showColor || showDepth) {
+        drawKinectData();
+    }
 
     // Draw color and depth images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
     if (showColor) {
         glBindTexture(GL_TEXTURE_2D, colorTextureId);
         glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
-            glTexCoord2f(1, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
-            glTexCoord2f(1, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
-            glTexCoord2f(0, 1); glVertex3f(0, (float) WINDOW_HEIGHT, 0);
+            glTexCoord2f(0, 0); glVertex3f(               0,                      0,  0);
+            glTexCoord2f(1, 0); glVertex3f(WINDOW_WIDTH / 2,                      0,  0);
+            glTexCoord2f(1, 1); glVertex3f(WINDOW_WIDTH / 2,  (float) WINDOW_HEIGHT,  0);
+            glTexCoord2f(0, 1); glVertex3f(               0,  (float) WINDOW_HEIGHT,  0);
         glEnd();
     }
-
     if (showDepth) {
         glBindTexture(GL_TEXTURE_2D, depthTextureId);
         glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
-            glTexCoord2f(1, 0); glVertex3f((float) WINDOW_WIDTH, 0, 0);
-            glTexCoord2f(1, 1); glVertex3f((float) WINDOW_WIDTH, (float) WINDOW_HEIGHT, 0);
-            glTexCoord2f(0, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
+            glTexCoord2f(0, 0); glVertex3f(        WINDOW_WIDTH / 2,                      0,  0);
+            glTexCoord2f(1, 0); glVertex3f((float) WINDOW_WIDTH    ,                      0,  0);
+            glTexCoord2f(1, 1); glVertex3f((float) WINDOW_WIDTH    ,  (float) WINDOW_HEIGHT,  0);
+            glTexCoord2f(0, 1); glVertex3f(        WINDOW_WIDTH / 2,  (float) WINDOW_HEIGHT,  0);
         glEnd();
     }
-
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Work the skeleton
-    updateSkeleton();
-    drawJoints();
+    // Draw the skeleton
+    if (showJoints) {
+        updateSkeleton();
+        drawJoints();
+    }
 
+    // Draw the gui
     gui.draw(window);
 
     window.display();
 }
-
 
 // ----------------------------------------------------------------------------
 std::wstring Application::showFileChooser() {
@@ -209,7 +222,7 @@ std::wstring Application::showFileChooser() {
             // buf now holds the directory path
             std::wstringstream ss;
             ss << _T("You selected the directory: ") << std::endl << _T("\t") << buffer << std::endl;
-            MessageBox(NULL, (LPWSTR)(ss.str().c_str()), _T("Selection"), MB_OK);
+            //MessageBox(NULL, (LPWSTR)(ss.str().c_str()), _T("Selection"), MB_OK);
         }
 
         lpMalloc->Free(pidl);
@@ -470,6 +483,8 @@ void Application::drawSkeletonPosition(const Vector4& position)
 
 void Application::drawJoints()
 {
+    assert(jointFrameVis);
+
     static const float Z = 0.5f;
 
     // TODO: store tracking/inferral info for each joint and use it to update the color
@@ -477,10 +492,10 @@ void Application::drawJoints()
     glColor3f(0.f, 1.f, 0.f);
     // Draw each joint
     for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
-        const struct joint &joint = joints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
+        const struct joint &joint = (*jointFrameVis)[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
         glVertex3f(joint.position.x *  WINDOW_WIDTH  / 3 + 512.f
                  , joint.position.y * -WINDOW_HEIGHT / 2 + 256.f
-                 , Z);//jointFromPosition.z);
+                 , Z);//joint.position.z);
     }
     glEnd();
     glColor3f(1.f, 1.f, 1.f);
@@ -496,8 +511,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         return; // nothing to draw, one joint not tracked
     }
 
-    const sf::Vector3f& jointFromPosition(joints[jointFrom].position);//skeleton.SkeletonPositions[jointFrom];
-    const sf::Vector3f& jointToPosition(joints[jointTo].position);//skeleton.SkeletonPositions[jointTo];
+    const sf::Vector3f& jointFromPosition(currentJoints[jointFrom].position);//skeleton.SkeletonPositions[jointFrom];
+    const sf::Vector3f& jointToPosition(currentJoints[jointTo].position);//skeleton.SkeletonPositions[jointTo];
     static const float Z = 1.f;
 
     // Don't draw if both points are inferred
@@ -528,11 +543,10 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
 
 void Application::initJointMap()
 {
-    joints.clear();
-    // For each joint
+    currentJoints.clear();
+    // Add a map entry for each joint
     for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
-        // Add an entry 
-        joints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
+        currentJoints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
     }
 }
 
@@ -544,7 +558,7 @@ void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
         const Vector4& jointPosition = skeleton.SkeletonPositions[jointIndex];
 
         // Update the entry 
-        struct joint &joint = joints[jointIndex];
+        struct joint &joint = currentJoints[jointIndex];
         joint.index      = jointIndex;
         joint.position.x = jointPosition.x;
         joint.position.y = jointPosition.y;
@@ -552,12 +566,76 @@ void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
         joint.timestamp  = clock.getElapsedTime().asSeconds();
 
         if (saving && saveStream.is_open()) {
-            // TODO: save joint struct as binary
-            saveStream  << "Joint[" << joint.index << "] "
-                        << "@ " << joint.timestamp << ": "
-                        << joint.position.x << ","
-                        << joint.position.y << ","
-                        << joint.position.z << std::endl;
+            saveStream.write((char *)&joint, sizeof(struct joint));
+            //saveStream  << "Joint[" << joint.index     << "] "
+            //            << "@ "     << joint.timestamp << ": "
+            //            << joint.position.x << " "
+            //            << joint.position.y << " "
+            //            << joint.position.z << std::endl;
         }
+    }
+}
+
+void Application::loadFile()
+{
+    // Get the file name from a file chooser dialog and try to load it
+    std::wstring filename(showFileChooser());
+    std::wcout << "Selected file: " << filename << std::endl;
+
+    // Open the file
+    if (loadStream.is_open()) loadStream.close();
+    loadStream.open(filename, std::ios::binary | std::ios::in);
+    if (loadStream.is_open()) {
+        std::wcout << L"Opened file: " << filename   << std::endl
+                   << L"Loading joints positions..." << std::endl;
+
+        JointPosFrame inputJointFrame;    
+        struct joint joint;
+        int numJointsRead = 0, totalJointsRead = 0, totalFramesRead = 0;
+        while (loadStream.good()) {
+            memset(&joint, 0, sizeof(struct joint));
+            loadStream.read((char *)&joint, sizeof(struct joint));
+            inputJointFrame[joint.index] = joint;
+            ++totalJointsRead;
+            if (++numJointsRead == _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT) {
+                numJointsRead = 0; 
+                ++totalFramesRead;
+                jointPositionFrames.push_back(inputJointFrame);
+            }
+        }
+
+        loadStream.close();
+        loaded = true;
+        std::wstringstream ss;
+        ss << _T("Done loading '") << filename << _T("'");
+        MessageBox(NULL,ss.str().c_str(),_T("Open"),MB_OK);
+    }
+
+    // DEBUG : load a frame out of the middle
+    jointFrameIndex = jointPositionFrames.size() / 2;
+    jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+}
+
+void Application::moveToNextFrame()
+{
+    if (!loaded) return;
+    
+    const int nextFrame = jointFrameIndex + 1;
+    const int numFrames = jointPositionFrames.size();
+    if (nextFrame >= 0 && nextFrame < numFrames) {
+        jointFrameIndex = nextFrame;
+        jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+    }
+}
+
+void Application::moveToPreviousFrame()
+{
+    if (!loaded) return;
+
+    const int nextFrame = jointFrameIndex - 1;
+    const int numFrames = jointPositionFrames.size();
+    if (nextFrame >= 0 && nextFrame < numFrames) {
+        jointFrameIndex = nextFrame;
+        jointFrameVis   = &jointPositionFrames[jointFrameIndex];
     }
 }
