@@ -8,6 +8,9 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include <fstream>
+#include <string>
+
 #include "UserInterface.h"
 #include "Config.h"
 
@@ -26,6 +29,8 @@ private:
     GLuint depthTextureId;
     GLubyte *colorData;
     GLubyte *depthData;
+    bool showColor;
+    bool showDepth;
 
     // Kinect vars
     HANDLE colorStream;
@@ -37,6 +42,11 @@ private:
     INuiSensor *sensor;
 
     enum EKinectDataType { COLOR, DEPTH };
+
+    // File
+    static const std::string saveFileName;
+    std::ofstream saveStream;
+    std::ifstream loadStream;
 
 private:
     // Singleton
@@ -54,6 +64,9 @@ public:
     void shutdown();
 
     void toggleSave();
+    void toggleShowColor() { showColor = !showColor; }
+    void toggleShowDepth() { showDepth = !showDepth; }
+
     std::wstring showFileChooser();
 
     bool isSaving() const { return saving; }

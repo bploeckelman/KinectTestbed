@@ -15,6 +15,7 @@
 #include <NuiImageCamera.h>
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <cstdlib>
@@ -25,6 +26,7 @@
 #include "Config.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
+const std::string Application::saveFileName("joints.txt");
 
 
 // ----------------------------------------------------------------------------
@@ -35,18 +37,27 @@ Application::Application()
     , depthTextureId(0)
     , colorData(new GLubyte[STREAM_WIDTH * STREAM_HEIGHT * 4])
     , depthData(new GLubyte[STREAM_WIDTH * STREAM_HEIGHT * 4])
+    , showColor(true)
+    , showDepth(true)
     , colorStream()
     , depthStream()
     , nextSkeletonEvent()
     , numSensors(-1)
     , sensor(nullptr)
     , saving(false)
+    , saveStream()
+    , loadStream()
 {}
 
 Application::~Application()
 {
     delete[] colorData;
     delete[] depthData;
+
+    if (saveStream.is_open())
+        saveStream.close();
+    if (loadStream.is_open())
+        loadStream.close();
 }
 
 void Application::startup()
@@ -75,6 +86,14 @@ void Application::toggleSave()
     }
 
     saving = !saving; 
+
+    if (saving) {
+        if (!saveStream.is_open())
+            saveStream.open(saveFileName, std::ios::app);
+    } else {
+        if (saveStream.is_open())
+            saveStream.close();
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -111,21 +130,26 @@ void Application::draw()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glBindTexture(GL_TEXTURE_2D, colorTextureId);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
-        glTexCoord2f(1, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
-        glTexCoord2f(1, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
-        glTexCoord2f(0, 1); glVertex3f(0, (float) WINDOW_HEIGHT, 0);
-    glEnd();
+    if (showColor) {
+        glBindTexture(GL_TEXTURE_2D, colorTextureId);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(0, 0, 0);
+            glTexCoord2f(1, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
+            glTexCoord2f(1, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
+            glTexCoord2f(0, 1); glVertex3f(0, (float) WINDOW_HEIGHT, 0);
+        glEnd();
+    }
 
-    glBindTexture(GL_TEXTURE_2D, depthTextureId);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
-        glTexCoord2f(1, 0); glVertex3f((float) WINDOW_WIDTH, 0, 0);
-        glTexCoord2f(1, 1); glVertex3f((float) WINDOW_WIDTH, (float) WINDOW_HEIGHT, 0);
-        glTexCoord2f(0, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
-    glEnd();
+    if (showDepth) {
+        glBindTexture(GL_TEXTURE_2D, depthTextureId);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0, 0); glVertex3f(WINDOW_WIDTH / 2, 0, 0);
+            glTexCoord2f(1, 0); glVertex3f((float) WINDOW_WIDTH, 0, 0);
+            glTexCoord2f(1, 1); glVertex3f((float) WINDOW_WIDTH, (float) WINDOW_HEIGHT, 0);
+            glTexCoord2f(0, 1); glVertex3f(WINDOW_WIDTH / 2, (float) WINDOW_HEIGHT, 0);
+        glEnd();
+    }
+
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // Draw the skeleton bones
@@ -468,11 +492,11 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
 
-        if (saving) {
+        if (saving && saveStream.is_open()) {
             const Vector4& f(jointFromPosition);
             const Vector4& t(jointToPosition);
-            std::cout << "From: " << f.x << "," << f.y << "," << f.z << std::endl
-                      << "To  : " << t.x << "," << t.y << "," << t.z << std::endl;
+            saveStream << "From: " << f.x << "," << f.y << "," << f.z << std::endl
+                       << "To  : " << t.x << "," << t.y << "," << t.z << std::endl;
         }
     }
 }

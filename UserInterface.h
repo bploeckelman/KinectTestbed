@@ -16,7 +16,9 @@ private:
     sfg::Box::Ptr box;
     sfg::Button::Ptr quitButton;
     sfg::Button::Ptr openButton;
-    sfg::Button::Ptr saveButton;
+    sfg::ToggleButton::Ptr saveButton;
+    sfg::CheckButton::Ptr showColorButton;
+    sfg::CheckButton::Ptr showDepthButton;
     sfg::Label::Ptr infoLabel;
 
 public:
@@ -35,6 +37,8 @@ private:
     void onQuitButtonClick();
     void onOpenButtonClick();
     void onSaveButtonClick();
+    void onShowColorButtonClick();
+    void onShowDepthButtonClick();
 
 };
 
