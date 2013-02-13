@@ -69,8 +69,8 @@ void UserInterface::setupWindowConfiguration()
     infoLabel->SetText("Sensor [?] : ?");
     infoLabel->SetLineWrap(true);
 
-    showColorButton->SetActive(true);
-    showDepthButton->SetActive(true);
+    showColorButton->SetActive(false);
+    showDepthButton->SetActive(false);
     showJointsButton->SetActive(true);
 
     jointFramesFilename->SetText(sf::String(""));
