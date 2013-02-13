@@ -21,6 +21,7 @@ private:
     static const sf::VideoMode videoMode;
 
     // SFML/SFGUI vars
+    sf::Clock clock;
     sf::RenderWindow window;
     UserInterface gui;
 
@@ -37,6 +38,13 @@ private:
     HANDLE depthStream;
     HANDLE nextSkeletonEvent;
     bool saving;
+
+    struct joint {
+        _NUI_SKELETON_POSITION_INDEX index;
+        sf::Vector3f position;
+        float timestamp; // in seconds
+    };
+    std::map<_NUI_SKELETON_POSITION_INDEX, struct joint> joints;
 
     int numSensors;
     INuiSensor *sensor;
@@ -88,12 +96,14 @@ private:
     void drawKinectData();
     void getKinectData(GLubyte *data, const EKinectDataType &dataType);
 
+    void initJointMap();
     void updateSkeleton();
+    void updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
     void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
     void drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
     void drawSkeletonPosition(const Vector4& position);
     void drawBone(const NUI_SKELETON_DATA& skeleton
                 , NUI_SKELETON_POSITION_INDEX jointFrom
                 , NUI_SKELETON_POSITION_INDEX jointTo);
-
+    void drawJoints();
 };

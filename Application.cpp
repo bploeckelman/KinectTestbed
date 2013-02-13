@@ -9,6 +9,7 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
+#include <SFML/System/Clock.hpp>
 
 #include <NuiApi.h>
 #include <NuiSensor.h>
@@ -32,6 +33,7 @@ const std::string Application::saveFileName("joints.txt");
 // ----------------------------------------------------------------------------
 Application::Application()
     : window(Application::videoMode, "Kinect Testbed")
+    , clock()
     , gui()
     , colorTextureId(0)
     , depthTextureId(0)
@@ -62,11 +64,16 @@ Application::~Application()
 
 void Application::startup()
 {
+    clock.restart();
     if (!initKinect()) {
         std::cerr << "Unable to initialize Kinect." << std::endl;
         exit(1);
+    } else {
+        initJointMap();
     }
+    std::cout << "Kinect initialized in " << clock.getElapsedTime().asSeconds() << " seconds." << std::endl;
 
+    clock.restart();    
     initOpenGL();
     mainLoop();
     shutdownOpenGL();
@@ -152,8 +159,9 @@ void Application::draw()
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Draw the skeleton bones
+    // Work the skeleton
     updateSkeleton();
+    drawJoints();
 
     gui.draw(window);
 
@@ -411,14 +419,20 @@ void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
     for (int i = 0; i < NUI_SKELETON_COUNT; ++i) {
         const NUI_SKELETON_DATA& skeleton = skeletonFrame->SkeletonData[i];
 
-        switch (skeleton.eTrackingState) {
-            case NUI_SKELETON_TRACKED:
-                drawTrackedSkeletonJoints(skeleton);
-            break;
-            case NUI_SKELETON_POSITION_ONLY:
-                drawSkeletonPosition(skeleton.Position);
-            break;
+        // TODO: handle more than 1 skeleton
+        // Update the current positions for drawing
+        if (skeleton.eTrackingState == NUI_SKELETON_TRACKING_STATE::NUI_SKELETON_TRACKED) {
+            updateSkeletonJoints(skeleton);
         }
+
+        //switch (skeleton.eTrackingState) {
+        //    case NUI_SKELETON_TRACKED:
+        //        drawTrackedSkeletonJoints(skeleton);
+        //    break;
+        //    case NUI_SKELETON_POSITION_ONLY:
+        //        drawSkeletonPosition(skeleton.Position);
+        //    break;
+        //}
     }
 }
 
@@ -454,6 +468,24 @@ void Application::drawSkeletonPosition(const Vector4& position)
     // TODO
 }
 
+void Application::drawJoints()
+{
+    static const float Z = 0.5f;
+
+    // TODO: store tracking/inferral info for each joint and use it to update the color
+    glBegin(GL_POINTS);
+    glColor3f(0.f, 1.f, 0.f);
+    // Draw each joint
+    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
+        const struct joint &joint = joints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
+        glVertex3f(joint.position.x *  WINDOW_WIDTH  / 3 + 512.f
+                 , joint.position.y * -WINDOW_HEIGHT / 2 + 256.f
+                 , Z);//jointFromPosition.z);
+    }
+    glEnd();
+    glColor3f(1.f, 1.f, 1.f);
+}
+
 void Application::drawBone(const NUI_SKELETON_DATA& skeleton
                          , NUI_SKELETON_POSITION_INDEX jointFrom
                          , NUI_SKELETON_POSITION_INDEX jointTo)
@@ -464,8 +496,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         return; // nothing to draw, one joint not tracked
     }
 
-    const Vector4& jointFromPosition = skeleton.SkeletonPositions[jointFrom];
-    const Vector4& jointToPosition   = skeleton.SkeletonPositions[jointTo];
+    const sf::Vector3f& jointFromPosition(joints[jointFrom].position);//skeleton.SkeletonPositions[jointFrom];
+    const sf::Vector3f& jointToPosition(joints[jointTo].position);//skeleton.SkeletonPositions[jointTo];
     static const float Z = 1.f;
 
     // Don't draw if both points are inferred
@@ -491,12 +523,41 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
             glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointToPosition.z);
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
+    }
+}
+
+void Application::initJointMap()
+{
+    joints.clear();
+    // For each joint
+    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
+        // Add an entry 
+        joints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
+    }
+}
+
+void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
+{
+    // For each joint
+    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
+        const _NUI_SKELETON_POSITION_INDEX &jointIndex = static_cast<_NUI_SKELETON_POSITION_INDEX>(i);
+        const Vector4& jointPosition = skeleton.SkeletonPositions[jointIndex];
+
+        // Update the entry 
+        struct joint &joint = joints[jointIndex];
+        joint.index      = jointIndex;
+        joint.position.x = jointPosition.x;
+        joint.position.y = jointPosition.y;
+        joint.position.z = jointPosition.z;
+        joint.timestamp  = clock.getElapsedTime().asSeconds();
 
         if (saving && saveStream.is_open()) {
-            const Vector4& f(jointFromPosition);
-            const Vector4& t(jointToPosition);
-            saveStream << "From: " << f.x << "," << f.y << "," << f.z << std::endl
-                       << "To  : " << t.x << "," << t.y << "," << t.z << std::endl;
+            // TODO: save joint struct as binary
+            saveStream  << "Joint[" << joint.index << "] "
+                        << "@ " << joint.timestamp << ": "
+                        << joint.position.x << ","
+                        << joint.position.y << ","
+                        << joint.position.z << std::endl;
         }
     }
 }
