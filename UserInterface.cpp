@@ -23,6 +23,7 @@ UserInterface::UserInterface()
     , showJointsButton(sfg::CheckButton::Create("Joints"))
     , jointFramesProgress(sfg::ProgressBar::Create())
     , jointFramesFilename(sfg::Label::Create())
+    , jointFrameIndex(sfg::Label::Create())
 {
     setupWidgetHandlers();
     setupWindowConfiguration();
@@ -74,6 +75,10 @@ void UserInterface::setupWindowConfiguration()
     jointFramesFilename->SetLineWrap(true);
     jointFramesFilename->SetZOrder(1);
 
+    jointFrameIndex->SetText(sf::String(""));
+    jointFrameIndex->SetLineWrap(true);
+    jointFrameIndex->SetZOrder(1);
+
     jointFramesProgress->SetFraction(0.0);
     jointFramesProgress->SetRequisition(sf::Vector2f(1200, 25));
 
@@ -86,7 +91,8 @@ void UserInterface::setupWindowConfiguration()
     fixed->Put(showDepthButton, sf::Vector2f(0, 100));
     fixed->Put(showJointsButton, sf::Vector2f(0, 140));
     fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
-    fixed->Put(jointFramesFilename, sf::Vector2f(30, 655));
+    fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
+    fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");

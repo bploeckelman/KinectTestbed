@@ -28,6 +28,7 @@ private:
 
     sfg::ProgressBar::Ptr jointFramesProgress;
     sfg::Label::Ptr jointFramesFilename;
+    sfg::Label::Ptr jointFrameIndex;
 
 public:
     UserInterface();
@@ -38,6 +39,11 @@ public:
     void setInfo    (const std::string &info) { infoLabel->SetText(sf::String(info)); }
     void setFileName(const std::string &name) { jointFramesFilename->SetText(sf::String(name)); }
     void setProgress(float fraction) { jointFramesProgress->SetFraction(fraction); }
+    void setIndex(int index) {
+        std::stringstream ss;
+        ss << "[" << index << "]";
+        jointFrameIndex->SetText(sf::String(ss.str()));
+    }
 
 private:
     void setupWidgetHandlers();

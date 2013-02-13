@@ -251,7 +251,7 @@ void Application::initOpenGL(){
     glClearColor(0,0,0,0);
     glClearDepth(1.f);
     glEnable(GL_TEXTURE_2D);
-    glPointSize(20.f);
+    glPointSize(10.f);
     glEnable(GL_POINT_SMOOTH);
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -617,6 +617,7 @@ void Application::loadFile()
     std::string name; name.assign(filename.begin(), filename.end());
     gui.setFileName(name);
     gui.setProgress((float) jointFrameIndex / (float) jointPositionFrames.size());
+    gui.setIndex(jointFrameIndex);
 }
 
 void Application::moveToNextFrame()
@@ -629,7 +630,7 @@ void Application::moveToNextFrame()
         jointFrameIndex = nextFrame;
         jointFrameVis   = &jointPositionFrames[jointFrameIndex];
         gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-        std::cout << "frame[" << jointFrameIndex << "]" << std::endl;
+        gui.setIndex(jointFrameIndex);
     }
 }
 
@@ -643,6 +644,6 @@ void Application::moveToPreviousFrame()
         jointFrameIndex = prevFrame;
         jointFrameVis   = &jointPositionFrames[jointFrameIndex];
         gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-        std::cout << "frame[" << jointFrameIndex << "]" << std::endl;
+        gui.setIndex(jointFrameIndex);
     }
 }
