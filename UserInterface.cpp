@@ -14,13 +14,15 @@ UserInterface::UserInterface()
     , desktop()
     , window(sfg::Window::Create())
     , box(sfg::Box::Create(sfg::Box::HORIZONTAL, 0.f))
+    , infoLabel(sfg::Label::Create())
     , quitButton(sfg::Button::Create("Quit"))
     , openButton(sfg::Button::Create("Open"))
     , saveButton(sfg::ToggleButton::Create("Save"))
-    , infoLabel(sfg::Label::Create())
     , showColorButton(sfg::CheckButton::Create("Color"))
     , showDepthButton(sfg::CheckButton::Create("Depth"))
     , showJointsButton(sfg::CheckButton::Create("Joints"))
+    , jointFramesProgress(sfg::ProgressBar::Create())
+    , jointFramesFilename(sfg::Label::Create())
 {
     setupWidgetHandlers();
     setupWindowConfiguration();
@@ -61,11 +63,19 @@ void UserInterface::setupWidgetHandlers()
 
 void UserInterface::setupWindowConfiguration()
 {
+    infoLabel->SetText("Sensor [?] : ?");
+    infoLabel->SetLineWrap(true);
+
     showColorButton->SetActive(true);
     showDepthButton->SetActive(true);
     showJointsButton->SetActive(true);
-    infoLabel->SetText("Sensor [?] : ?");
-    infoLabel->SetLineWrap(true);
+
+    jointFramesFilename->SetText(sf::String(""));
+    jointFramesFilename->SetLineWrap(true);
+    jointFramesFilename->SetZOrder(1);
+
+    jointFramesProgress->SetFraction(0.0);
+    jointFramesProgress->SetRequisition(sf::Vector2f(1200, 25));
 
     sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
     fixed->Put(infoLabel, sf::Vector2f(0,0));
@@ -75,6 +85,8 @@ void UserInterface::setupWindowConfiguration()
     fixed->Put(showColorButton, sf::Vector2f(0, 60));
     fixed->Put(showDepthButton, sf::Vector2f(0, 100));
     fixed->Put(showJointsButton, sf::Vector2f(0, 140));
+    fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
+    fixed->Put(jointFramesFilename, sf::Vector2f(30, 655));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");

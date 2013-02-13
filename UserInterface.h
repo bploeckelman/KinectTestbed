@@ -14,13 +14,20 @@ private:
 
     // Widgets...
     sfg::Box::Ptr box;
+
     sfg::Label::Ptr infoLabel;
+
     sfg::Button::Ptr quitButton;
     sfg::Button::Ptr openButton;
+
     sfg::ToggleButton::Ptr saveButton;
+
     sfg::CheckButton::Ptr showColorButton;
     sfg::CheckButton::Ptr showDepthButton;
     sfg::CheckButton::Ptr showJointsButton;
+
+    sfg::ProgressBar::Ptr jointFramesProgress;
+    sfg::Label::Ptr jointFramesFilename;
 
 public:
     UserInterface();
@@ -28,7 +35,9 @@ public:
     void draw(sf::RenderWindow &renderWindow);
     void handleEvent(sf::Event &event);
 
-    void setInfo(const std::string &info) { infoLabel->SetText(sf::String(info)); }
+    void setInfo    (const std::string &info) { infoLabel->SetText(sf::String(info)); }
+    void setFileName(const std::string &name) { jointFramesFilename->SetText(sf::String(name)); }
+    void setProgress(float fraction) { jointFramesProgress->SetFraction(fraction); }
 
 private:
     void setupWidgetHandlers();
@@ -41,6 +50,5 @@ private:
     void onShowColorButtonClick();
     void onShowDepthButtonClick();
     void onShowJointsButtonClick();
-
 };
 

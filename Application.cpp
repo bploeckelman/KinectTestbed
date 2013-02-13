@@ -130,8 +130,8 @@ void Application::processEvents()
         }
 
         if (event.type == sf::Event::KeyPressed) {
-            if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToNextFrame();
-            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToPreviousFrame();
+            if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToNextFrame();
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
         }
             
     }
@@ -611,9 +611,12 @@ void Application::loadFile()
         MessageBox(NULL,ss.str().c_str(),_T("Open"),MB_OK);
     }
 
-    // DEBUG : load a frame out of the middle
+    // Set the current frame as the middle frame of the sequence
     jointFrameIndex = jointPositionFrames.size() / 2;
     jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+    std::string name; name.assign(filename.begin(), filename.end());
+    gui.setFileName(name);
+    gui.setProgress((float) jointFrameIndex / (float) jointPositionFrames.size());
 }
 
 void Application::moveToNextFrame()
@@ -625,6 +628,8 @@ void Application::moveToNextFrame()
     if (nextFrame >= 0 && nextFrame < numFrames) {
         jointFrameIndex = nextFrame;
         jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+        gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
+        std::cout << "frame[" << jointFrameIndex << "]" << std::endl;
     }
 }
 
@@ -632,10 +637,12 @@ void Application::moveToPreviousFrame()
 {
     if (!loaded) return;
 
-    const int nextFrame = jointFrameIndex - 1;
+    const int prevFrame = jointFrameIndex - 1;
     const int numFrames = jointPositionFrames.size();
-    if (nextFrame >= 0 && nextFrame < numFrames) {
-        jointFrameIndex = nextFrame;
+    if (prevFrame >= 0 && prevFrame < numFrames) {
+        jointFrameIndex = prevFrame;
         jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+        gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
+        std::cout << "frame[" << jointFrameIndex << "]" << std::endl;
     }
 }
