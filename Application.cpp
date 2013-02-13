@@ -587,6 +587,10 @@ void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
 
 void Application::loadFile()
 {
+    if (loaded) {
+        jointPositionFrames.clear();
+    }
+
     // Get the file name from a file chooser dialog and try to load it
     std::wstring filename(showFileChooser());
     std::wcout << "Selected file: " << filename << std::endl;
