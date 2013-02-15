@@ -60,11 +60,12 @@ private:
     bool showDepth;
     bool showJoints;
 
+    float cameraz;
+
     // File
     static const std::string saveFileName;
     std::ofstream saveStream;
     std::ifstream loadStream;
-
 private:
     // Singleton
     Application();
@@ -124,4 +125,5 @@ private:
     void drawJoints();
     void moveToNextFrame();
     void moveToPreviousFrame();
+    void drawCube();
 };
