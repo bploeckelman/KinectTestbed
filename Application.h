@@ -19,6 +19,7 @@ struct joint {
     float timestamp; // in seconds
     sf::Vector3f position;
     _NUI_SKELETON_POSITION_INDEX index;
+    _NUI_SKELETON_POSITION_TRACKING_STATE trackState;
 };
 
 typedef std::map<_NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;

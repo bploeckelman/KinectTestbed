@@ -552,14 +552,23 @@ void Application::drawJoints()
 {
     assert(jointFrameVis);
 
-    // TODO: store tracking/inferral info for each joint and use it to update the color
     glPushMatrix();
 
     glBegin(GL_POINTS);
-    glColor3f(0.f, 1.f, 0.f);
     // Draw each joint
     for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
         const struct joint &joint = (*jointFrameVis)[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
+        switch (joint.trackState) {
+            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_NOT_TRACKED:
+            glColor3f(1.f, 0.f, 1.f);
+            break;
+            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_TRACKED:
+            glColor3f(0.f, 1.f, 0.f);
+            break;
+            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_INFERRED:
+            glColor3f(1.f, 0.5f, 0.f);
+            break;
+        }
         glVertex3f(joint.position.x, joint.position.y, joint.position.z);
     }
     glEnd();
@@ -622,6 +631,7 @@ void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
     // For each joint
     for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
         const _NUI_SKELETON_POSITION_INDEX &jointIndex = static_cast<_NUI_SKELETON_POSITION_INDEX>(i);
+        const _NUI_SKELETON_POSITION_TRACKING_STATE &trackingState = skeleton.eSkeletonPositionTrackingState[jointIndex];
         const Vector4& jointPosition = skeleton.SkeletonPositions[jointIndex];
 
         // Update the entry 
@@ -631,6 +641,7 @@ void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
         joint.position.y = jointPosition.y;
         joint.position.z = jointPosition.z;
         joint.timestamp  = clock.getElapsedTime().asSeconds();
+        joint.trackState = trackingState;
 
         if (saving && saveStream.is_open()) {
             saveStream.write((char *)&joint, sizeof(struct joint));
