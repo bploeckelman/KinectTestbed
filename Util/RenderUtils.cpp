@@ -105,21 +105,22 @@ void Render::vector( const vec3& vec, const vec3& point, const vec3& color )
     glColor3f(1,1,1);
 }
 
-void Render::basis(const vec3& pos
+void Render::basis(const float scale
+                 , const vec3& pos
                  , const vec3& x
                  , const vec3& y
                  , const vec3& z)
 {
     glDisable(GL_TEXTURE_2D);
 
-    static const vec3 origin(pos);
+    //static const vec3 origin(0,0,0);
     static const vec3 red   (1,0,0);
     static const vec3 green (0,1,0);
     static const vec3 blue  (0,0,1);
 
-    vector(x, origin, red);
-    vector(y, origin, green);
-    vector(z, origin, blue);
+    vector(x * scale, pos, red);
+    vector(y * scale, pos, green);
+    vector(z * scale, pos, blue);
 
     glEnable(GL_TEXTURE_2D);
 }

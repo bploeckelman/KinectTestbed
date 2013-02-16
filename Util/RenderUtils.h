@@ -25,8 +25,9 @@ public:
     static void vector(const glm::vec3& v, const glm::vec3& point
                      , const glm::vec3& color=glm::vec3(1,1,1));
 
-    // Draw the specified coordinate axes at the specified location
-    static void basis(const glm::vec3& pos=glm::vec3(0,0,0)
+    // Draw the specified coordinate axes at the specified position, scaling vectors by specified scale
+    static void basis(const float scale=1.f
+                    , const glm::vec3& pos=glm::vec3(0,0,0)
                     , const glm::vec3& x=glm::vec3(1,0,0)
                     , const glm::vec3& y=glm::vec3(0,1,0)
                     , const glm::vec3& z=glm::vec3(0,0,1));

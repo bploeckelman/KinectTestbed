@@ -27,6 +27,9 @@
     <ClCompile Include="Util\RenderUtils.cpp">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="Util\Utils.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Config.h">
@@ -45,6 +48,9 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Util\RenderUtils.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\Utils.h">
       <Filter>Util</Filter>
     </ClInclude>
   </ItemGroup>

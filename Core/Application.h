@@ -8,6 +8,8 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include <glm/glm.hpp>
+
 #include <fstream>
 #include <string>
 
@@ -17,9 +19,9 @@
 
 struct joint {
     float timestamp; // in seconds
-    sf::Vector3f position;
+    glm::vec3 position;
     NUI_SKELETON_POSITION_INDEX index;
-    NUI_SKELETON_BONE_ORIENTATION boneOrientation;
+    NUI_SKELETON_BONE_ORIENTATION orientation;
     NUI_SKELETON_POSITION_TRACKING_STATE trackState;
 };
 

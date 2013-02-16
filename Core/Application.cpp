@@ -11,6 +11,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Clock.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <NuiApi.h>
 #include <NuiSensor.h>
 #include <NuiImageCamera.h>
@@ -115,9 +118,9 @@ void Application::setJointIndex(const float fraction)
     if (!loaded) return;
     assert(fraction >= 0.f && fraction <= 1.f);
 
-    const int frameIndex = static_cast<int>(floor(fraction * jointPositionFrames.size()));
-    jointFrameVis = &jointPositionFrames[frameIndex];
-    gui.setIndex(frameIndex);
+    jointFrameIndex = static_cast<int>(floor(fraction * jointPositionFrames.size()));
+    jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+    gui.setIndex(jointFrameIndex);
 }
 
 // ----------------------------------------------------------------------------
@@ -493,19 +496,17 @@ void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
         const NUI_SKELETON_BONE_ORIENTATION&        orientation   = boneOrientations[jointIndex];
         const NUI_SKELETON_POSITION_TRACKING_STATE& trackingState = skeleton->eSkeletonPositionTrackingState[jointIndex];
 
-        // Get joint position
         const Vector4& jointPosition = skeleton->SkeletonPositions[jointIndex];
-
-        // TODO: save orientations
 
         // Update the entry 
         struct joint &joint = currentJoints[jointIndex];
-        joint.timestamp  = timestamp;
-        joint.index      = jointIndex;
-        joint.position.x = jointPosition.x;
-        joint.position.y = jointPosition.y;
-        joint.position.z = jointPosition.z;
-        joint.trackState = trackingState;
+        joint.timestamp     = timestamp;
+        joint.index         = jointIndex;
+        joint.position.x    = jointPosition.x;
+        joint.position.y    = jointPosition.y;
+        joint.position.z    = jointPosition.z;
+        joint.trackState    = trackingState;
+        joint.orientation   = orientation;
 
         // Save the frame if appropriate
         if (saving && saveStream.is_open()) {
@@ -528,18 +529,43 @@ void Application::drawSkeletonFrame()
 
     glPushMatrix();
 
-    glBegin(GL_POINTS);
+    // TODO flags == [POS | JOINTS | ORIENT | BONES]
+    // ---------------------------------------------
+    // POS    = whole skeleton position
+    // JOINTS = skeleton joints
+    // ORIENT = skeleton joint orientations
+    // BONES  = connections between skeleton joints
+
     // Draw each joint
+    glPointSize(5.f);
+    glBegin(GL_POINTS);
     for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
         const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-        switch (joint.trackState) {
-            case NUI_SKELETON_POSITION_NOT_TRACKED: glColor3f(1.f, 0.f, 1.f);  break;
-            case NUI_SKELETON_POSITION_TRACKED:     glColor3f(0.f, 1.f, 0.f);  break;
-            case NUI_SKELETON_POSITION_INFERRED:    glColor3f(1.f, 0.5f, 0.f); break;
+        switch (joint.trackState) { // skip untracked joints
+            case NUI_SKELETON_POSITION_NOT_TRACKED: continue;//glColor3f(1.f, 0.f, 1.f);  break;
+            case NUI_SKELETON_POSITION_TRACKED:     glColor3f(1.f, 1.f, 1.f);  break;
+            case NUI_SKELETON_POSITION_INFERRED:    continue;//glColor3f(1.f, 0.5f, 0.f); break;
         }
-        glVertex3f(joint.position.x, joint.position.y, joint.position.z);
+        glVertex3fv(glm::value_ptr(joint.position));
     }
     glEnd();
+
+    // Draw each joint's orientation
+    glPointSize(1.f);
+    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+        switch (joint.trackState) { // skip untracked joints
+            case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
+            case NUI_SKELETON_POSITION_INFERRED:    continue;
+        }
+        const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
+        const glm::vec3 x(m.M11, m.M12, m.M13);
+        const glm::vec3 y(m.M21, m.M22, m.M23);
+        const glm::vec3 z(m.M31, m.M32, m.M33);
+        const float scale = 0.1f;
+        Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
+    }
+
     glColor3f(1.f, 1.f, 1.f);
 
     glPopMatrix();
@@ -587,8 +613,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         return; // nothing to draw, one joint not tracked
     }
 
-    const sf::Vector3f& jointFromPosition(currentJoints[jointFrom].position);//skeleton.SkeletonPositions[jointFrom];
-    const sf::Vector3f& jointToPosition(currentJoints[jointTo].position);//skeleton.SkeletonPositions[jointTo];
+    const glm::vec3& jointFromPosition(currentJoints[jointFrom].position);
+    const glm::vec3& jointToPosition(currentJoints[jointTo].position);
     static const float Z = 1.f;
 
     // Don't draw if both points are inferred
@@ -598,8 +624,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         glColor3f(1.f, 0.f, 0.f);
         //glBegin(GL_POINTS);
         glBegin(GL_LINES);
-            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointFromPosition.z);
-            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointToPosition.z);
+            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
+            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
     }
@@ -610,8 +636,8 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
         glColor3f(0.f, 1.f, 0.f);
         //glBegin(GL_POINTS);
         glBegin(GL_LINES);
-            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointFromPosition.z);
-            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);//jointToPosition.z);
+            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
+            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
     }
