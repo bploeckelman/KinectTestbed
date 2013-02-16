@@ -1,18 +1,16 @@
-*.suo
-*.user
-*.ncb
-*.aps
-
-*.sdf
-*.opensdf
-
-[Dd]ebug
-[Rr]elease
+Intermediate
 
 *.obj
 *.pch
 *.pdb
-
+*.ilk
+*.exe
+*.suo
+*.user
+*.ncb
+*.aps
 *.tmp
 *.log
+*.sdf
+*.opensdf
 

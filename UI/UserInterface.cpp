@@ -6,7 +6,7 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 
-#include "Application.h"
+#include "Core/Application.h"
 
 
 UserInterface::UserInterface()

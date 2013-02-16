@@ -24,8 +24,8 @@
 #include <tchar.h>
 
 #include "Application.h"
-#include "ImageManager.h"
 #include "Config.h"
+#include "Util/ImageManager.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 const std::string Application::saveFileName("joint_frames.bin");
@@ -56,7 +56,7 @@ Application::Application()
     , showJoints(true)
     , saveStream()
     , loadStream()
-    , cameraz(0.f)
+    , cameraz(5.f)
 {}
 
 Application::~Application()
@@ -70,6 +70,8 @@ Application::~Application()
 
 void Application::startup()
 {
+    ImageManager::get().addResourceDir("../../Res/");
+
     clock.restart();
     if (!initKinect())
         std::cerr << "Unable to initialize Kinect." << std::endl;

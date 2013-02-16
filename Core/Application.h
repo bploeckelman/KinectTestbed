@@ -11,8 +11,8 @@
 #include <fstream>
 #include <string>
 
-#include "UserInterface.h"
-#include "Config.h"
+#include "UI/UserInterface.h"
+#include "Core/Config.h"
 
 
 struct joint {
