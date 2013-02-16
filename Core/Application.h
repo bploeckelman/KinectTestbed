@@ -11,8 +11,8 @@
 #include <fstream>
 #include <string>
 
-#include "UI/UserInterface.h"
 #include "Core/Config.h"
+#include "UI/UserInterface.h"
 
 
 struct joint {
@@ -101,6 +101,7 @@ private:
     void processEvents();
     void draw();
 
+    float getCameraRotation();
     std::wstring showFileChooser();
 
     // OpenGL methods
@@ -113,12 +114,14 @@ private:
     // Kinect image methods
     void updateKinectCameraTextures();
     void getKinectData(GLubyte *data, const EKinectDataType &dataType);
+    void drawKinectCameraFrame() ;
 
     // Kinect skeleton methods
     void checkForSkeletonFrame();
     void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
     void drawSkeletonFrame();
 
+    void drawKinectSkeletonFrame();
     void drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
     void drawSkeletonPosition(const Vector4& position);
     void drawBone(const NUI_SKELETON_DATA& skeleton

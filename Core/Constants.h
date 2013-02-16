@@ -13,4 +13,6 @@ namespace constants
     const float one_third_pi = one_third * pi;
     const float pi_over_180  = pi / 180.f;
 
+    const float initial_camera_z = 3.f;
+
 };

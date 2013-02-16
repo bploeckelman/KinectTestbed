@@ -25,6 +25,8 @@
 
 #include "Application.h"
 #include "Config.h"
+#include "Constants.h"
+#include "Util/RenderUtils.h"
 #include "Util/ImageManager.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
@@ -56,7 +58,7 @@ Application::Application()
     , showJoints(true)
     , saveStream()
     , loadStream()
-    , cameraz(5.f)
+    , cameraz(constants::initial_camera_z)
 {}
 
 Application::~Application()
@@ -149,92 +151,29 @@ void Application::processEvents()
     }
 }
 
-void drawGroundPlane() 
-{
-    static const float Y = -1.f;
-    static const float R = 10.f;
-
-    glDisable(GL_CULL_FACE);
-
-    sf::Texture texture;
-    texture.loadFromImage(GetImage("grid.png"));
-    texture.bind(&texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    const float radius = 40.f;
-    glColor3f(0.5f, 0.6f, 0.5f);
-    glBegin(GL_TRIANGLE_STRIP);
-    glNormal3f(0.f, 1.f, 0.f);
-        glTexCoord2f(   0.f,    0.f); glVertex3f( R, Y,  R);
-        glTexCoord2f(radius,    0.f); glVertex3f( R, Y, -R);
-        glTexCoord2f(   0.f, radius); glVertex3f(-R, Y,  R);
-        glTexCoord2f(radius, radius); glVertex3f(-R, Y, -R);
-    glEnd();
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    glEnable(GL_CULL_FACE);
-}
-
-void drawCube()
-{
-    glPushMatrix();
-    glTranslatef(0.f, -0.5f, 0.f);
-    //glTranslated(position.x, position.y, position.z);
-
-    const float scale = 0.5f;
-    const float nl = -0.5f * scale;
-    const float pl =  0.5f * scale;
-
-    glDisable(GL_CULL_FACE);
-    glColor3f(1.f, 0.f, 0.f);
-    glBegin(GL_QUADS);
-        glNormal3d( 0,0,1);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(nl,pl,pl);
-            glVertex3d(nl,nl,pl);
-            glVertex3d(pl,nl,pl);
-        glNormal3d( 0, 0, -1);
-            glVertex3d(pl,pl, nl);
-            glVertex3d(pl,nl, nl);
-            glVertex3d(nl,nl, nl);
-            glVertex3d(nl,pl, nl);
-        glNormal3d( 0, 1, 0);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(pl,pl,nl);
-            glVertex3d(nl,pl,nl);
-            glVertex3d(nl,pl,pl);
-        glNormal3d( 0,-1,0);
-            glVertex3d(pl,nl,pl);
-            glVertex3d(nl,nl,pl);
-            glVertex3d(nl,nl,nl);
-            glVertex3d(pl,nl,nl);
-        glNormal3d( 1,0,0);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(pl,nl,pl);
-            glVertex3d(pl,nl,nl);
-            glVertex3d(pl,pl,nl);
-        glNormal3d(-1,0,0);
-            glVertex3d(nl,pl,pl);
-            glVertex3d(nl,pl,nl);
-            glVertex3d(nl,nl,nl);
-            glVertex3d(nl,nl,pl);
-    glEnd();
-    glColor3f(1.f, 1.f, 1.f);
-    glEnable(GL_CULL_FACE);
-
-    glPopMatrix(); 
-}
-
 void Application::draw()
 {
     window.setActive();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Move the camera
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPushMatrix();
+        glTranslatef(0, 0.f, -cameraz);
+        glRotatef(getCameraRotation(), 0.f, 1.f, 0.f);
+
+        Render::basis();
+        Render::ground();
+
+        drawKinectSkeletonFrame();
+        drawKinectCameraFrame();
+    glPopMatrix();
+
+    gui.draw(window);
+
+    window.display();
+}
+
+float Application::getCameraRotation()
+{
     static float rot = 0.f;
     static float lastTime = clock.getElapsedTime().asSeconds();
     float thisTime = clock.getElapsedTime().asSeconds();
@@ -243,58 +182,7 @@ void Application::draw()
         if (++rot > 360) rot = 0;
         lastTime = thisTime;
     }
-
-    glPushMatrix();
-    glTranslatef(0, 0.f, -cameraz);
-    glRotatef(rot, 0.f, 1.f, 0.f);
-
-    drawGroundPlane();
-    drawCube();
-
-    // Get kinect frame and update textures
-    if (showColor || showDepth) {
-        updateKinectCameraTextures();
-
-        // Draw color and depth images
-        glPushMatrix();
-        glLoadIdentity();
-        glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
-        glDisable(GL_CULL_FACE);
-        if (showColor) {
-            glBindTexture(GL_TEXTURE_2D, colorTextureId);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0, 1); glVertex3f(0.f, -1.f, 0.f);
-                glTexCoord2f(1, 1); glVertex3f(2.f, -1.f, 0.f);
-                glTexCoord2f(1, 0); glVertex3f(2.f,  1.f, 0.f);
-                glTexCoord2f(0, 0); glVertex3f(0.f,  1.f, 0.f);
-            glEnd();
-        }
-        if (showDepth) {
-            glBindTexture(GL_TEXTURE_2D, depthTextureId);
-            glBegin(GL_QUADS);
-                glTexCoord2f(0, 1); glVertex3f(-2.f, -1.f, 0.f);
-                glTexCoord2f(1, 1); glVertex3f( 0.f, -1.f, 0.f);
-                glTexCoord2f(1, 0); glVertex3f( 0.f,  1.f, 0.f);
-                glTexCoord2f(0, 0); glVertex3f(-2.f,  1.f, 0.f);
-            glEnd();
-        }
-        glEnable(GL_CULL_FACE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glPopMatrix();
-    }
-
-    // Draw the skeleton
-    if (showJoints) {
-        checkForSkeletonFrame();
-        drawSkeletonFrame();
-    }
-
-    glPopMatrix();
-
-    // Draw the gui
-    gui.draw(window);
-
-    window.display();
+    return rot;
 }
 
 // ----------------------------------------------------------------------------
@@ -529,6 +417,41 @@ void Application::getKinectData(GLubyte *dest, const EKinectDataType &dataType)
     }
 }
 
+void Application::drawKinectCameraFrame()
+{
+    // Get kinect frame and update textures
+    if (showColor || showDepth) {
+        updateKinectCameraTextures();
+
+        // Draw color and depth images
+        glPushMatrix();
+        glLoadIdentity();
+        glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
+        glDisable(GL_CULL_FACE);
+        if (showColor) {
+            glBindTexture(GL_TEXTURE_2D, colorTextureId);
+            glBegin(GL_QUADS);
+            glTexCoord2f(0, 1); glVertex3f(0.f, -1.f, 0.f);
+            glTexCoord2f(1, 1); glVertex3f(2.f, -1.f, 0.f);
+            glTexCoord2f(1, 0); glVertex3f(2.f,  1.f, 0.f);
+            glTexCoord2f(0, 0); glVertex3f(0.f,  1.f, 0.f);
+            glEnd();
+        }
+        if (showDepth) {
+            glBindTexture(GL_TEXTURE_2D, depthTextureId);
+            glBegin(GL_QUADS);
+            glTexCoord2f(0, 1); glVertex3f(-2.f, -1.f, 0.f);
+            glTexCoord2f(1, 1); glVertex3f( 0.f, -1.f, 0.f);
+            glTexCoord2f(1, 0); glVertex3f( 0.f,  1.f, 0.f);
+            glTexCoord2f(0, 0); glVertex3f(-2.f,  1.f, 0.f);
+            glEnd();
+        }
+        glEnable(GL_CULL_FACE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glPopMatrix();
+    }
+}
+
 void Application::checkForSkeletonFrame()
 {
     // Wait for 0ms to quickly test if it is time to process a skeleton
@@ -588,6 +511,14 @@ void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
         if (saving && saveStream.is_open()) {
             saveStream.write((char *)&joint, sizeof(struct joint));
         }
+    }
+}
+
+void Application::drawKinectSkeletonFrame()
+{
+    if (showJoints) {
+        checkForSkeletonFrame();
+        drawSkeletonFrame();
     }
 }
 
@@ -715,13 +646,13 @@ void Application::loadFile()
             inputJointFrame[joint.index] = joint;
             ++totalJointsRead;
             
-            mn.x = min(mn.x, joint.position.x);
-            mn.y = min(mn.y, joint.position.y);
-            mn.z = min(mn.z, joint.position.z);
+            mn.x = std::min(mn.x, joint.position.x);
+            mn.y = std::min(mn.y, joint.position.y);
+            mn.z = std::min(mn.z, joint.position.z);
 
-            mx.x = max(mx.x, joint.position.x);
-            mx.y = max(mx.y, joint.position.y);
-            mx.z = max(mx.z, joint.position.z);
+            mx.x = std::max(mx.x, joint.position.x);
+            mx.y = std::max(mx.y, joint.position.y);
+            mx.z = std::max(mx.z, joint.position.z);
 
             if (++numJointsRead == NUI_SKELETON_POSITION_COUNT) {
                 numJointsRead = 0; 

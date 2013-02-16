@@ -24,6 +24,9 @@
     <ClCompile Include="Core\Application.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Util\RenderUtils.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Config.h">
@@ -40,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="Core\Application.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\RenderUtils.h">
+      <Filter>Util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
