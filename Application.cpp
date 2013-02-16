@@ -64,21 +64,17 @@ Application::~Application()
     delete[] colorData;
     delete[] depthData;
 
-    if (saveStream.is_open())
-        saveStream.close();
-    if (loadStream.is_open())
-        loadStream.close();
+    if (saveStream.is_open()) saveStream.close();
+    if (loadStream.is_open()) loadStream.close();
 }
 
 void Application::startup()
 {
     clock.restart();
-    if (!initKinect()) {
+    if (!initKinect())
         std::cerr << "Unable to initialize Kinect." << std::endl;
-        //exit(1);
-    }
-    initJointMap();
-    std::cout << "Kinect initialized in " << clock.getElapsedTime().asSeconds() << " seconds." << std::endl;
+    else
+        std::cout << "Kinect initialized in " << clock.getElapsedTime().asSeconds() << " seconds." << std::endl;
 
     clock.restart();    
     initOpenGL();
@@ -181,6 +177,56 @@ void drawGroundPlane()
     glEnable(GL_CULL_FACE);
 }
 
+void drawCube()
+{
+    glPushMatrix();
+    glTranslatef(0.f, -0.5f, 0.f);
+    //glTranslated(position.x, position.y, position.z);
+
+    const float scale = 0.5f;
+    const float nl = -0.5f * scale;
+    const float pl =  0.5f * scale;
+
+    glDisable(GL_CULL_FACE);
+    glColor3f(1.f, 0.f, 0.f);
+    glBegin(GL_QUADS);
+        glNormal3d( 0,0,1);
+            glVertex3d(pl,pl,pl);
+            glVertex3d(nl,pl,pl);
+            glVertex3d(nl,nl,pl);
+            glVertex3d(pl,nl,pl);
+        glNormal3d( 0, 0, -1);
+            glVertex3d(pl,pl, nl);
+            glVertex3d(pl,nl, nl);
+            glVertex3d(nl,nl, nl);
+            glVertex3d(nl,pl, nl);
+        glNormal3d( 0, 1, 0);
+            glVertex3d(pl,pl,pl);
+            glVertex3d(pl,pl,nl);
+            glVertex3d(nl,pl,nl);
+            glVertex3d(nl,pl,pl);
+        glNormal3d( 0,-1,0);
+            glVertex3d(pl,nl,pl);
+            glVertex3d(nl,nl,pl);
+            glVertex3d(nl,nl,nl);
+            glVertex3d(pl,nl,nl);
+        glNormal3d( 1,0,0);
+            glVertex3d(pl,pl,pl);
+            glVertex3d(pl,nl,pl);
+            glVertex3d(pl,nl,nl);
+            glVertex3d(pl,pl,nl);
+        glNormal3d(-1,0,0);
+            glVertex3d(nl,pl,pl);
+            glVertex3d(nl,pl,nl);
+            glVertex3d(nl,nl,nl);
+            glVertex3d(nl,nl,pl);
+    glEnd();
+    glColor3f(1.f, 1.f, 1.f);
+    glEnable(GL_CULL_FACE);
+
+    glPopMatrix(); 
+}
+
 void Application::draw()
 {
     window.setActive();
@@ -205,40 +251,40 @@ void Application::draw()
 
     // Get kinect frame and update textures
     if (showColor || showDepth) {
-        drawKinectData();
-    }
+        updateKinectCameraTextures();
 
-    // Draw color and depth images
-    glPushMatrix();
-    glLoadIdentity();
-    glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
-    glDisable(GL_CULL_FACE);
-    if (showColor) {
-        glBindTexture(GL_TEXTURE_2D, colorTextureId);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 1); glVertex3f(0.f, -1.f, 0.f);
-            glTexCoord2f(1, 1); glVertex3f(2.f, -1.f, 0.f);
-            glTexCoord2f(1, 0); glVertex3f(2.f,  1.f, 0.f);
-            glTexCoord2f(0, 0); glVertex3f(0.f,  1.f, 0.f);
-        glEnd();
+        // Draw color and depth images
+        glPushMatrix();
+        glLoadIdentity();
+        glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
+        glDisable(GL_CULL_FACE);
+        if (showColor) {
+            glBindTexture(GL_TEXTURE_2D, colorTextureId);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0, 1); glVertex3f(0.f, -1.f, 0.f);
+                glTexCoord2f(1, 1); glVertex3f(2.f, -1.f, 0.f);
+                glTexCoord2f(1, 0); glVertex3f(2.f,  1.f, 0.f);
+                glTexCoord2f(0, 0); glVertex3f(0.f,  1.f, 0.f);
+            glEnd();
+        }
+        if (showDepth) {
+            glBindTexture(GL_TEXTURE_2D, depthTextureId);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0, 1); glVertex3f(-2.f, -1.f, 0.f);
+                glTexCoord2f(1, 1); glVertex3f( 0.f, -1.f, 0.f);
+                glTexCoord2f(1, 0); glVertex3f( 0.f,  1.f, 0.f);
+                glTexCoord2f(0, 0); glVertex3f(-2.f,  1.f, 0.f);
+            glEnd();
+        }
+        glEnable(GL_CULL_FACE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glPopMatrix();
     }
-    if (showDepth) {
-        glBindTexture(GL_TEXTURE_2D, depthTextureId);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0, 1); glVertex3f(-2.f, -1.f, 0.f);
-            glTexCoord2f(1, 1); glVertex3f( 0.f, -1.f, 0.f);
-            glTexCoord2f(1, 0); glVertex3f( 0.f,  1.f, 0.f);
-            glTexCoord2f(0, 0); glVertex3f(-2.f,  1.f, 0.f);
-        glEnd();
-    }
-    glEnable(GL_CULL_FACE);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glPopMatrix();
 
     // Draw the skeleton
     if (showJoints) {
-        updateSkeleton();
-        drawJoints();
+        checkForSkeletonFrame();
+        drawSkeletonFrame();
     }
 
     glPopMatrix();
@@ -409,7 +455,7 @@ bool Application::initKinect() {
     return (sensor != nullptr);
 }
 
-void Application::drawKinectData()
+void Application::updateKinectCameraTextures()
 {
     glBindTexture(GL_TEXTURE_2D, colorTextureId);
     getKinectData(colorData, COLOR);
@@ -481,7 +527,7 @@ void Application::getKinectData(GLubyte *dest, const EKinectDataType &dataType)
     }
 }
 
-void Application::updateSkeleton()
+void Application::checkForSkeletonFrame()
 {
     // Wait for 0ms to quickly test if it is time to process a skeleton
     if (WAIT_OBJECT_0 == WaitForSingleObject(nextSkeletonEvent, 0)) {
@@ -496,24 +542,74 @@ void Application::updateSkeleton()
 
 void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
 {
-    for (int i = 0; i < NUI_SKELETON_COUNT; ++i) {
-        const NUI_SKELETON_DATA& skeleton = skeletonFrame->SkeletonData[i];
-
-        // TODO: handle more than 1 skeleton
-        // Update the current positions for drawing
-        if (skeleton.eTrackingState == NUI_SKELETON_TRACKING_STATE::NUI_SKELETON_TRACKED) {
-            updateSkeletonJoints(skeleton);
+    // Get data for the first tracked skeleton
+    const NUI_SKELETON_DATA *skeleton = nullptr;
+    for (auto i = 0; i < NUI_SKELETON_COUNT; ++i) {
+        if (skeletonFrame->SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
+            skeleton = &skeletonFrame->SkeletonData[i];
+            break;
         }
-
-        //switch (skeleton.eTrackingState) {
-        //    case NUI_SKELETON_TRACKED:
-        //        drawTrackedSkeletonJoints(skeleton);
-        //    break;
-        //    case NUI_SKELETON_POSITION_ONLY:
-        //        drawSkeletonPosition(skeleton.Position);
-        //    break;
-        //}
     }
+    if (skeleton == nullptr) {
+        //std::cerr << "Warning: unable to find a tracked skeleton." << std::endl;
+        return;
+    }
+
+    // Stash current time for timestamps
+    const float timestamp = clock.getElapsedTime().asSeconds();
+
+    // Get bone orientations for this skeleton's joints
+    NUI_SKELETON_BONE_ORIENTATION boneOrientations[NUI_SKELETON_POSITION_COUNT];
+    NuiSkeletonCalculateBoneOrientations(skeleton, boneOrientations);
+
+    // For each joint
+    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+        const NUI_SKELETON_POSITION_INDEX&          jointIndex    = static_cast<NUI_SKELETON_POSITION_INDEX>(i);
+        const NUI_SKELETON_BONE_ORIENTATION&        orientation   = boneOrientations[jointIndex];
+        const NUI_SKELETON_POSITION_TRACKING_STATE& trackingState = skeleton->eSkeletonPositionTrackingState[jointIndex];
+
+        // Get joint position
+        const Vector4& jointPosition = skeleton->SkeletonPositions[jointIndex];
+
+        // TODO: save orientations
+
+        // Update the entry 
+        struct joint &joint = currentJoints[jointIndex];
+        joint.timestamp  = timestamp;
+        joint.index      = jointIndex;
+        joint.position.x = jointPosition.x;
+        joint.position.y = jointPosition.y;
+        joint.position.z = jointPosition.z;
+        joint.trackState = trackingState;
+
+        // Save the frame if appropriate
+        if (saving && saveStream.is_open()) {
+            saveStream.write((char *)&joint, sizeof(struct joint));
+        }
+    }
+}
+
+void Application::drawSkeletonFrame()
+{
+    assert(jointFrameVis);
+
+    glPushMatrix();
+
+    glBegin(GL_POINTS);
+    // Draw each joint
+    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+        switch (joint.trackState) {
+            case NUI_SKELETON_POSITION_NOT_TRACKED: glColor3f(1.f, 0.f, 1.f);  break;
+            case NUI_SKELETON_POSITION_TRACKED:     glColor3f(0.f, 1.f, 0.f);  break;
+            case NUI_SKELETON_POSITION_INFERRED:    glColor3f(1.f, 0.5f, 0.f); break;
+        }
+        glVertex3f(joint.position.x, joint.position.y, joint.position.z);
+    }
+    glEnd();
+    glColor3f(1.f, 1.f, 1.f);
+
+    glPopMatrix();
 }
 
 void Application::drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
@@ -546,35 +642,6 @@ void Application::drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
 void Application::drawSkeletonPosition(const Vector4& position)
 {
     // TODO
-}
-
-void Application::drawJoints()
-{
-    assert(jointFrameVis);
-
-    glPushMatrix();
-
-    glBegin(GL_POINTS);
-    // Draw each joint
-    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
-        const struct joint &joint = (*jointFrameVis)[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
-        switch (joint.trackState) {
-            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_NOT_TRACKED:
-            glColor3f(1.f, 0.f, 1.f);
-            break;
-            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_TRACKED:
-            glColor3f(0.f, 1.f, 0.f);
-            break;
-            case _NUI_SKELETON_POSITION_TRACKING_STATE::NUI_SKELETON_POSITION_INFERRED:
-            glColor3f(1.f, 0.5f, 0.f);
-            break;
-        }
-        glVertex3f(joint.position.x, joint.position.y, joint.position.z);
-    }
-    glEnd();
-    glColor3f(1.f, 1.f, 1.f);
-
-    glPopMatrix();
 }
 
 void Application::drawBone(const NUI_SKELETON_DATA& skeleton
@@ -617,43 +684,6 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
     }
 }
 
-void Application::initJointMap()
-{
-    currentJoints.clear();
-    // Add a map entry for each joint
-    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
-        currentJoints[static_cast<_NUI_SKELETON_POSITION_INDEX>(i)];
-    }
-}
-
-void Application::updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
-{
-    // For each joint
-    for (auto i = 0; i < _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT; ++i) {
-        const _NUI_SKELETON_POSITION_INDEX &jointIndex = static_cast<_NUI_SKELETON_POSITION_INDEX>(i);
-        const _NUI_SKELETON_POSITION_TRACKING_STATE &trackingState = skeleton.eSkeletonPositionTrackingState[jointIndex];
-        const Vector4& jointPosition = skeleton.SkeletonPositions[jointIndex];
-
-        // Update the entry 
-        struct joint &joint = currentJoints[jointIndex];
-        joint.index      = jointIndex;
-        joint.position.x = jointPosition.x;
-        joint.position.y = jointPosition.y;
-        joint.position.z = jointPosition.z;
-        joint.timestamp  = clock.getElapsedTime().asSeconds();
-        joint.trackState = trackingState;
-
-        if (saving && saveStream.is_open()) {
-            saveStream.write((char *)&joint, sizeof(struct joint));
-            //saveStream  << "Joint[" << joint.index     << "] "
-            //            << "@ "     << joint.timestamp << ": "
-            //            << joint.position.x << " "
-            //            << joint.position.y << " "
-            //            << joint.position.z << std::endl;
-        }
-    }
-}
-
 void Application::loadFile()
 {
     if (loaded) {
@@ -691,7 +721,7 @@ void Application::loadFile()
             mx.y = max(mx.y, joint.position.y);
             mx.z = max(mx.z, joint.position.z);
 
-            if (++numJointsRead == _NUI_SKELETON_POSITION_INDEX::NUI_SKELETON_POSITION_COUNT) {
+            if (++numJointsRead == NUI_SKELETON_POSITION_COUNT) {
                 numJointsRead = 0; 
                 ++totalFramesRead;
                 jointPositionFrames.push_back(inputJointFrame);
@@ -752,54 +782,4 @@ void Application::moveToPreviousFrame()
         gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
         gui.setIndex(jointFrameIndex);
     }
-}
-
-void Application::drawCube()
-{
-    glPushMatrix();
-    glTranslatef(0.f, -0.5f, 0.f);
-    //glTranslated(position.x, position.y, position.z);
-
-    const float scale = 0.5f;
-    const float nl = -0.5f * scale;
-    const float pl =  0.5f * scale;
-
-    glDisable(GL_CULL_FACE);
-    glColor3f(1.f, 0.f, 0.f);
-    glBegin(GL_QUADS);
-        glNormal3d( 0,0,1);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(nl,pl,pl);
-            glVertex3d(nl,nl,pl);
-            glVertex3d(pl,nl,pl);
-        glNormal3d( 0, 0, -1);
-            glVertex3d(pl,pl, nl);
-            glVertex3d(pl,nl, nl);
-            glVertex3d(nl,nl, nl);
-            glVertex3d(nl,pl, nl);
-        glNormal3d( 0, 1, 0);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(pl,pl,nl);
-            glVertex3d(nl,pl,nl);
-            glVertex3d(nl,pl,pl);
-        glNormal3d( 0,-1,0);
-            glVertex3d(pl,nl,pl);
-            glVertex3d(nl,nl,pl);
-            glVertex3d(nl,nl,nl);
-            glVertex3d(pl,nl,nl);
-        glNormal3d( 1,0,0);
-            glVertex3d(pl,pl,pl);
-            glVertex3d(pl,nl,pl);
-            glVertex3d(pl,nl,nl);
-            glVertex3d(pl,pl,nl);
-        glNormal3d(-1,0,0);
-            glVertex3d(nl,pl,pl);
-            glVertex3d(nl,pl,nl);
-            glVertex3d(nl,nl,nl);
-            glVertex3d(nl,nl,pl);
-    glEnd();
-    glColor3f(1.f, 1.f, 1.f);
-    glEnable(GL_CULL_FACE);
-
-    glPopMatrix(); 
 }

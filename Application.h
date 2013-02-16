@@ -18,11 +18,12 @@
 struct joint {
     float timestamp; // in seconds
     sf::Vector3f position;
-    _NUI_SKELETON_POSITION_INDEX index;
-    _NUI_SKELETON_POSITION_TRACKING_STATE trackState;
+    NUI_SKELETON_POSITION_INDEX index;
+    NUI_SKELETON_BONE_ORIENTATION boneOrientation;
+    NUI_SKELETON_POSITION_TRACKING_STATE trackState;
 };
 
-typedef std::map<_NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
+typedef std::map<NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
 typedef std::vector<JointPosFrame> JointPositionFrames;
 
 
@@ -110,21 +111,20 @@ private:
     bool initKinect();
 
     // Kinect image methods
-    void drawKinectData();
+    void updateKinectCameraTextures();
     void getKinectData(GLubyte *data, const EKinectDataType &dataType);
 
     // Kinect skeleton methods
-    void initJointMap();
-    void updateSkeleton();
-    void updateSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
+    void checkForSkeletonFrame();
     void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
+    void drawSkeletonFrame();
+
     void drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
     void drawSkeletonPosition(const Vector4& position);
     void drawBone(const NUI_SKELETON_DATA& skeleton
                 , NUI_SKELETON_POSITION_INDEX jointFrom
                 , NUI_SKELETON_POSITION_INDEX jointTo);
-    void drawJoints();
+
     void moveToNextFrame();
     void moveToPreviousFrame();
-    void drawCube();
 };
