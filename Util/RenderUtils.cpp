@@ -139,7 +139,7 @@ void Render::ground()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     const float radius = 50.f;
-    glColor3f(1,1,1);
+    glColor3f(0,0,0.5);
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(0.f, 1.f, 0.f);
         glTexCoord2f(   0.f,    0.f); glVertex3f( R, Y,  R);
