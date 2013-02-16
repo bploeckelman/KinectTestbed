@@ -554,7 +554,7 @@ void Application::drawSkeletonFrame()
     }
     if (skeletonRenderFlags & JOINTS) {
         // Draw each joint
-        glPointSize(7.f);
+        glPointSize(8.f);
         glBegin(GL_POINTS);
         for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
             const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
@@ -573,58 +573,14 @@ void Application::drawSkeletonFrame()
         glEnd();
     }
     if (skeletonRenderFlags & ORIENT) {
-        // Draw each joint's orientation
-        glPointSize(1.f);
-        for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-            const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-            float scale = 0.075f;
-            switch (joint.trackState) { // skip untracked joints
-                case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
-                case NUI_SKELETON_POSITION_INFERRED:
-                    if (skeletonRenderFlags & INFER) scale = 0.05f;
-                    else                             continue; 
-                break;
-            }
-            const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
-            const glm::vec3 x(m.M11, m.M12, m.M13);
-            const glm::vec3 y(m.M21, m.M22, m.M23);
-            const glm::vec3 z(m.M31, m.M32, m.M33);
-            Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
-        }
+        drawOrientations();
     }
     if (skeletonRenderFlags & BONES) {
-        // TODO
+        drawBones();
     }
 
     glColor3f(1.f, 1.f, 1.f);
     glPopMatrix();
-}
-
-void Application::drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton)
-{
-    // Render head and shoulders
-    drawBone(skeleton, NUI_SKELETON_POSITION_HEAD, NUI_SKELETON_POSITION_SHOULDER_CENTER);
-    drawBone(skeleton, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_RIGHT);
-
-    // Render left arm
-    drawBone(skeleton, NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
-
-    // Render right arm
-    drawBone(skeleton, NUI_SKELETON_POSITION_SHOULDER_RIGHT, NUI_SKELETON_POSITION_ELBOW_RIGHT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_ELBOW_RIGHT, NUI_SKELETON_POSITION_WRIST_RIGHT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_WRIST_RIGHT, NUI_SKELETON_POSITION_HAND_RIGHT);
-
-    // Render torso
-    drawBone(skeleton, NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SPINE);
-    drawBone(skeleton, NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_HIP_CENTER);
-    drawBone(skeleton, NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_RIGHT);
-    drawBone(skeleton, NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_LEFT);
-
-    // Render other bones...
-    // TODO
 }
 
 void Application::drawSkeletonPosition(const Vector4& position)
@@ -632,29 +588,82 @@ void Application::drawSkeletonPosition(const Vector4& position)
     // TODO
 }
 
-void Application::drawBone(const NUI_SKELETON_DATA& skeleton
-                         , NUI_SKELETON_POSITION_INDEX jointFrom
-                         , NUI_SKELETON_POSITION_INDEX jointTo)
+void Application::drawOrientations()
 {
-    NUI_SKELETON_POSITION_TRACKING_STATE jointFromState = skeleton.eSkeletonPositionTrackingState[jointFrom];
-    NUI_SKELETON_POSITION_TRACKING_STATE jointToState   = skeleton.eSkeletonPositionTrackingState[jointTo];
-    if (jointFromState == NUI_SKELETON_POSITION_NOT_TRACKED || jointToState == NUI_SKELETON_POSITION_NOT_TRACKED) {
-        return; // nothing to draw, one joint not tracked
+    // Draw each joint's orientation
+    glPointSize(1.f);
+    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+        float scale = 0.075f;
+        switch (joint.trackState) { // skip untracked joints
+        case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
+        case NUI_SKELETON_POSITION_INFERRED:
+            if (skeletonRenderFlags & INFER) scale = 0.05f;
+            else                             continue; 
+            break;
+        }
+        const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
+        const glm::vec3 x(m.M11, m.M12, m.M13);
+        const glm::vec3 y(m.M21, m.M22, m.M23);
+        const glm::vec3 z(m.M31, m.M32, m.M33);
+        Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
     }
+}
 
-    const glm::vec3& jointFromPosition(currentJoints[jointFrom].position);
-    const glm::vec3& jointToPosition(currentJoints[jointTo].position);
-    static const float Z = 1.f;
+void Application::drawBones()
+{
+    // Render head and shoulders
+    drawBone(NUI_SKELETON_POSITION_HEAD, NUI_SKELETON_POSITION_SHOULDER_CENTER);
+    drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT);
+    drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_RIGHT);
+
+    // Render left arm
+    drawBone(NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT);
+    drawBone(NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT);
+    drawBone(NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
+
+    // Render right arm
+    drawBone(NUI_SKELETON_POSITION_SHOULDER_RIGHT, NUI_SKELETON_POSITION_ELBOW_RIGHT);
+    drawBone(NUI_SKELETON_POSITION_ELBOW_RIGHT, NUI_SKELETON_POSITION_WRIST_RIGHT);
+    drawBone(NUI_SKELETON_POSITION_WRIST_RIGHT, NUI_SKELETON_POSITION_HAND_RIGHT);
+
+    // Render torso
+    drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SPINE);
+    drawBone(NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_HIP_CENTER);
+    drawBone(NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_RIGHT);
+    drawBone(NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_LEFT);
+
+    // Render left leg
+    drawBone(NUI_SKELETON_POSITION_HIP_LEFT, NUI_SKELETON_POSITION_KNEE_LEFT);
+    drawBone(NUI_SKELETON_POSITION_KNEE_LEFT, NUI_SKELETON_POSITION_ANKLE_LEFT);
+    drawBone(NUI_SKELETON_POSITION_ANKLE_LEFT, NUI_SKELETON_POSITION_FOOT_LEFT);
+
+    // Render right leg
+    drawBone(NUI_SKELETON_POSITION_HIP_RIGHT, NUI_SKELETON_POSITION_KNEE_RIGHT);
+    drawBone(NUI_SKELETON_POSITION_KNEE_RIGHT, NUI_SKELETON_POSITION_ANKLE_RIGHT);
+    drawBone(NUI_SKELETON_POSITION_ANKLE_RIGHT, NUI_SKELETON_POSITION_FOOT_RIGHT);
+}
+
+void Application::drawBone( NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo )
+{
+    NUI_SKELETON_POSITION_TRACKING_STATE jointFromState = currentJoints[jointFrom].trackState;
+    NUI_SKELETON_POSITION_TRACKING_STATE jointToState   = currentJoints[jointTo].trackState;
+    if (jointFromState == NUI_SKELETON_POSITION_NOT_TRACKED || jointToState == NUI_SKELETON_POSITION_NOT_TRACKED)
+        return; // nothing to draw, one joint not tracked
+
+    const glm::vec3& fromPosition(currentJoints[jointFrom].position);
+    const glm::vec3& toPosition(currentJoints[jointTo].position);
+    //static const float Z = 1.f;
 
     // Don't draw if both points are inferred
 
     // TODO: draw thinner lines if either side is inferred
     if (jointFromState == NUI_SKELETON_POSITION_INFERRED || jointToState == NUI_SKELETON_POSITION_INFERRED) {
+        glLineWidth(1.f);
         glColor3f(1.f, 0.f, 0.f);
-        //glBegin(GL_POINTS);
         glBegin(GL_LINES);
-            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
-            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
+            glVertex3fv(glm::value_ptr(fromPosition));
+            glVertex3fv(glm::value_ptr(toPosition));
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
     }
@@ -662,14 +671,16 @@ void Application::drawBone(const NUI_SKELETON_DATA& skeleton
     // Assume all drawn bones are inferred unless BOTH joints are tracked
     if (jointFromState == NUI_SKELETON_POSITION_TRACKED && jointToState == NUI_SKELETON_POSITION_TRACKED) {
         // TODO: draw thick lines between joints
+        glLineWidth(8.f);
         glColor3f(0.f, 1.f, 0.f);
-        //glBegin(GL_POINTS);
         glBegin(GL_LINES);
-            glVertex3f(jointFromPosition.x * WINDOW_WIDTH / 3 + 512.f, jointFromPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
-            glVertex3f(jointToPosition.x * WINDOW_WIDTH / 3 + 512.f, jointToPosition.y * -WINDOW_HEIGHT / 2 + 256.f, Z);
+            glVertex3fv(glm::value_ptr(fromPosition));
+            glVertex3fv(glm::value_ptr(toPosition));
         glEnd();
         glColor3f(1.f, 1.f, 1.f);
     }
+
+    glLineWidth(1.f);
 }
 
 void Application::loadFile()

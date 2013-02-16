@@ -146,12 +146,12 @@ private:
     void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
     void drawSkeletonFrame();
 
+    void drawOrientations();
+
     void drawKinectSkeletonFrame();
-    void drawTrackedSkeletonJoints(const NUI_SKELETON_DATA& skeleton);
+    void drawBones();
     void drawSkeletonPosition(const Vector4& position);
-    void drawBone(const NUI_SKELETON_DATA& skeleton
-                , NUI_SKELETON_POSITION_INDEX jointFrom
-                , NUI_SKELETON_POSITION_INDEX jointTo);
+    void drawBone(NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo);
 
     void moveToNextFrame();
     void moveToPreviousFrame();
