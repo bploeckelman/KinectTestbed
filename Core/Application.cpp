@@ -30,7 +30,7 @@
 #include "Util/ImageManager.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
-const std::string Application::saveFileName("joint_frames.bin");
+const std::string Application::saveFileName("../../Res/Out/joint_frames.bin");
 
 
 // ----------------------------------------------------------------------------
