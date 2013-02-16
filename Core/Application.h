@@ -28,6 +28,13 @@ struct joint {
 typedef std::map<NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
 typedef std::vector<JointPosFrame> JointPositionFrames;
 
+// Skeleton rendering flags
+const byte POS    = 0x01;
+const byte JOINTS = 0x02;
+const byte INFER  = 0x04;
+const byte ORIENT = 0x08;
+const byte BONES  = 0x10;
+
 enum ESkeletonFilterLevel { OFF, LOW, MEDIUM, HIGH };
 
 
@@ -65,8 +72,9 @@ private:
     bool saving;
     bool showColor;
     bool showDepth;
-    bool showJoints;
+    bool showSkeleton;
 
+    byte skeletonRenderFlags;
 
     float cameraz;
 
@@ -90,10 +98,18 @@ public:
     void shutdown();
 
     void toggleSave();
-    void toggleShowColor()  { showColor  = !showColor; }
-    void toggleShowDepth()  { showDepth  = !showDepth; }
-    void toggleShowJoints() { showJoints = !showJoints; }
+    void toggleShowColor()    { showColor    = !showColor;    }
+    void toggleShowDepth()    { showDepth    = !showDepth;    }
+    void toggleShowSkeleton() { showSkeleton = !showSkeleton; }
 
+    // Rendering flags
+    void setRenderFlags(const byte flags) { skeletonRenderFlags  = flags;  }
+    void clearRenderFlags()               { skeletonRenderFlags  = 0;      }
+    void togglePosition()                 { skeletonRenderFlags ^= POS;    }
+    void toggleJoints()                   { skeletonRenderFlags ^= JOINTS; }
+    void toggleOrientation()              { skeletonRenderFlags ^= ORIENT; }
+    void toggleBones()                    { skeletonRenderFlags ^= BONES;  }
+    void toggleInferred()                 { skeletonRenderFlags ^= INFER;  }
     void setFilterLevel(const ESkeletonFilterLevel& level) { filterLevel = level; }
 
     void loadFile();

@@ -24,7 +24,13 @@ private:
 
     sfg::CheckButton::Ptr showColorButton;
     sfg::CheckButton::Ptr showDepthButton;
+    sfg::CheckButton::Ptr showSkeletonButton;
+
+    sfg::CheckButton::Ptr showPositionButton;
     sfg::CheckButton::Ptr showJointsButton;
+    sfg::CheckButton::Ptr showInferredButton;
+    sfg::CheckButton::Ptr showOrientationButton;
+    sfg::CheckButton::Ptr showBonesButton;
 
     sfg::ComboBox::Ptr filterJointsCombo;
 
@@ -57,7 +63,12 @@ private:
     void onSaveButtonClick();
     void onShowColorButtonClick();
     void onShowDepthButtonClick();
+    void onShowSkeletonButtonClick();
+    void onShowPositionButtonClick();
     void onShowJointsButtonClick();
+    void onShowInferredButtonClick();
+    void onShowOrientationButtonClick();
+    void onShowBonesButtonClick();
     void onProgressBarMouseMove();
     void onFilterComboSelect();
 };

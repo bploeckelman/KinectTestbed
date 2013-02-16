@@ -58,7 +58,8 @@ Application::Application()
     , saving(false)
     , showColor(false)
     , showDepth(false)
-    , showJoints(true)
+    , showSkeleton(true)
+    , skeletonRenderFlags(JOINTS | ORIENT) 
     , filterLevel(OFF)
     , saveStream()
     , loadStream()
@@ -526,7 +527,7 @@ void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
 
 void Application::drawKinectSkeletonFrame()
 {
-    if (showJoints) {
+    if (showSkeleton) {
         checkForSkeletonFrame();
         drawSkeletonFrame();
     }
@@ -538,45 +539,62 @@ void Application::drawSkeletonFrame()
 
     glPushMatrix();
 
-    // TODO flags == [POS | JOINTS | ORIENT | BONES]
-    // ---------------------------------------------
+    // Rendering flags == [POS | JOINTS | ORIENT | BONES | INFER]
+    // ----------------------------------------------------------
     // POS    = whole skeleton position
     // JOINTS = skeleton joints
     // ORIENT = skeleton joint orientations
     // BONES  = connections between skeleton joints
+    // INFER  = draw inferred joints/bones
 
-    // Draw each joint
-    glPointSize(5.f);
-    glBegin(GL_POINTS);
-    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-        switch (joint.trackState) { // skip untracked joints
-            case NUI_SKELETON_POSITION_NOT_TRACKED: continue;//glColor3f(1.f, 0.f, 1.f);  break;
-            case NUI_SKELETON_POSITION_TRACKED:     glColor3f(1.f, 1.f, 1.f);  break;
-            case NUI_SKELETON_POSITION_INFERRED:    continue;//glColor3f(1.f, 0.5f, 0.f); break;
-        }
-        glVertex3fv(glm::value_ptr(joint.position));
+    if (skeletonRenderFlags & POS) {
+        // TODO: - draw skeleton position (hip center)
     }
-    glEnd();
-
-    // Draw each joint's orientation
-    glPointSize(1.f);
-    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-        switch (joint.trackState) { // skip untracked joints
-            case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
-            case NUI_SKELETON_POSITION_INFERRED:    continue;
+    if (skeletonRenderFlags & JOINTS) {
+        // Draw each joint
+        glPointSize(5.f);
+        glBegin(GL_POINTS);
+        for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+            const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+            switch (joint.trackState) { // skip untracked joints
+                case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
+                case NUI_SKELETON_POSITION_TRACKED:
+                    glColor3f(1.f, 1.f, 1.f);
+                break;
+                case NUI_SKELETON_POSITION_INFERRED:
+                    if (skeletonRenderFlags & INFER) glColor3f(1.f, 0.5f, 0.f);
+                    else                             continue;
+                break;
+            }
+            glVertex3fv(glm::value_ptr(joint.position));
         }
-        const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
-        const glm::vec3 x(m.M11, m.M12, m.M13);
-        const glm::vec3 y(m.M21, m.M22, m.M23);
-        const glm::vec3 z(m.M31, m.M32, m.M33);
-        const float scale = 0.1f;
-        Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
+        glEnd();
+    }
+    if (skeletonRenderFlags & ORIENT) {
+        // Draw each joint's orientation
+        glPointSize(1.f);
+        for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+            const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+            switch (joint.trackState) { // skip untracked joints
+                case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
+                case NUI_SKELETON_POSITION_INFERRED:
+                    if (!(skeletonRenderFlags & INFER))
+                        continue;
+                break;
+            }
+            const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
+            const glm::vec3 x(m.M11, m.M12, m.M13);
+            const glm::vec3 y(m.M21, m.M22, m.M23);
+            const glm::vec3 z(m.M31, m.M32, m.M33);
+            const float scale = 0.1f;
+            Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
+        }
+    }
+    if (skeletonRenderFlags & BONES) {
+        // TODO
     }
 
     glColor3f(1.f, 1.f, 1.f);
-
     glPopMatrix();
 }
 

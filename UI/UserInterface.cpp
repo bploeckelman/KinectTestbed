@@ -20,7 +20,12 @@ UserInterface::UserInterface()
     , saveButton(sfg::ToggleButton::Create("Save"))
     , showColorButton(sfg::CheckButton::Create("Color"))
     , showDepthButton(sfg::CheckButton::Create("Depth"))
+    , showSkeletonButton(sfg::CheckButton::Create("Skeleton"))
+    , showPositionButton(sfg::CheckButton::Create("Position"))
     , showJointsButton(sfg::CheckButton::Create("Joints"))
+    , showOrientationButton(sfg::CheckButton::Create("Orientation"))
+    , showBonesButton(sfg::CheckButton::Create("Bones"))
+    , showInferredButton(sfg::CheckButton::Create("Inferred"))
     , jointFramesProgress(sfg::ProgressBar::Create())
     , jointFramesFilename(sfg::Label::Create())
     , jointFrameIndex(sfg::Label::Create())
@@ -48,14 +53,19 @@ void UserInterface::handleEvent(sf::Event &event)
 
 void UserInterface::setupWidgetHandlers()
 {
-             quitButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onQuitButtonClick, this);
-             openButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onOpenButtonClick, this);
-             saveButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onSaveButtonClick, this);
-        showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
-        showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
-       showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
-      filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
-    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
+               quitButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onQuitButtonClick, this);
+               openButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onOpenButtonClick, this);
+               saveButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onSaveButtonClick, this);
+          showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
+          showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
+       showSkeletonButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowSkeletonButtonClick, this);
+       showPositionButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowPositionButtonClick, this);
+          showBonesButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowBonesButtonClick, this);
+         showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
+       showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
+    showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
+        filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
+      jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
     // TODO: hook up other widget handlers as needed
 }
 
@@ -66,7 +76,13 @@ void UserInterface::setupWindowConfiguration()
 
     showColorButton->SetActive(false);
     showDepthButton->SetActive(false);
+    showSkeletonButton->SetActive(true);
+
+    showPositionButton->SetActive(false);
     showJointsButton->SetActive(true);
+    showInferredButton->SetActive(false);
+    showOrientationButton->SetActive(true);
+    showBonesButton->SetActive(false);
 
     jointFramesFilename->SetText(sf::String(""));
     jointFramesFilename->SetLineWrap(true);
@@ -91,11 +107,16 @@ void UserInterface::setupWindowConfiguration()
     fixed->Put(saveButton, sf::Vector2f(100, 20));
     fixed->Put(showColorButton, sf::Vector2f(0, 60));
     fixed->Put(showDepthButton, sf::Vector2f(0, 100));
-    fixed->Put(showJointsButton, sf::Vector2f(0, 140));
+    fixed->Put(showSkeletonButton, sf::Vector2f(0, 140));
     fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
     fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
     fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
-    fixed->Put(filterJointsCombo, sf::Vector2f(0, 180));
+    fixed->Put(showPositionButton, sf::Vector2f(0, 180));
+    fixed->Put(showJointsButton, sf::Vector2f(0, 220));
+    fixed->Put(showInferredButton, sf::Vector2f(0, 260));
+    fixed->Put(showOrientationButton, sf::Vector2f(0, 300));
+    fixed->Put(showBonesButton, sf::Vector2f(0, 340));
+    fixed->Put(filterJointsCombo, sf::Vector2f(0, 380));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");
@@ -104,35 +125,17 @@ void UserInterface::setupWindowConfiguration()
     desktop.Add(window);
 }
 
-void UserInterface::onQuitButtonClick()
-{
-    Application::request().shutdown();    
-}
-
-void UserInterface::onOpenButtonClick()
-{
-    Application::request().loadFile();
-}
-
-void UserInterface::onSaveButtonClick()
-{
-    Application::request().toggleSave();
-}
-
-void UserInterface::onShowColorButtonClick()
-{
-    Application::request().toggleShowColor();
-}
-
-void UserInterface::onShowDepthButtonClick()
-{
-    Application::request().toggleShowDepth();
-}
-
-void UserInterface::onShowJointsButtonClick()
-{
-    Application::request().toggleShowJoints();
-}
+void UserInterface::onQuitButtonClick() { Application::request().shutdown(); }
+void UserInterface::onOpenButtonClick() { Application::request().loadFile(); }
+void UserInterface::onSaveButtonClick() { Application::request().toggleSave(); }
+void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
+void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
+void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
+void UserInterface::onShowPositionButtonClick()    { Application::request().togglePosition(); }
+void UserInterface::onShowJointsButtonClick()      { Application::request().toggleShowSkeleton(); }
+void UserInterface::onShowInferredButtonClick()    { Application::request().toggleInferred(); }
+void UserInterface::onShowOrientationButtonClick() { Application::request().toggleOrientation(); }
+void UserInterface::onShowBonesButtonClick()       { Application::request().toggleBones(); }
 
 void UserInterface::onProgressBarMouseMove()
 {
