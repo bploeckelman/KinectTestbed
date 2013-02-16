@@ -15,4 +15,8 @@ namespace constants
 
     const float initial_camera_z = 3.f;
 
+    const NUI_TRANSFORM_SMOOTH_PARAMETERS joint_smooth_params_low[]  = { 0.5f, 0.5f, 0.5f, 0.05f, 0.04f };
+    const NUI_TRANSFORM_SMOOTH_PARAMETERS joint_smooth_params_med[]  = { 0.5f, 0.1f, 0.5f, 0.1f , 0.1f  };
+    const NUI_TRANSFORM_SMOOTH_PARAMETERS joint_smooth_params_high[] = { 0.7f, 0.3f, 1.0f, 1.0f , 1.0f  };
+
 };

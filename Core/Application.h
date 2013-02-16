@@ -28,6 +28,8 @@ struct joint {
 typedef std::map<NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
 typedef std::vector<JointPosFrame> JointPositionFrames;
 
+enum ESkeletonFilterLevel { OFF, LOW, MEDIUM, HIGH };
+
 
 class Application
 {
@@ -55,6 +57,7 @@ private:
     JointPosFrame *jointFrameVis;
     JointPosFrame currentJoints;
     JointPositionFrames jointPositionFrames;
+    ESkeletonFilterLevel filterLevel;
     enum EKinectDataType { COLOR, DEPTH };
 
     // State
@@ -63,6 +66,7 @@ private:
     bool showColor;
     bool showDepth;
     bool showJoints;
+
 
     float cameraz;
 
@@ -89,6 +93,8 @@ public:
     void toggleShowColor()  { showColor  = !showColor; }
     void toggleShowDepth()  { showDepth  = !showDepth; }
     void toggleShowJoints() { showJoints = !showJoints; }
+
+    void setFilterLevel(const ESkeletonFilterLevel& level) { filterLevel = level; }
 
     void loadFile();
     void setJointIndex(const float fraction);

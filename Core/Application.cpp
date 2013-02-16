@@ -59,6 +59,7 @@ Application::Application()
     , showColor(false)
     , showDepth(false)
     , showJoints(true)
+    , filterLevel(OFF)
     , saveStream()
     , loadStream()
     , cameraz(constants::initial_camera_z)
@@ -481,6 +482,14 @@ void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
     if (skeleton == nullptr) {
         //std::cerr << "Warning: unable to find a tracked skeleton." << std::endl;
         return;
+    }
+
+    // Filter skeleton frame? 
+    switch (filterLevel) {
+        case OFF:    break;
+        case LOW:    NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_low);  break;
+        case MEDIUM: NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_med);  break;
+        case HIGH:   NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_high); break;
     }
 
     // Stash current time for timestamps

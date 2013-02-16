@@ -26,6 +26,8 @@ private:
     sfg::CheckButton::Ptr showDepthButton;
     sfg::CheckButton::Ptr showJointsButton;
 
+    sfg::ComboBox::Ptr filterJointsCombo;
+
     sfg::ProgressBar::Ptr jointFramesProgress;
     sfg::Label::Ptr jointFramesFilename;
     sfg::Label::Ptr jointFrameIndex;
@@ -57,5 +59,6 @@ private:
     void onShowDepthButtonClick();
     void onShowJointsButtonClick();
     void onProgressBarMouseMove();
+    void onFilterComboSelect();
 };
 

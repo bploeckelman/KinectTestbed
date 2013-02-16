@@ -24,6 +24,7 @@ UserInterface::UserInterface()
     , jointFramesProgress(sfg::ProgressBar::Create())
     , jointFramesFilename(sfg::Label::Create())
     , jointFrameIndex(sfg::Label::Create())
+    , filterJointsCombo(sfg::ComboBox::Create())
 {
     setupWidgetHandlers();
     setupWindowConfiguration();
@@ -59,8 +60,10 @@ void UserInterface::setupWidgetHandlers()
            .Connect(&UserInterface::onShowDepthButtonClick, this);
     showJointsButton->GetSignal(sfg::Button::OnLeftClick)
            .Connect(&UserInterface::onShowJointsButtonClick, this);
-    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove)//OnLeftClick)
+    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove)
            .Connect(&UserInterface::onProgressBarMouseMove, this);
+    filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect)
+           .Connect(&UserInterface::onFilterComboSelect, this);
     // TODO: hook up other widget handlers as needed
 }
 
@@ -84,6 +87,11 @@ void UserInterface::setupWindowConfiguration()
     jointFramesProgress->SetFraction(0.0);
     jointFramesProgress->SetRequisition(sf::Vector2f(1200, 25));
 
+    filterJointsCombo->AppendItem("No joint filtering");
+    filterJointsCombo->AppendItem("Low joint filtering");
+    filterJointsCombo->AppendItem("Medium joint filtering");
+    filterJointsCombo->AppendItem("High joint filtering");
+
     sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
     fixed->Put(infoLabel, sf::Vector2f(0,0));
     fixed->Put(quitButton, sf::Vector2f(0  , 20));
@@ -95,6 +103,7 @@ void UserInterface::setupWindowConfiguration()
     fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
     fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
     fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
+    fixed->Put(filterJointsCombo, sf::Vector2f(0, 180));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");
@@ -139,6 +148,7 @@ void UserInterface::onProgressBarMouseMove()
     if (!sf::Mouse::isButtonPressed(sf::Mouse::Left))
         return;
 
+    // TODO: enable dragging that started in the progress bar but moved out of it after click+holding
     const sf::Vector2i pos = Application::request().getMousePosition();
     const sf::Vector2f bounds(jointFramesProgress->GetAbsolutePosition().x
                             , jointFramesProgress->GetAbsolutePosition().x + jointFramesProgress->GetRequisition().x);
@@ -147,4 +157,14 @@ void UserInterface::onProgressBarMouseMove()
         jointFramesProgress->SetFraction(fraction);
         Application::request().setJointIndex(fraction);
     }
+}
+
+void UserInterface::onFilterComboSelect()
+{
+    // TODO: map combo box index to string
+    const sf::String& selected(filterJointsCombo->GetSelectedText());
+         if (selected == "Joint filtering - Off")    Application::request().setFilterLevel(OFF);
+    else if (selected == "Joint filtering - Low")    Application::request().setFilterLevel(LOW);
+    else if (selected == "Joint filtering - Medium") Application::request().setFilterLevel(MEDIUM);
+    else if (selected == "Joint filtering - High")   Application::request().setFilterLevel(HIGH);
 }
