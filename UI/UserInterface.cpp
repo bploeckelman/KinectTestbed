@@ -80,9 +80,9 @@ void UserInterface::setupWindowConfiguration()
 
     showPositionButton->SetActive(false);
     showJointsButton->SetActive(true);
-    showInferredButton->SetActive(false);
+    showInferredButton->SetActive(true);
     showOrientationButton->SetActive(true);
-    showBonesButton->SetActive(false);
+    showBonesButton->SetActive(true);
 
     jointFramesFilename->SetText(sf::String(""));
     jointFramesFilename->SetLineWrap(true);
@@ -132,7 +132,7 @@ void UserInterface::onShowColorButtonClick()       { Application::request().togg
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
 void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
 void UserInterface::onShowPositionButtonClick()    { Application::request().togglePosition(); }
-void UserInterface::onShowJointsButtonClick()      { Application::request().toggleShowSkeleton(); }
+void UserInterface::onShowJointsButtonClick()      { Application::request().toggleJoints(); }
 void UserInterface::onShowInferredButtonClick()    { Application::request().toggleInferred(); }
 void UserInterface::onShowOrientationButtonClick() { Application::request().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().toggleBones(); }

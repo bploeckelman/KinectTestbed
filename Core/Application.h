@@ -73,6 +73,7 @@ private:
     bool showColor;
     bool showDepth;
     bool showSkeleton;
+    bool rightMouseDown;
 
     byte skeletonRenderFlags;
 

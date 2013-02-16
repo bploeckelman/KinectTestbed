@@ -59,7 +59,8 @@ Application::Application()
     , showColor(false)
     , showDepth(false)
     , showSkeleton(true)
-    , skeletonRenderFlags(JOINTS | ORIENT) 
+    , rightMouseDown(false)
+    , skeletonRenderFlags(JOINTS | INFER | ORIENT | BONES) 
     , filterLevel(OFF)
     , saveStream()
     , loadStream()
@@ -151,6 +152,13 @@ void Application::processEvents()
             else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
         }
 
+        if (event.type == sf::Event::MouseButtonPressed) {
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = true;
+        }
+        if (event.type == sf::Event::MouseButtonReleased) {
+            if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = false;
+        }
+
         if (event.type == sf::Event::MouseWheelMoved) {
             cameraz -= event.mouseWheel.delta;
         }
@@ -180,12 +188,21 @@ void Application::draw()
 
 float Application::getCameraRotation()
 {
+    static const int middleX = WINDOW_WIDTH / 2;
     static float rot = 0.f;
     static float lastTime = clock.getElapsedTime().asSeconds();
     float thisTime = clock.getElapsedTime().asSeconds();
     float delta    = thisTime - lastTime;
     if (delta > 0.05f) {
-        if (++rot > 360) rot = 0;
+        if (rightMouseDown) {
+            const int currX = sf::Mouse::getPosition(window).x;
+            const int delta = currX - middleX;
+            const int thresh = 30;
+            if (delta < -thresh || delta > thresh) {
+                rot += static_cast<int>(5.f * ((float)delta / (float)middleX));
+                if (rot > 360) rot = 0;
+            }
+        }
         lastTime = thisTime;
     }
     return rot;
@@ -646,20 +663,22 @@ void Application::drawBones()
 
 void Application::drawBone( NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo )
 {
-    NUI_SKELETON_POSITION_TRACKING_STATE jointFromState = currentJoints[jointFrom].trackState;
-    NUI_SKELETON_POSITION_TRACKING_STATE jointToState   = currentJoints[jointTo].trackState;
+    NUI_SKELETON_POSITION_TRACKING_STATE jointFromState = (*jointFrameVis)[jointFrom].trackState;
+    NUI_SKELETON_POSITION_TRACKING_STATE jointToState   = (*jointFrameVis)[jointTo].trackState;
     if (jointFromState == NUI_SKELETON_POSITION_NOT_TRACKED || jointToState == NUI_SKELETON_POSITION_NOT_TRACKED)
         return; // nothing to draw, one joint not tracked
 
-    const glm::vec3& fromPosition(currentJoints[jointFrom].position);
-    const glm::vec3& toPosition(currentJoints[jointTo].position);
-    //static const float Z = 1.f;
+    const glm::vec3& fromPosition((*jointFrameVis)[jointFrom].position);
+    const glm::vec3& toPosition((*jointFrameVis)[jointTo].position);
 
     // Don't draw if both points are inferred
+    if (jointFromState == NUI_SKELETON_POSITION_INFERRED && jointToState == NUI_SKELETON_POSITION_INFERRED) {
+        return;
+    }
 
-    // TODO: draw thinner lines if either side is inferred
     if (jointFromState == NUI_SKELETON_POSITION_INFERRED || jointToState == NUI_SKELETON_POSITION_INFERRED) {
         glLineWidth(1.f);
+        // Draw thin red lines if either side is inferred
         glColor3f(1.f, 0.f, 0.f);
         glBegin(GL_LINES);
             glVertex3fv(glm::value_ptr(fromPosition));
