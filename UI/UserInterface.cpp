@@ -48,22 +48,14 @@ void UserInterface::handleEvent(sf::Event &event)
 
 void UserInterface::setupWidgetHandlers()
 {
-    quitButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onQuitButtonClick, this);
-    openButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onOpenButtonClick, this);
-    saveButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onSaveButtonClick, this);
-    showColorButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onShowColorButtonClick, this);
-    showDepthButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onShowDepthButtonClick, this);
-    showJointsButton->GetSignal(sfg::Button::OnLeftClick)
-           .Connect(&UserInterface::onShowJointsButtonClick, this);
-    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove)
-           .Connect(&UserInterface::onProgressBarMouseMove, this);
-    filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect)
-           .Connect(&UserInterface::onFilterComboSelect, this);
+             quitButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onQuitButtonClick, this);
+             openButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onOpenButtonClick, this);
+             saveButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onSaveButtonClick, this);
+        showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
+        showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
+       showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
+      filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
+    jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
     // TODO: hook up other widget handlers as needed
 }
 
