@@ -63,6 +63,7 @@ Application::Application()
     , filterLevel(OFF)
     , saveStream()
     , loadStream()
+    , cameray(constants::initial_camera_y)
     , cameraz(constants::initial_camera_z)
 {}
 
@@ -162,11 +163,11 @@ void Application::draw()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
-        glTranslatef(0, 0.f, -cameraz);
+        glTranslatef(0, -cameray, -cameraz);
         glRotatef(getCameraRotation(), 0.f, 1.f, 0.f);
 
-        Render::basis();
         Render::ground();
+        Render::basis();
 
         drawKinectSkeletonFrame();
         drawKinectCameraFrame();
@@ -538,6 +539,7 @@ void Application::drawSkeletonFrame()
     assert(jointFrameVis);
 
     glPushMatrix();
+    glTranslatef(0,1,-1.5); // Move closer to origin, default z is dist from kinect [0.8m, 4m]
 
     // Rendering flags == [POS | JOINTS | ORIENT | BONES | INFER]
     // ----------------------------------------------------------
@@ -552,7 +554,7 @@ void Application::drawSkeletonFrame()
     }
     if (skeletonRenderFlags & JOINTS) {
         // Draw each joint
-        glPointSize(5.f);
+        glPointSize(7.f);
         glBegin(GL_POINTS);
         for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
             const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
@@ -575,18 +577,18 @@ void Application::drawSkeletonFrame()
         glPointSize(1.f);
         for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
             const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+            float scale = 0.075f;
             switch (joint.trackState) { // skip untracked joints
                 case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
                 case NUI_SKELETON_POSITION_INFERRED:
-                    if (!(skeletonRenderFlags & INFER))
-                        continue;
+                    if (skeletonRenderFlags & INFER) scale = 0.05f;
+                    else                             continue; 
                 break;
             }
             const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
             const glm::vec3 x(m.M11, m.M12, m.M13);
             const glm::vec3 y(m.M21, m.M22, m.M23);
             const glm::vec3 z(m.M31, m.M32, m.M33);
-            const float scale = 0.1f;
             Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
         }
     }

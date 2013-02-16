@@ -13,6 +13,7 @@ namespace constants
     const float one_third_pi = one_third * pi;
     const float pi_over_180  = pi / 180.f;
 
+    const float initial_camera_y = 0.5f;
     const float initial_camera_z = 3.f;
 
     const NUI_TRANSFORM_SMOOTH_PARAMETERS joint_smooth_params_low[]  = { 0.5f, 0.5f, 0.5f, 0.05f, 0.04f };

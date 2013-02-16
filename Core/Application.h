@@ -76,6 +76,7 @@ private:
 
     byte skeletonRenderFlags;
 
+    float cameray;
     float cameraz;
 
     // File

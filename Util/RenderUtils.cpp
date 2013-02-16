@@ -127,7 +127,7 @@ void Render::basis(const float scale
 
 void Render::ground()
 {
-    static const float Y = -1.f;
+    static const float Y = 0.f;
     static const float R = 10.f;
 
     glDisable(GL_CULL_FACE);
@@ -138,7 +138,7 @@ void Render::ground()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    const float radius = 50.f;
+    const float radius = 20.f;
     glColor3f(0,0,0.5);
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(0.f, 1.f, 0.f);
