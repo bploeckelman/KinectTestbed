@@ -568,7 +568,7 @@ void Application::drawSkeletonFrame()
 
     if (skeletonRenderFlags & POS) {
         // TODO: - draw skeleton position (hip center)
-		drawSkeletonPosition();
+        drawSkeletonPosition();
     }
     if (skeletonRenderFlags & JOINTS) {
         // Draw each joint
@@ -603,18 +603,18 @@ void Application::drawSkeletonFrame()
 
 void Application::drawSkeletonPosition()
 {
-	glPushMatrix();
+    glPushMatrix();
 
-	glColor3f(1.f, 0.f, 1.f);
+    glColor3f(1.f, 0.f, 1.f);
 
-	glPointSize(20.f);
-	glBegin(GL_POINTS);
-		const struct joint &joint = (*jointFrameVis)[NUI_SKELETON_POSITION_HIP_CENTER];
-		glVertex3fv(glm::value_ptr(joint.position));
-	glEnd();
-	glPointSize(1.f);
+    glPointSize(20.f);
+    glBegin(GL_POINTS);
+        const struct joint &joint = (*jointFrameVis)[NUI_SKELETON_POSITION_HIP_CENTER];
+        glVertex3fv(glm::value_ptr(joint.position));
+    glEnd();
+    glPointSize(1.f);
 
-	glPopMatrix();
+    glPopMatrix();
 }
 
 void Application::drawOrientations()
