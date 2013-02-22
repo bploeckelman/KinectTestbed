@@ -1,6 +1,7 @@
 Intermediate
 Res/Out
 
+*.bsc
 *.obj
 *.pch
 *.pdb
