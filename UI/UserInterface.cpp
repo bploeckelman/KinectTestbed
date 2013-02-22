@@ -74,13 +74,13 @@ void UserInterface::setupWindowConfiguration()
     infoLabel->SetText("Sensor [?] : ?");
     infoLabel->SetLineWrap(true);
 
-    showColorButton->SetActive(false);
-    showDepthButton->SetActive(false);
+    showColorButton->SetActive(true);
+    showDepthButton->SetActive(true);
     showSkeletonButton->SetActive(true);
 
-    showPositionButton->SetActive(false);
+    showPositionButton->SetActive(true);
     showJointsButton->SetActive(true);
-    showInferredButton->SetActive(true);
+    showInferredButton->SetActive(false);
     showOrientationButton->SetActive(true);
     showBonesButton->SetActive(true);
 
@@ -93,7 +93,7 @@ void UserInterface::setupWindowConfiguration()
     jointFrameIndex->SetZOrder(1);
 
     jointFramesProgress->SetFraction(0.0);
-    jointFramesProgress->SetRequisition(sf::Vector2f(1200, 25));
+    jointFramesProgress->SetRequisition(sf::Vector2f(1250, 50));
 
     filterJointsCombo->AppendItem("No joint filtering");
     filterJointsCombo->AppendItem("Low joint filtering");

@@ -56,11 +56,11 @@ Application::Application()
     , jointPositionFrames()
     , loaded(false)
     , saving(false)
-    , showColor(false)
-    , showDepth(false)
+    , showColor(true)
+    , showDepth(true)
     , showSkeleton(true)
     , rightMouseDown(false)
-    , skeletonRenderFlags(JOINTS | INFER | ORIENT | BONES) 
+    , skeletonRenderFlags(POS | JOINTS | ORIENT | BONES)
     , filterLevel(OFF)
     , saveStream()
     , loadStream()
@@ -568,6 +568,7 @@ void Application::drawSkeletonFrame()
 
     if (skeletonRenderFlags & POS) {
         // TODO: - draw skeleton position (hip center)
+		drawSkeletonPosition();
     }
     if (skeletonRenderFlags & JOINTS) {
         // Draw each joint
@@ -600,9 +601,20 @@ void Application::drawSkeletonFrame()
     glPopMatrix();
 }
 
-void Application::drawSkeletonPosition(const Vector4& position)
+void Application::drawSkeletonPosition()
 {
-    // TODO
+	glPushMatrix();
+
+	glColor3f(1.f, 0.f, 1.f);
+
+	glPointSize(20.f);
+	glBegin(GL_POINTS);
+		const struct joint &joint = (*jointFrameVis)[NUI_SKELETON_POSITION_HIP_CENTER];
+		glVertex3fv(glm::value_ptr(joint.position));
+	glEnd();
+	glPointSize(1.f);
+
+	glPopMatrix();
 }
 
 void Application::drawOrientations()

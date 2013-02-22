@@ -151,7 +151,7 @@ private:
 
     void drawKinectSkeletonFrame();
     void drawBones();
-    void drawSkeletonPosition(const Vector4& position);
+	void drawSkeletonPosition();
     void drawBone(NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo);
 
     void moveToNextFrame();
