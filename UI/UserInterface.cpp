@@ -26,6 +26,7 @@ UserInterface::UserInterface()
     , showOrientationButton(sfg::CheckButton::Create("Orientation"))
     , showBonesButton(sfg::CheckButton::Create("Bones"))
     , showInferredButton(sfg::CheckButton::Create("Inferred"))
+    , showJointPathButton(sfg::CheckButton::Create("Joint Path"))
     , jointFramesProgress(sfg::ProgressBar::Create())
     , jointFramesFilename(sfg::Label::Create())
     , jointFrameIndex(sfg::Label::Create())
@@ -63,6 +64,7 @@ void UserInterface::setupWidgetHandlers()
           showBonesButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowBonesButtonClick, this);
          showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
        showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
+      showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
     showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
         filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
       jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
@@ -74,8 +76,8 @@ void UserInterface::setupWindowConfiguration()
     infoLabel->SetText("Sensor [?] : ?");
     infoLabel->SetLineWrap(true);
 
-    showColorButton->SetActive(true);
-    showDepthButton->SetActive(true);
+    showColorButton->SetActive(false);
+    showDepthButton->SetActive(false);
     showSkeletonButton->SetActive(true);
 
     showPositionButton->SetActive(true);
@@ -83,6 +85,7 @@ void UserInterface::setupWindowConfiguration()
     showInferredButton->SetActive(false);
     showOrientationButton->SetActive(true);
     showBonesButton->SetActive(true);
+    showJointPathButton->SetActive(false);
 
     jointFramesFilename->SetText(sf::String(""));
     jointFramesFilename->SetLineWrap(true);
@@ -116,7 +119,8 @@ void UserInterface::setupWindowConfiguration()
     fixed->Put(showInferredButton, sf::Vector2f(0, 260));
     fixed->Put(showOrientationButton, sf::Vector2f(0, 300));
     fixed->Put(showBonesButton, sf::Vector2f(0, 340));
-    fixed->Put(filterJointsCombo, sf::Vector2f(0, 380));
+    fixed->Put(showJointPathButton, sf::Vector2f(0, 380));
+    fixed->Put(filterJointsCombo, sf::Vector2f(0, 420));
     box->Pack(fixed);
 
     window->SetTitle("Kinect Testbed");
@@ -136,6 +140,7 @@ void UserInterface::onShowJointsButtonClick()      { Application::request().togg
 void UserInterface::onShowInferredButtonClick()    { Application::request().toggleInferred(); }
 void UserInterface::onShowOrientationButtonClick() { Application::request().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().toggleBones(); }
+void UserInterface::onShowJointPathButtonClick()   { Application::request().toggleJointPath(); }
 
 void UserInterface::onProgressBarMouseMove()
 {

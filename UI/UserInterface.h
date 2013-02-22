@@ -31,6 +31,7 @@ private:
     sfg::CheckButton::Ptr showInferredButton;
     sfg::CheckButton::Ptr showOrientationButton;
     sfg::CheckButton::Ptr showBonesButton;
+    sfg::CheckButton::Ptr showJointPathButton;
 
     sfg::ComboBox::Ptr filterJointsCombo;
 
@@ -69,6 +70,7 @@ private:
     void onShowInferredButtonClick();
     void onShowOrientationButtonClick();
     void onShowBonesButtonClick();
+    void onShowJointPathButtonClick();
     void onProgressBarMouseMove();
     void onFilterComboSelect();
 };

@@ -56,8 +56,8 @@ Application::Application()
     , jointPositionFrames()
     , loaded(false)
     , saving(false)
-    , showColor(true)
-    , showDepth(true)
+    , showColor(false)
+    , showDepth(false)
     , showSkeleton(true)
     , rightMouseDown(false)
     , skeletonRenderFlags(POS | JOINTS | ORIENT | BONES)
@@ -82,10 +82,13 @@ void Application::startup()
     ImageManager::get().addResourceDir("../../Res/");
 
     clock.restart();
-    if (!initKinect())
+    if (!initKinect()) {
+        kinectInitialized = false;
         std::cerr << "Unable to initialize Kinect." << std::endl;
-    else
+    } else {
+        kinectInitialized = true;
         std::cout << "Kinect initialized in " << clock.getElapsedTime().asSeconds() << " seconds." << std::endl;
+    }
 
     clock.restart();    
     initOpenGL();
@@ -160,7 +163,13 @@ void Application::processEvents()
         }
 
         if (event.type == sf::Event::MouseWheelMoved) {
-            cameraz -= event.mouseWheel.delta;
+            const int threshold = 2;
+            static int accum = 0;
+            accum += event.mouseWheel.delta;
+            if (accum < -threshold || accum > threshold) {
+                cameraz -= 0.1f * accum / threshold;
+                accum = 0;
+            }
         }
     }
 }
@@ -443,7 +452,7 @@ void Application::getKinectData(GLubyte *dest, const EKinectDataType &dataType)
 void Application::drawKinectCameraFrame()
 {
     // Get kinect frame and update textures
-    if (showColor || showDepth) {
+    if ((showColor || showDepth) && kinectInitialized) {
         updateKinectCameraTextures();
 
         // Draw color and depth images
@@ -565,36 +574,22 @@ void Application::drawSkeletonFrame()
     // ORIENT = skeleton joint orientations
     // BONES  = connections between skeleton joints
     // INFER  = draw inferred joints/bones
+    // PATH   = draw path of particular joints over time
 
     if (skeletonRenderFlags & POS) {
-        // TODO: - draw skeleton position (hip center)
         drawSkeletonPosition();
     }
     if (skeletonRenderFlags & JOINTS) {
-        // Draw each joint
-        glPointSize(8.f);
-        glBegin(GL_POINTS);
-        for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-            const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-            switch (joint.trackState) { // skip untracked joints
-                case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
-                case NUI_SKELETON_POSITION_TRACKED:
-                    glColor3f(1.f, 1.f, 1.f);
-                break;
-                case NUI_SKELETON_POSITION_INFERRED:
-                    if (skeletonRenderFlags & INFER) glColor3f(1.f, 0.5f, 0.f);
-                    else                             continue;
-                break;
-            }
-            glVertex3fv(glm::value_ptr(joint.position));
-        }
-        glEnd();
+        drawJoints();
     }
     if (skeletonRenderFlags & ORIENT) {
         drawOrientations();
     }
     if (skeletonRenderFlags & BONES) {
         drawBones();
+    }
+    if (skeletonRenderFlags & PATH) {
+        drawJointPath();
     }
 
     glColor3f(1.f, 1.f, 1.f);
@@ -613,6 +608,38 @@ void Application::drawSkeletonPosition()
         glVertex3fv(glm::value_ptr(joint.position));
     glEnd();
     glPointSize(1.f);
+
+    glPopMatrix();
+}
+
+void Application::drawJointPath()
+{
+    if (!loaded) return;
+
+    glPushMatrix();
+
+    // TODO: draw sequence of frames for a particular joint or subset of joints
+    // TODO: draw all frames for a particular joint or subset of joints    
+
+    glColor3f(1.f, 1.f, 0.f);
+    //glBegin(GL_LINE_STRIP);
+    //    for (int i = 0; i <= jointFrameIndex; ++i) {
+    //        auto& hip_center = jointPositionFrames[i][NUI_SKELETON_POSITION_HIP_CENTER];
+    //        glVertex3fv(glm::value_ptr(hip_center.position));
+    //    }
+    //glEnd();
+    glBegin(GL_LINE_STRIP);
+        for (int i = 0; i <= jointFrameIndex; ++i) {
+            auto& left_hand  = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_LEFT];
+            glVertex3fv(glm::value_ptr(left_hand.position));
+        }
+    glEnd();
+    glBegin(GL_LINE_STRIP);
+        for (int i = 0; i < jointFrameIndex; ++i) {
+            auto& right_hand = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_RIGHT];
+            glVertex3fv(glm::value_ptr(right_hand.position));
+        }
+    glEnd();
 
     glPopMatrix();
 }
@@ -812,4 +839,26 @@ void Application::moveToPreviousFrame()
         gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
         gui.setIndex(jointFrameIndex);
     }
+}
+
+void Application::drawJoints()
+{
+    // Draw each joint
+    glPointSize(8.f);
+    glBegin(GL_POINTS);
+    for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
+        const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
+        switch (joint.trackState) { // skip untracked joints
+        case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
+        case NUI_SKELETON_POSITION_TRACKED:
+            glColor3f(1.f, 1.f, 1.f);
+            break;
+        case NUI_SKELETON_POSITION_INFERRED:
+            if (skeletonRenderFlags & INFER) glColor3f(1.f, 0.5f, 0.f);
+            else                             continue;
+            break;
+        }
+        glVertex3fv(glm::value_ptr(joint.position));
+    }
+    glEnd();
 }

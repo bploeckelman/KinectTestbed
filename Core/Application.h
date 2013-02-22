@@ -34,6 +34,7 @@ const byte JOINTS = 0x02;
 const byte INFER  = 0x04;
 const byte ORIENT = 0x08;
 const byte BONES  = 0x10;
+const byte PATH   = 0x20;
 
 enum ESkeletonFilterLevel { OFF, LOW, MEDIUM, HIGH };
 
@@ -74,6 +75,7 @@ private:
     bool showDepth;
     bool showSkeleton;
     bool rightMouseDown;
+    bool kinectInitialized;
 
     byte skeletonRenderFlags;
 
@@ -100,9 +102,9 @@ public:
     void shutdown();
 
     void toggleSave();
-    void toggleShowColor()    { showColor    = !showColor;    }
-    void toggleShowDepth()    { showDepth    = !showDepth;    }
-    void toggleShowSkeleton() { showSkeleton = !showSkeleton; }
+    void toggleShowColor()     { showColor    = !showColor;    }
+    void toggleShowDepth()     { showDepth    = !showDepth;    }
+    void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
 
     // Rendering flags
     void setRenderFlags(const byte flags) { skeletonRenderFlags  = flags;  }
@@ -112,6 +114,7 @@ public:
     void toggleOrientation()              { skeletonRenderFlags ^= ORIENT; }
     void toggleBones()                    { skeletonRenderFlags ^= BONES;  }
     void toggleInferred()                 { skeletonRenderFlags ^= INFER;  }
+    void toggleJointPath()                { skeletonRenderFlags ^= PATH;   }
     void setFilterLevel(const ESkeletonFilterLevel& level) { filterLevel = level; }
 
     void loadFile();
@@ -146,13 +149,14 @@ private:
     void checkForSkeletonFrame();
     void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
     void drawSkeletonFrame();
-
+    void drawJoints();
     void drawOrientations();
 
     void drawKinectSkeletonFrame();
     void drawBones();
     void drawSkeletonPosition();
     void drawBone(NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo);
+    void drawJointPath();
 
     void moveToNextFrame();
     void moveToPreviousFrame();
