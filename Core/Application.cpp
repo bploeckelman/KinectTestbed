@@ -322,7 +322,7 @@ bool Application::initKinect() {
     gui.setInfo(ss.str());
 
     NuiCreateSensorByIndex(0, &sensor);
-    if (sensor < 0) {
+    if (sensor == nullptr) {
         std::cerr << "Unable to create Kinect sensor 0." << std::endl;
         return false;
     }
@@ -806,11 +806,13 @@ void Application::loadFile()
 
     // Set the current frame as the middle frame of the sequence
     jointFrameIndex = jointPositionFrames.size() / 2;
-    jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-    std::string name; name.assign(filename.begin(), filename.end());
-    gui.setFileName(name);
-    gui.setProgress((float) jointFrameIndex / (float) jointPositionFrames.size());
-    gui.setIndex(jointFrameIndex);
+    if (jointFrameIndex < jointPositionFrames.size()) { 
+        jointFrameVis   = &jointPositionFrames[jointFrameIndex];
+        std::string name; name.assign(filename.begin(), filename.end());
+        gui.setFileName(name);
+        gui.setProgress((float) jointFrameIndex / (float) jointPositionFrames.size());
+        gui.setIndex(jointFrameIndex);
+    }
 }
 
 void Application::moveToNextFrame()
