@@ -131,6 +131,8 @@ void Render::ground()
     static const float R = 10.f;
 
     glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     sf::Texture texture;
     texture.loadFromImage(GetImage("grid.png"));
@@ -138,8 +140,8 @@ void Render::ground()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    const float radius = 20.f;
-    glColor3f(0,0,0.5);
+    const float radius = 10.f;
+    glColor4f(1,1,1,0.75f);
     glBegin(GL_TRIANGLE_STRIP);
     glNormal3f(0.f, 1.f, 0.f);
         glTexCoord2f(   0.f,    0.f); glVertex3f( R, Y,  R);
@@ -152,5 +154,6 @@ void Render::ground()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 }
