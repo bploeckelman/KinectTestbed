@@ -75,6 +75,7 @@ private:
     bool showDepth;
     bool showSkeleton;
     bool rightMouseDown;
+    bool leftMouseDown;
     bool kinectInitialized;
 
     byte skeletonRenderFlags;
@@ -130,7 +131,8 @@ private:
     void processEvents();
     void draw();
 
-    float getCameraRotation();
+    float getCameraRotationX();
+    float getCameraRotationY();
     std::wstring showFileChooser();
 
     // OpenGL methods

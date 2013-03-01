@@ -60,6 +60,7 @@ Application::Application()
     , showDepth(false)
     , showSkeleton(true)
     , rightMouseDown(false)
+    , leftMouseDown(false)
     , skeletonRenderFlags(POS | JOINTS | ORIENT | BONES)
     , filterLevel(OFF)
     , saveStream()
@@ -157,9 +158,11 @@ void Application::processEvents()
 
         if (event.type == sf::Event::MouseButtonPressed) {
             if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = true;
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = true;
         }
         if (event.type == sf::Event::MouseButtonReleased) {
             if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = false;
+            if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = false;
         }
 
         if (event.type == sf::Event::MouseWheelMoved) {
@@ -181,7 +184,8 @@ void Application::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPushMatrix();
         glTranslatef(0, -cameray, -cameraz);
-        glRotatef(getCameraRotation(), 0.f, 1.f, 0.f);
+        glRotatef(getCameraRotationX(), 1.f, 0.f, 0.f);
+        glRotatef(getCameraRotationY(), 0.f, 1.f, 0.f);
 
         Render::ground();
         Render::basis();
@@ -195,25 +199,60 @@ void Application::draw()
     window.display();
 }
 
-float Application::getCameraRotation()
+float Application::getCameraRotationX()
 {
-    static const int middleX = WINDOW_WIDTH / 2;
+    static const int middleY = WINDOW_HEIGHT / 2;
+    static const int scrollThreshold = 20;
+    static const float timeThreshold = 0.05f;
+    static const float rotBound      = 90;
+    static const float scale         = 5.f;
+
     static float rot = 0.f;
     static float lastTime = clock.getElapsedTime().asSeconds();
+
     float thisTime = clock.getElapsedTime().asSeconds();
     float delta    = thisTime - lastTime;
-    if (delta > 0.05f) {
+    if (delta > timeThreshold) {
         if (rightMouseDown) {
-            const int currX = sf::Mouse::getPosition(window).x;
-            const int delta = currX - middleX;
-            const int thresh = 30;
-            if (delta < -thresh || delta > thresh) {
-                rot += static_cast<int>(5.f * ((float)delta / (float)middleX));
-                if (rot > 360) rot = 0;
+            const int currY = sf::Mouse::getPosition(window).y;
+            const int delta = currY - middleY;
+            if (delta < -scrollThreshold || delta > scrollThreshold) {
+                rot += static_cast<int>(scale * ((float)delta / (float)middleY));
+                if (rot > rotBound) rot = rotBound;
+                if (rot < 0.f) rot = 0.f;
             }
         }
         lastTime = thisTime;
     }
+
+    return rot;
+}
+
+float Application::getCameraRotationY()
+{
+    static const int middleX = WINDOW_WIDTH / 2;
+    static const int scrollThreshold = 20;
+    static const float timeThreshold = 0.05f;
+    static const float rotBound      = 360.f;
+    static const float scale         = 5.f;
+
+    static float rot = 0.f;
+    static float lastTime = clock.getElapsedTime().asSeconds();
+
+    float thisTime = clock.getElapsedTime().asSeconds();
+    float delta    = thisTime - lastTime;
+    if (delta > timeThreshold) {
+        if (rightMouseDown) {
+            const int currX = sf::Mouse::getPosition(window).x;
+            const int delta = currX - middleX;
+            if (delta < -scrollThreshold || delta > scrollThreshold) {
+                rot += static_cast<int>(scale * ((float)delta / (float)middleX));
+                if (rot > rotBound) rot = 0;
+            }
+        }
+        lastTime = thisTime;
+    }
+
     return rot;
 }
 
