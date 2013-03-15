@@ -14,8 +14,8 @@
 #include <string>
 
 #include "Core/Config.h"
+#include "Kinect/Kinect.h"
 #include "UI/UserInterface.h"
-#include "Util/Kinect.h"
 
 struct joint {
     float timestamp; // in seconds

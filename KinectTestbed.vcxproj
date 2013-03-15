@@ -13,18 +13,18 @@
   <ItemGroup>
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Main.cpp" />
+    <ClCompile Include="Kinect\Kinect.cpp" />
     <ClCompile Include="UI\UserInterface.cpp" />
     <ClCompile Include="Util\ImageManager.cpp" />
-    <ClCompile Include="Util\Kinect.cpp" />
     <ClCompile Include="Util\RenderUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Config.h" />
     <ClInclude Include="Core\Constants.h" />
+    <ClInclude Include="Kinect\Kinect.h" />
     <ClInclude Include="UI\UserInterface.h" />
     <ClInclude Include="Util\ImageManager.h" />
-    <ClInclude Include="Util\Kinect.h" />
     <ClInclude Include="Util\RenderUtils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

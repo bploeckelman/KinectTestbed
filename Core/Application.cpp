@@ -29,9 +29,9 @@
 #include "Application.h"
 #include "Config.h"
 #include "Constants.h"
+#include "Kinect/Kinect.h"
 #include "Util/RenderUtils.h"
 #include "Util/ImageManager.h"
-#include "Util/Kinect.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 const std::string Application::saveFileName("../../Res/Out/joint_frames.bin");
