@@ -33,6 +33,9 @@
     <ClCompile Include="Kinect\Kinect.cpp">
       <Filter>Kinect</Filter>
     </ClCompile>
+    <ClCompile Include="Kinect\Skeleton.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Config.h">
@@ -54,6 +57,9 @@
       <Filter>Util</Filter>
     </ClInclude>
     <ClInclude Include="Kinect\Kinect.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\Skeleton.h">
       <Filter>Kinect</Filter>
     </ClInclude>
   </ItemGroup>

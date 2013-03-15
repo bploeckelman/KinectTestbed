@@ -190,7 +190,9 @@ void Application::draw()
 		Render::ground();
 		Render::basis();
 
-		drawKinectSkeletonFrame();
+		//drawKinectSkeletonFrame();
+		kinect.update();
+		kinect.getSkeleton().render();
 		drawKinectImageStreams();
 	glPopMatrix();
 

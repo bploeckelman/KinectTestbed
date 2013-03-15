@@ -4,10 +4,14 @@
 
 #include <NuiApi.h>
 
+#include <SFML/System/Clock.hpp>
+
+#include "Skeleton.h"
+
 #include <string>
 #include <vector>
 
-enum EKinectDataType { COLOR, DEPTH };
+enum EStreamDataType { COLOR, DEPTH };
 
 class Kinect
 {
@@ -22,6 +26,7 @@ public:
 
 private:
 	bool initialized;
+	sf::Clock clock;
 
 	std::string deviceId;
 	std::vector<INuiSensor *> sensors;
@@ -31,19 +36,27 @@ private:
 	HANDLE nextSkeletonEvent;
 	DWORD  skeletonTrackingFlags;
 
-	// TODO: Skeleton skeleton;
+	Skeleton skeleton;
 
 public:
 	Kinect();
 	~Kinect();
 
 	bool initialize();
+	void update();
 
-	void getStreamData(byte *dest, const EKinectDataType &dataType, unsigned int sensorIndex = 0);
+	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
 
-	bool isInitialized() const;
-	int getNumSensors() const;
-	INuiSensor *getSensor(unsigned int i) const;
-	const std::string &getDeviceId() const;
+	Skeleton& getSkeleton() { return skeleton; }
+
+	bool isInitialized() const { return initialized; }
+	int  getNumSensors() const { return sensors.size(); }
+	const std::string& getDeviceId() const { return deviceId; }
+
+	INuiSensor *getSensor(unsigned int i = 0) const;
+
+private:
+	void checkForSkeletonFrame();
+	void skeletonFrameReady(NUI_SKELETON_FRAME& skeletonFrame);
 
 };
