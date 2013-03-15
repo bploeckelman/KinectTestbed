@@ -15,7 +15,7 @@
 
 #include "Core/Config.h"
 #include "UI/UserInterface.h"
-
+#include "Util/Kinect.h"
 
 struct joint {
     float timestamp; // in seconds
@@ -56,8 +56,7 @@ private:
     GLubyte *depthData;
 
     // Kinect vars
-    HANDLE colorStream;
-    HANDLE depthStream;
+    Kinect kinect;
     HANDLE nextSkeletonEvent;
     INuiSensor *sensor;
     int numSensors;
@@ -66,7 +65,6 @@ private:
     JointPosFrame currentJoints;
     JointPositionFrames jointPositionFrames;
     ESkeletonFilterLevel filterLevel;
-    enum EKinectDataType { COLOR, DEPTH };
 
     // State
     bool loaded;
@@ -76,7 +74,6 @@ private:
     bool showSkeleton;
     bool rightMouseDown;
     bool leftMouseDown;
-    bool kinectInitialized;
 
     byte skeletonRenderFlags;
 
@@ -140,12 +137,8 @@ private:
     void shutdownOpenGL();
 
     // Kinect methods -------------------------------------
-    bool initKinect();
-
-    // Kinect image methods
-    void updateKinectCameraTextures();
-    void getKinectData(GLubyte *data, const EKinectDataType &dataType);
-    void drawKinectCameraFrame() ;
+    void updateKinectImageStreams();
+    void drawKinectImageStreams() ;
 
     // Kinect skeleton methods
     void checkForSkeletonFrame();

@@ -15,6 +15,7 @@
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="UI\UserInterface.cpp" />
     <ClCompile Include="Util\ImageManager.cpp" />
+    <ClCompile Include="Util\Kinect.cpp" />
     <ClCompile Include="Util\RenderUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -23,6 +24,7 @@
     <ClInclude Include="Core\Constants.h" />
     <ClInclude Include="UI\UserInterface.h" />
     <ClInclude Include="Util\ImageManager.h" />
+    <ClInclude Include="Util\Kinect.h" />
     <ClInclude Include="Util\RenderUtils.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
