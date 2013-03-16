@@ -34,7 +34,6 @@
 #include "Util/ImageManager.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
-const std::string Application::saveFileName("../../Res/Out/joint_frames.bin");
 
 
 // ----------------------------------------------------------------------------
@@ -46,24 +45,11 @@ Application::Application()
 	, depthTextureId(0)
 	, colorData(new GLubyte[Kinect::COLOR_STREAM_BYTES])
 	, depthData(new GLubyte[Kinect::DEPTH_STREAM_BYTES])
-	, nextSkeletonEvent()
-	, numSensors(-1)
-	, sensor(nullptr)
-	, jointFrameIndex(0)
-	, jointFrameVis(&currentJoints)
-	, currentJoints()
-	, jointPositionFrames()
-	, loaded(false)
-	, saving(false)
 	, showColor(false)
 	, showDepth(false)
 	, showSkeleton(true)
 	, rightMouseDown(false)
 	, leftMouseDown(false)
-	, skeletonRenderFlags(POS | JOINTS | ORIENT | BONES)
-	, filterLevel(OFF)
-	, saveStream()
-	, loadStream()
 	, cameray(constants::initial_camera_y)
 	, cameraz(constants::initial_camera_z)
 {
@@ -75,23 +61,15 @@ Application::~Application()
 {
 	delete[] colorData;
 	delete[] depthData;
-
-	if (saveStream.is_open()) saveStream.close();
-	if (loadStream.is_open()) loadStream.close();
 }
 
 void Application::startup()
 {
 	ImageManager::get().addResourceDir("../../Res/");
 
-	clock.restart();
-	if (!kinect.initialize()) {
-		std::cerr << "Unable to initialize Kinect." << std::endl;
-	} else {
-		std::cout << "Kinect initialized in " << clock.getElapsedTime().asSeconds() << " seconds." << std::endl;
-	}
+	kinect.initialize();
+	gui.setInfo(kinect.getDeviceId());
 
-	clock.restart();    
 	initOpenGL();
 	mainLoop();
 	shutdownOpenGL();
@@ -102,38 +80,46 @@ void Application::shutdown()
 	window.close();
 }
 
+void Application::loadFile()
+{
+	std::wstring wfilename(showFileChooser());
+	std::string filename; filename.assign(wfilename.begin(), wfilename.end());
+	if (kinect.getSkeleton().loadFile(filename)) {
+		gui.setFileName(filename);
+	} else {
+		gui.setFileName("No file loaded");
+	}
+}
+
+void Application::moveToNextFrame()
+{
+	kinect.getSkeleton().nextFrame();
+	gui.setProgress(kinect.getSkeleton().getFrameIndex() / (float) (kinect.getSkeleton().getNumFrames() - 1));
+	gui.setIndex(kinect.getSkeleton().getFrameIndex());
+}
+
+void Application::moveToPreviousFrame()
+{
+	kinect.getSkeleton().prevFrame();
+	gui.setProgress(kinect.getSkeleton().getFrameIndex() / (float) (kinect.getSkeleton().getNumFrames() - 1));
+	gui.setIndex(kinect.getSkeleton().getFrameIndex());
+}
+
+void Application::setJointFrameIndex( const float fraction )
+{
+	kinect.getSkeleton().setFrameIndex(fraction);
+	gui.setProgress(fraction);
+	gui.setIndex(kinect.getSkeleton().getFrameIndex());
+}
+
 void Application::toggleSave()
 {
-	if (saving) {
-		std::cout << "Stopped saving joint data." << std::endl;
-	} else {
-		std::cout << "Started saving joint data." << std::endl;
-	}
-
-	saving = !saving; 
-
-	if (saving) {
-		if (!saveStream.is_open())
-			saveStream.open(saveFileName, std::ios::binary | std::ios::app);
-	} else {
-		if (saveStream.is_open())
-			saveStream.close();
-	}
+	kinect.toggleSave();
 }
 
-void Application::setJointIndex(const float fraction)
-{
-	if (!loaded) return;
-	assert(fraction >= 0.f && fraction <= 1.f);
-
-	jointFrameIndex = static_cast<int>(floor(fraction * jointPositionFrames.size()));
-	jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-	gui.setIndex(jointFrameIndex);
-}
-
-// ----------------------------------------------------------------------------
 void Application::mainLoop()
 {
+	clock.restart();    
 	while (window.isOpen()) {
 		processEvents();
 		draw();
@@ -190,7 +176,6 @@ void Application::draw()
 		Render::ground();
 		Render::basis();
 
-		//drawKinectSkeletonFrame();
 		kinect.update();
 		kinect.getSkeleton().render();
 		drawKinectImageStreams();
@@ -201,6 +186,7 @@ void Application::draw()
 	window.display();
 }
 
+// TODO : this is ugly as hell, make it cleaner 
 float Application::getCameraRotationX()
 {
 	static const int middleY = WINDOW_HEIGHT / 2;
@@ -230,6 +216,7 @@ float Application::getCameraRotationX()
 	return rot;
 }
 
+// TODO : this is ugly as hell, make it cleaner 
 float Application::getCameraRotationY()
 {
 	static const int middleX = WINDOW_WIDTH / 2;
@@ -353,8 +340,6 @@ void Application::shutdownOpenGL() {
 	glDeleteTextures(1, &depthTextureId);
 }
 
-// ----------------------------------------------------------------------------
-
 void Application::updateKinectImageStreams()
 {
 	glBindTexture(GL_TEXTURE_2D, colorTextureId);
@@ -405,385 +390,4 @@ void Application::drawKinectImageStreams()
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glPopMatrix();
 	}
-}
-
-void Application::checkForSkeletonFrame()
-{
-	// Wait for 0ms to quickly test if it is time to process a skeleton
-	if (WAIT_OBJECT_0 == WaitForSingleObject(nextSkeletonEvent, 0)) {
-		NUI_SKELETON_FRAME skeletonFrame = {0};
-		// Get the skeleton frame that is ready
-		if (SUCCEEDED(sensor->NuiSkeletonGetNextFrame(0, &skeletonFrame))) {
-			// Process the skeleton frame
-			skeletonFrameReady(&skeletonFrame);
-		} 
-	}
-}
-
-void Application::skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame)
-{
-	// Get data for the first tracked skeleton
-	const NUI_SKELETON_DATA *skeleton = nullptr;
-	for (auto i = 0; i < NUI_SKELETON_COUNT; ++i) {
-		if (skeletonFrame->SkeletonData[i].eTrackingState == NUI_SKELETON_TRACKED) {
-			skeleton = &skeletonFrame->SkeletonData[i];
-			break;
-		}
-	}
-	if (skeleton == nullptr) {
-		//std::cerr << "Warning: unable to find a tracked skeleton." << std::endl;
-		return;
-	}
-
-	// Filter skeleton frame? 
-	switch (filterLevel) {
-		case OFF:    break;
-		case LOW:    NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_low);  break;
-		case MEDIUM: NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_med);  break;
-		case HIGH:   NuiTransformSmooth(skeletonFrame, constants::joint_smooth_params_high); break;
-	}
-
-	// Stash current time for timestamps
-	const float timestamp = clock.getElapsedTime().asSeconds();
-
-	// Get bone orientations for this skeleton's joints
-	NUI_SKELETON_BONE_ORIENTATION boneOrientations[NUI_SKELETON_POSITION_COUNT];
-	NuiSkeletonCalculateBoneOrientations(skeleton, boneOrientations);
-
-	// For each joint
-	for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-		const NUI_SKELETON_POSITION_INDEX&          jointIndex    = static_cast<NUI_SKELETON_POSITION_INDEX>(i);
-		const NUI_SKELETON_BONE_ORIENTATION&        orientation   = boneOrientations[jointIndex];
-		const NUI_SKELETON_POSITION_TRACKING_STATE& trackingState = skeleton->eSkeletonPositionTrackingState[jointIndex];
-
-		const Vector4& jointPosition = skeleton->SkeletonPositions[jointIndex];
-
-		// Update the entry 
-		struct joint &joint = currentJoints[jointIndex];
-		joint.timestamp     = timestamp;
-		joint.index         = jointIndex;
-		joint.position.x    = jointPosition.x;
-		joint.position.y    = jointPosition.y;
-		joint.position.z    = jointPosition.z;
-		joint.trackState    = trackingState;
-		joint.orientation   = orientation;
-
-		// Save the frame if appropriate
-		if (saving && saveStream.is_open()) {
-			saveStream.write((char *)&joint, sizeof(struct joint));
-		}
-	}
-}
-
-void Application::drawKinectSkeletonFrame()
-{
-	if (showSkeleton) {
-		checkForSkeletonFrame();
-		drawSkeletonFrame();
-	}
-}
-
-void Application::drawSkeletonFrame()
-{
-	assert(jointFrameVis);
-
-	glPushMatrix();
-	glTranslatef(0,1,-1.5); // Move closer to origin, default z is dist from kinect [0.8m, 4m]
-
-	// Rendering flags == [POS | JOINTS | ORIENT | BONES | INFER]
-	// ----------------------------------------------------------
-	// POS    = whole skeleton position
-	// JOINTS = skeleton joints
-	// ORIENT = skeleton joint orientations
-	// BONES  = connections between skeleton joints
-	// INFER  = draw inferred joints/bones
-	// PATH   = draw path of particular joints over time
-
-	if (skeletonRenderFlags & POS) {
-		drawSkeletonPosition();
-	}
-	if (skeletonRenderFlags & JOINTS) {
-		drawJoints();
-	}
-	if (skeletonRenderFlags & ORIENT) {
-		drawOrientations();
-	}
-	if (skeletonRenderFlags & BONES) {
-		drawBones();
-	}
-	if (skeletonRenderFlags & PATH) {
-		drawJointPath();
-	}
-
-	glColor3f(1.f, 1.f, 1.f);
-	glPopMatrix();
-}
-
-void Application::drawSkeletonPosition()
-{
-	glPushMatrix();
-
-	glColor3f(1.f, 0.f, 1.f);
-
-	glPointSize(20.f);
-	glBegin(GL_POINTS);
-		const struct joint &joint = (*jointFrameVis)[NUI_SKELETON_POSITION_HIP_CENTER];
-		glVertex3fv(glm::value_ptr(joint.position));
-	glEnd();
-	glPointSize(1.f);
-
-	glPopMatrix();
-}
-
-void Application::drawJointPath()
-{
-	if (!loaded) return;
-
-	glPushMatrix();
-
-	// TODO: draw sequence of frames for a particular joint or subset of joints
-	// TODO: draw all frames for a particular joint or subset of joints    
-
-	glColor3f(1.f, 1.f, 0.f);
-	//glBegin(GL_LINE_STRIP);
-	//    for (int i = 0; i <= jointFrameIndex; ++i) {
-	//        auto& hip_center = jointPositionFrames[i][NUI_SKELETON_POSITION_HIP_CENTER];
-	//        glVertex3fv(glm::value_ptr(hip_center.position));
-	//    }
-	//glEnd();
-	glBegin(GL_LINE_STRIP);
-		for (int i = 0; i <= jointFrameIndex; ++i) {
-			auto& left_hand  = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_LEFT];
-			glVertex3fv(glm::value_ptr(left_hand.position));
-		}
-	glEnd();
-	glBegin(GL_LINE_STRIP);
-		for (int i = 0; i < jointFrameIndex; ++i) {
-			auto& right_hand = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_RIGHT];
-			glVertex3fv(glm::value_ptr(right_hand.position));
-		}
-	glEnd();
-
-	glPopMatrix();
-}
-
-void Application::drawOrientations()
-{
-	// Draw each joint's orientation
-	glPointSize(1.f);
-	for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-		const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-		float scale = 0.075f;
-		switch (joint.trackState) { // skip untracked joints
-		case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
-		case NUI_SKELETON_POSITION_INFERRED:
-			if (skeletonRenderFlags & INFER) scale = 0.05f;
-			else                             continue; 
-			break;
-		}
-		const Matrix4&  m = joint.orientation.absoluteRotation.rotationMatrix;
-		const glm::vec3 x(m.M11, m.M12, m.M13);
-		const glm::vec3 y(m.M21, m.M22, m.M23);
-		const glm::vec3 z(m.M31, m.M32, m.M33);
-		Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
-	}
-}
-
-void Application::drawBones()
-{
-	// Render head and shoulders
-	drawBone(NUI_SKELETON_POSITION_HEAD, NUI_SKELETON_POSITION_SHOULDER_CENTER);
-	drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_LEFT);
-	drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SHOULDER_RIGHT);
-
-	// Render left arm
-	drawBone(NUI_SKELETON_POSITION_SHOULDER_LEFT, NUI_SKELETON_POSITION_ELBOW_LEFT);
-	drawBone(NUI_SKELETON_POSITION_ELBOW_LEFT, NUI_SKELETON_POSITION_WRIST_LEFT);
-	drawBone(NUI_SKELETON_POSITION_WRIST_LEFT, NUI_SKELETON_POSITION_HAND_LEFT);
-
-	// Render right arm
-	drawBone(NUI_SKELETON_POSITION_SHOULDER_RIGHT, NUI_SKELETON_POSITION_ELBOW_RIGHT);
-	drawBone(NUI_SKELETON_POSITION_ELBOW_RIGHT, NUI_SKELETON_POSITION_WRIST_RIGHT);
-	drawBone(NUI_SKELETON_POSITION_WRIST_RIGHT, NUI_SKELETON_POSITION_HAND_RIGHT);
-
-	// Render torso
-	drawBone(NUI_SKELETON_POSITION_SHOULDER_CENTER, NUI_SKELETON_POSITION_SPINE);
-	drawBone(NUI_SKELETON_POSITION_SPINE, NUI_SKELETON_POSITION_HIP_CENTER);
-	drawBone(NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_RIGHT);
-	drawBone(NUI_SKELETON_POSITION_HIP_CENTER, NUI_SKELETON_POSITION_HIP_LEFT);
-
-	// Render left leg
-	drawBone(NUI_SKELETON_POSITION_HIP_LEFT, NUI_SKELETON_POSITION_KNEE_LEFT);
-	drawBone(NUI_SKELETON_POSITION_KNEE_LEFT, NUI_SKELETON_POSITION_ANKLE_LEFT);
-	drawBone(NUI_SKELETON_POSITION_ANKLE_LEFT, NUI_SKELETON_POSITION_FOOT_LEFT);
-
-	// Render right leg
-	drawBone(NUI_SKELETON_POSITION_HIP_RIGHT, NUI_SKELETON_POSITION_KNEE_RIGHT);
-	drawBone(NUI_SKELETON_POSITION_KNEE_RIGHT, NUI_SKELETON_POSITION_ANKLE_RIGHT);
-	drawBone(NUI_SKELETON_POSITION_ANKLE_RIGHT, NUI_SKELETON_POSITION_FOOT_RIGHT);
-}
-
-void Application::drawBone( NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo )
-{
-	NUI_SKELETON_POSITION_TRACKING_STATE jointFromState = (*jointFrameVis)[jointFrom].trackState;
-	NUI_SKELETON_POSITION_TRACKING_STATE jointToState   = (*jointFrameVis)[jointTo].trackState;
-	if (jointFromState == NUI_SKELETON_POSITION_NOT_TRACKED || jointToState == NUI_SKELETON_POSITION_NOT_TRACKED)
-		return; // nothing to draw, one joint not tracked
-
-	const glm::vec3& fromPosition((*jointFrameVis)[jointFrom].position);
-	const glm::vec3& toPosition((*jointFrameVis)[jointTo].position);
-
-	// Don't draw if both points are inferred
-	if (jointFromState == NUI_SKELETON_POSITION_INFERRED && jointToState == NUI_SKELETON_POSITION_INFERRED) {
-		return;
-	}
-
-	if (jointFromState == NUI_SKELETON_POSITION_INFERRED || jointToState == NUI_SKELETON_POSITION_INFERRED) {
-		glLineWidth(1.f);
-		// Draw thin red lines if either side is inferred
-		glColor3f(1.f, 0.f, 0.f);
-		glBegin(GL_LINES);
-			glVertex3fv(glm::value_ptr(fromPosition));
-			glVertex3fv(glm::value_ptr(toPosition));
-		glEnd();
-		glColor3f(1.f, 1.f, 1.f);
-	}
-
-	// Assume all drawn bones are inferred unless BOTH joints are tracked
-	if (jointFromState == NUI_SKELETON_POSITION_TRACKED && jointToState == NUI_SKELETON_POSITION_TRACKED) {
-		// TODO: draw thick lines between joints
-		glLineWidth(8.f);
-		glColor3f(0.f, 1.f, 0.f);
-		glBegin(GL_LINES);
-			glVertex3fv(glm::value_ptr(fromPosition));
-			glVertex3fv(glm::value_ptr(toPosition));
-		glEnd();
-		glColor3f(1.f, 1.f, 1.f);
-	}
-
-	glLineWidth(1.f);
-}
-
-void Application::loadFile()
-{
-	if (loaded) {
-		jointPositionFrames.clear();
-	}
-
-	// Get the file name from a file chooser dialog and try to load it
-	std::wstring filename(showFileChooser());
-	std::wcout << "Selected file: " << filename << std::endl;
-
-	sf::Vector3f mn( 1e30f,  1e30f,  1e30f);
-	sf::Vector3f mx(-1e30f, -1e30f, -1e30f);
-
-	// Open the file
-	if (loadStream.is_open()) loadStream.close();
-	loadStream.open(filename, std::ios::binary | std::ios::in);
-	if (loadStream.is_open()) {
-		std::wcout << L"Opened file: " << filename   << std::endl
-				   << L"Loading joints positions..." << std::endl;
-
-		JointPosFrame inputJointFrame;    
-		struct joint joint;
-		int numJointsRead = 0, totalJointsRead = 0, totalFramesRead = 0;
-		while (loadStream.good()) {
-			memset(&joint, 0, sizeof(struct joint));
-			loadStream.read((char *)&joint, sizeof(struct joint));
-			inputJointFrame[joint.index] = joint;
-			++totalJointsRead;
-			
-			mn.x = std::min(mn.x, joint.position.x);
-			mn.y = std::min(mn.y, joint.position.y);
-			mn.z = std::min(mn.z, joint.position.z);
-
-			mx.x = std::max(mx.x, joint.position.x);
-			mx.y = std::max(mx.y, joint.position.y);
-			mx.z = std::max(mx.z, joint.position.z);
-
-			if (++numJointsRead == NUI_SKELETON_POSITION_COUNT) {
-				numJointsRead = 0; 
-				++totalFramesRead;
-				jointPositionFrames.push_back(inputJointFrame);
-			}
-		}
-
-		loadStream.close();
-		loaded = true;
-		std::wstringstream ss;
-		ss << _T("Done loading '") << filename << _T("'");
-		MessageBox(NULL,ss.str().c_str(),_T("Open"),MB_OK);
-	}
-
-	std::cout << "min,max = (" << mn.x << "," << mn.y << "," << mn.z << ")"
-			  <<        " , (" << mx.x << "," << mx.y << "," << mx.z << ")"
-			  << std::endl;
-
-	// Normalize the z values for each joint in each frame
-	for (auto frame : jointPositionFrames) {
-		for (auto joints : frame) {
-			struct joint &joint = joints.second;
-			joint.position.z /= mx.z;
-		}
-	}
-
-	// Set the current frame as the middle frame of the sequence
-	jointFrameIndex = jointPositionFrames.size() / 2;
-	if (jointFrameIndex < jointPositionFrames.size()) { 
-		jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-		std::string name; name.assign(filename.begin(), filename.end());
-		gui.setFileName(name);
-		gui.setProgress((float) jointFrameIndex / (float) jointPositionFrames.size());
-		gui.setIndex(jointFrameIndex);
-	}
-}
-
-void Application::moveToNextFrame()
-{
-	if (!loaded) return;
-	
-	const int nextFrame = jointFrameIndex + 1;
-	const int numFrames = jointPositionFrames.size();
-	if (nextFrame >= 0 && nextFrame < numFrames) {
-		jointFrameIndex = nextFrame;
-		jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-		gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-		gui.setIndex(jointFrameIndex);
-	}
-}
-
-void Application::moveToPreviousFrame()
-{
-	if (!loaded) return;
-
-	const int prevFrame = jointFrameIndex - 1;
-	const int numFrames = jointPositionFrames.size();
-	if (prevFrame >= 0 && prevFrame < numFrames) {
-		jointFrameIndex = prevFrame;
-		jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-		gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-		gui.setIndex(jointFrameIndex);
-	}
-}
-
-void Application::drawJoints()
-{
-	// Draw each joint
-	glPointSize(8.f);
-	glBegin(GL_POINTS);
-	for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
-		const struct joint &joint = (*jointFrameVis)[static_cast<NUI_SKELETON_POSITION_INDEX>(i)];
-		switch (joint.trackState) { // skip untracked joints
-		case NUI_SKELETON_POSITION_NOT_TRACKED: continue;
-		case NUI_SKELETON_POSITION_TRACKED:
-			glColor3f(1.f, 1.f, 1.f);
-			break;
-		case NUI_SKELETON_POSITION_INFERRED:
-			if (skeletonRenderFlags & INFER) glColor3f(1.f, 0.5f, 0.f);
-			else                             continue;
-			break;
-		}
-		glVertex3fv(glm::value_ptr(joint.position));
-	}
-	glEnd();
 }

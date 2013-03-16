@@ -5,12 +5,18 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <SFML/OpenGL.hpp>
+#include <SFML/System/Vector3.hpp>
+
+#include <iostream>
+#include <fstream>
 
 
 Skeleton::Skeleton()
 	: visibleJointFrame(nullptr)
 	, currentJointFrame()
 	, jointFrames()
+	, loaded(false)
+	, frameIndex(0)
 	, renderingFlags(R_POS | R_JOINTS | R_ORIENT | R_BONES)
 	, filteringLevel(MEDIUM)
 {
@@ -36,6 +42,109 @@ void Skeleton::render() const
 		if (renderingFlags & R_PATH)   renderJointPaths();
 	glPopMatrix();
 	glColor3f(1,1,1);
+}
+
+bool Skeleton::loadFile( const std::string& filename )
+{
+	if (loaded) {
+		jointFrames.clear();
+		frameIndex = 0;
+		loaded = false;
+	}
+
+	sf::Vector3f mn( 1e30f,  1e30f,  1e30f);
+	sf::Vector3f mx(-1e30f, -1e30f, -1e30f);
+
+	std::ifstream loadStream;
+	loadStream.open(filename, std::ios::binary | std::ios::in);
+	if (loadStream.is_open()) {
+		std::cout << "Opened file: " << filename.c_str() << std::endl
+				  << "Loading joints positions..." << std::endl;
+
+		Skeleton::JointFrame inputJointFrame;    
+		Skeleton::Joint joint;
+		int numJointsRead = 0, totalJointsRead = 0, totalFramesRead = 0;
+		while (loadStream.good()) {
+			memset(&joint, 0, sizeof(Skeleton::Joint));
+			loadStream.read((char *)&joint, sizeof(Skeleton::Joint));
+			inputJointFrame[joint.type] = joint;
+			++totalJointsRead;
+			
+			mn.x = std::min(mn.x, joint.position.x);
+			mn.y = std::min(mn.y, joint.position.y);
+			mn.z = std::min(mn.z, joint.position.z);
+
+			mx.x = std::max(mx.x, joint.position.x);
+			mx.y = std::max(mx.y, joint.position.y);
+			mx.z = std::max(mx.z, joint.position.z);
+
+			// Done reading joints for current frame, save it and continue with next frame 
+			if (++numJointsRead == NUM_JOINT_TYPES) {
+				jointFrames.push_back(inputJointFrame);
+				numJointsRead = 0; 
+				++totalFramesRead;
+			}
+		}
+
+		loadStream.close();
+		loaded = true;
+		std::cout << "Loaded " << totalJointsRead << " joints in " << totalFramesRead << " frames." << std::endl
+				  << "Done loading skeleton data from '" << filename.c_str() << "'." << std::endl;
+	}
+
+	std::cout << "min,max = (" << mn.x << "," << mn.y << "," << mn.z << ")"
+			  <<        " , (" << mx.x << "," << mx.y << "," << mx.z << ")"
+			  << std::endl;
+
+	// Normalize the z values for each joint in each frame
+	for (auto frame : jointFrames) {
+		for (auto joints : frame) {
+			Skeleton::Joint& joint = joints.second;
+			joint.position.z /= mx.z;
+		}
+	}
+
+	frameIndex = 0;
+	if (loaded) {
+		visibleJointFrame = &jointFrames[frameIndex];
+	} else {
+		visibleJointFrame = &currentJointFrame;
+	}
+
+	return loaded;
+}
+
+void Skeleton::nextFrame()
+{
+	if (!loaded) return;
+	
+	const int nextFrame = frameIndex + 1;
+	const int numFrames = jointFrames.size();
+	if (nextFrame >= 0 && nextFrame < numFrames) {
+		frameIndex = nextFrame;
+		visibleJointFrame = &jointFrames[frameIndex];
+	}
+}
+
+void Skeleton::prevFrame()
+{
+	if (!loaded) return;
+
+	const int prevFrame = frameIndex - 1;
+	const int numFrames = jointFrames.size();
+	if (prevFrame >= 0 && prevFrame < numFrames) {
+		frameIndex = prevFrame;
+		visibleJointFrame = &jointFrames[frameIndex];
+	}
+}
+
+void Skeleton::setFrameIndex( const float fraction )
+{
+	if (!loaded) return;
+	assert(fraction >= 0.f && fraction <= 1.f);
+
+	frameIndex = static_cast<int>(floor(fraction * jointFrames.size()));
+	visibleJointFrame = &jointFrames[frameIndex];
 }
 
 void Skeleton::renderSkeletonPosition() const
@@ -174,7 +283,7 @@ void Skeleton::renderBones() const
 
 void Skeleton::renderJointPath( EJointType type ) const
 {
-	// TODO - update this for greater flexibilty
+	// TODO - update this for greater flexibility
 	/*
 	if (!loaded) return;
 
@@ -212,38 +321,4 @@ void Skeleton::renderJointPaths() const
 	for (auto i = 0; i < NUM_JOINT_TYPES; ++i) {
 		renderJointPath((EJointType) i);
 	}
-}
-
-void Skeleton::nextFrame()
-{
-	// TODO - get this working
-	/*
-	if (!loaded) return;
-	
-	const int nextFrame = jointFrameIndex + 1;
-	const int numFrames = jointPositionFrames.size();
-	if (nextFrame >= 0 && nextFrame < numFrames) {
-		jointFrameIndex = nextFrame;
-		jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-		gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-		gui.setIndex(jointFrameIndex);
-	}
-	*/
-}
-
-void Skeleton::prevFrame()
-{
-	// TODO - get this working
-	/*
-	if (!loaded) return;
-
-	const int prevFrame = jointFrameIndex - 1;
-	const int numFrames = jointPositionFrames.size();
-	if (prevFrame >= 0 && prevFrame < numFrames) {
-		jointFrameIndex = prevFrame;
-		jointFrameVis   = &jointPositionFrames[jointFrameIndex];
-		gui.setProgress((float) jointFrameIndex / (float) (numFrames - 1));
-		gui.setIndex(jointFrameIndex);
-	}
-	*/
 }

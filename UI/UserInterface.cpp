@@ -60,12 +60,12 @@ void UserInterface::setupWidgetHandlers()
           showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
           showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
        showSkeletonButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowSkeletonButtonClick, this);
-       showPositionButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowPositionButtonClick, this);
-          showBonesButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowBonesButtonClick, this);
-         showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
-       showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
-      showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
-    showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
+    //   showPositionButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowPositionButtonClick, this);
+    //      showBonesButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowBonesButtonClick, this);
+    //     showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
+    //   showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
+    //  showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
+    //showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
         filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
       jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
     // TODO: hook up other widget handlers as needed
@@ -135,12 +135,12 @@ void UserInterface::onSaveButtonClick() { Application::request().toggleSave(); }
 void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
 void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
-void UserInterface::onShowPositionButtonClick()    { Application::request().togglePosition(); }
-void UserInterface::onShowJointsButtonClick()      { Application::request().toggleJoints(); }
-void UserInterface::onShowInferredButtonClick()    { Application::request().toggleInferred(); }
-void UserInterface::onShowOrientationButtonClick() { Application::request().toggleOrientation(); }
-void UserInterface::onShowBonesButtonClick()       { Application::request().toggleBones(); }
-void UserInterface::onShowJointPathButtonClick()   { Application::request().toggleJointPath(); }
+//void UserInterface::onShowPositionButtonClick()    { Application::request().togglePosition(); }
+//void UserInterface::onShowJointsButtonClick()      { Application::request().toggleJoints(); }
+//void UserInterface::onShowInferredButtonClick()    { Application::request().toggleInferred(); }
+//void UserInterface::onShowOrientationButtonClick() { Application::request().toggleOrientation(); }
+//void UserInterface::onShowBonesButtonClick()       { Application::request().toggleBones(); }
+//void UserInterface::onShowJointPathButtonClick()   { Application::request().toggleJointPath(); }
 
 void UserInterface::onProgressBarMouseMove()
 {
@@ -155,7 +155,7 @@ void UserInterface::onProgressBarMouseMove()
     if (pos.x >= bounds.x && pos.x <= bounds.y) {
         const float fraction = (float) (pos.x - bounds.x) / (bounds.y - bounds.x);
         jointFramesProgress->SetFraction(fraction);
-        Application::request().setJointIndex(fraction);
+        Application::request().setJointFrameIndex(fraction);
     }
 }
 
@@ -163,8 +163,8 @@ void UserInterface::onFilterComboSelect()
 {
     // TODO: map combo box index to string
     const sf::String& selected(filterJointsCombo->GetSelectedText());
-         if (selected == "Joint filtering - Off")    Application::request().setFilterLevel(OFF);
-    else if (selected == "Joint filtering - Low")    Application::request().setFilterLevel(LOW);
-    else if (selected == "Joint filtering - Medium") Application::request().setFilterLevel(MEDIUM);
-    else if (selected == "Joint filtering - High")   Application::request().setFilterLevel(HIGH);
+         if (selected == "Joint filtering - Off")    Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::OFF);
+    else if (selected == "Joint filtering - Low")    Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::LOW);
+    else if (selected == "Joint filtering - Medium") Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::MEDIUM);
+    else if (selected == "Joint filtering - High")   Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::HIGH);
 }

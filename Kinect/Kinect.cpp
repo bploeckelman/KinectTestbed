@@ -9,14 +9,21 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <tchar.h>
 
 std::string toStdString(const BSTR bstr);
 Skeleton::EJointType toJointType(unsigned int i);
 NUI_SKELETON_POSITION_INDEX toPositionIndex(unsigned int i);
 glm::mat4 toMat4(const Matrix4& m);
 
+// TODO : allow user to change path and filename for output
+const std::string Kinect::saveFileName("../../Res/Out/joint_frames.bin");
+
+
 Kinect::Kinect()
 	: initialized(false)
+	, saving(false)
+	, numJointsSaved()
 	, clock()
 	, deviceId("?")
 	, sensors()
@@ -25,15 +32,19 @@ Kinect::Kinect()
 	, nextSkeletonEvent()
 	, skeletonTrackingFlags(NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT)
 	, skeleton()
+	, saveStream()
 {}
 
 Kinect::~Kinect()
 {
 	// TODO: delete each sensor and the streams
+	if (saveStream.is_open()) saveStream.close();
 }
 
 bool Kinect::initialize()
 {
+	clock.restart();
+
 	int numSensors = -1;
 	HRESULT hr = NuiGetSensorCount(&numSensors);
 	if (!SUCCEEDED(hr) || numSensors < 1) {
@@ -95,12 +106,20 @@ bool Kinect::initialize()
 			return false;
 		}
 
-		std::cout << "Initialized Kinect #" << i << " with Device Id "
-				  << "[" << toStdString(sensor->NuiDeviceConnectionId()) << "]"
+		deviceId = toStdString(sensor->NuiDeviceConnectionId());
+		std::cout << "Initialized Kinect #" << i << " with Device Id [" << deviceId.c_str() << "]" << std::endl;
+	}
+
+	initialized = (sensors.size() >= 1);
+	if (!initialized) {
+		std::cerr << "Unable to initialize Kinect." << std::endl;
+	} else {
+		std::cout << "Initialized " << sensors.size() << " Kinect device(s) "
+				  << "in " << clock.getElapsedTime().asSeconds() << " seconds."
 				  << std::endl;
 	}
 
-	return (initialized = (sensors.size() >= 1));
+	return initialized;
 }
 
 void Kinect::update()
@@ -108,6 +127,20 @@ void Kinect::update()
 	checkForSkeletonFrame();
 }
 
+void Kinect::toggleSave()
+{
+	std::cout << (saving ? "Stopped" : "Started") << " saving joint data." << std::endl;
+
+	saving = !saving; 
+	if (saving) {
+		if (!saveStream.is_open())
+			saveStream.open(saveFileName, std::ios::binary | std::ios::app);
+	} else {
+		std::cout << "Joint frames saved: " << numJointsSaved / Skeleton::NUM_JOINT_TYPES << std::endl;
+		if (saveStream.is_open())
+			saveStream.close();
+	}
+}
 
 void Kinect::getStreamData( byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex )
 {
@@ -248,10 +281,11 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		joint.type          = toJointType(i);
 		joint.trackingState = static_cast<Skeleton::ETrackingState>(positionTrackingState);
 
-		// TODO : Save the joint frame entry if appropriate?
-		//if (saving & saveStream.is_open()) {
-		//	saveStream.write((char *)&joint, sizeof(Skeleton::Joint));
-		//}
+		// Save the joint frame entry if appropriate
+		if (saving & saveStream.is_open()) {
+			saveStream.write((char *)&joint, sizeof(Skeleton::Joint));
+			++numJointsSaved;
+		}
 	}
 
 }
@@ -264,9 +298,8 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 std::string toStdString( const BSTR bstr )
 {
 	const std::wstring wstr(bstr, SysStringLen(bstr));
-	std::string deviceId;
-	deviceId.assign(wstr.begin(), wstr.end());
-	return deviceId;
+	std::string str; str.assign(wstr.begin(), wstr.end());
+	return str;
 }
 
 Skeleton::EJointType toJointType( unsigned int i )

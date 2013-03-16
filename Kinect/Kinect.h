@@ -8,6 +8,7 @@
 
 #include "Skeleton.h"
 
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -24,8 +25,13 @@ public:
 	static const int DEPTH_STREAM_HEIGHT = 480;
 	static const int DEPTH_STREAM_BYTES  = 4 * DEPTH_STREAM_WIDTH * DEPTH_STREAM_HEIGHT; // BGRA
 
+	static const std::string saveFileName;
+
 private:
 	bool initialized;
+	bool saving;
+	unsigned int numJointsSaved;
+
 	sf::Clock clock;
 
 	std::string deviceId;
@@ -38,18 +44,24 @@ private:
 
 	Skeleton skeleton;
 
+	std::ofstream saveStream;
+
 public:
 	Kinect();
 	~Kinect();
 
 	bool initialize();
 	void update();
+	bool loadFile(const std::string& filename);
 
+	void toggleSave();
 	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
 
-	Skeleton& getSkeleton() { return skeleton; }
+	Skeleton& getSkeleton()             { return skeleton; }
+	const Skeleton& getSkeleton() const { return skeleton; }
 
 	bool isInitialized() const { return initialized; }
+	bool isSaving()      const { return saving; }
 	int  getNumSensors() const { return sensors.size(); }
 	const std::string& getDeviceId() const { return deviceId; }
 

@@ -85,6 +85,9 @@ private:
 	JointFrame  currentJointFrame;
 	JointFrames jointFrames;
 
+	bool loaded;
+	unsigned int frameIndex;
+
 	RenderingFlags renderingFlags;
 	EFilteringLevel filteringLevel;
 
@@ -93,10 +96,17 @@ public:
 	~Skeleton();
 
 	void render() const;
+	bool loadFile(const std::string& filename);
+	bool isLoaded() const { return loaded; }
 
-	JointFrame& getCurrentJointFrame() { return currentJointFrame; }
+	void nextFrame();
+	void prevFrame();
 
-	// Rendering flags ------------------------------------
+	void setFrameIndex(const float fraction);
+	unsigned int getFrameIndex() const { return frameIndex;         }
+	unsigned int getNumFrames()  const { return jointFrames.size(); }
+	JointFrame& getCurrentJointFrame() { return currentJointFrame;  }
+
 	void togglePosition()                 { renderingFlags ^= R_POS;    }
 	void toggleJoints()                   { renderingFlags ^= R_JOINTS; }
 	void toggleOrientation()              { renderingFlags ^= R_ORIENT; }
@@ -122,10 +132,5 @@ private:
 	void renderJointPaths() const;
 
 	void renderOrientations() const;
-
-	// TODO: come up with a cleaner way to navigate between frames
-	void nextFrame();
-	void prevFrame();
-
 };
 

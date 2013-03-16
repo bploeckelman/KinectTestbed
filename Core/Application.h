@@ -17,142 +17,81 @@
 #include "Kinect/Kinect.h"
 #include "UI/UserInterface.h"
 
-struct joint {
-    float timestamp; // in seconds
-    glm::vec3 position;
-    NUI_SKELETON_POSITION_INDEX index;
-    NUI_SKELETON_BONE_ORIENTATION orientation;
-    NUI_SKELETON_POSITION_TRACKING_STATE trackState;
-};
-
-typedef std::map<NUI_SKELETON_POSITION_INDEX, struct joint> JointPosFrame;
-typedef std::vector<JointPosFrame> JointPositionFrames;
-
-// Skeleton rendering flags
-const byte POS    = 0x01;
-const byte JOINTS = 0x02;
-const byte INFER  = 0x04;
-const byte ORIENT = 0x08;
-const byte BONES  = 0x10;
-const byte PATH   = 0x20;
-
-enum ESkeletonFilterLevel { OFF, LOW, MEDIUM, HIGH };
-
 
 class Application
 {
 private:
-    static const sf::VideoMode videoMode;
+	static const sf::VideoMode videoMode;
 
-    // SFML/SFGUI vars
-    sf::Clock clock;
-    sf::RenderWindow window;
-    UserInterface gui;
+	sf::Clock clock;
+	sf::RenderWindow window;
+	UserInterface gui;
 
-    // OpenGL vars
-    GLuint colorTextureId;
-    GLuint depthTextureId;
-    GLubyte *colorData;
-    GLubyte *depthData;
+	// TODO : move to OpenGLEnvironment class?
+	GLuint colorTextureId;
+	GLuint depthTextureId;
+	GLubyte *colorData;
+	GLubyte *depthData;
 
-    // Kinect vars
-    Kinect kinect;
-    HANDLE nextSkeletonEvent;
-    INuiSensor *sensor;
-    int numSensors;
-    int jointFrameIndex;
-    JointPosFrame *jointFrameVis;
-    JointPosFrame currentJoints;
-    JointPositionFrames jointPositionFrames;
-    ESkeletonFilterLevel filterLevel;
+	Kinect kinect;
 
-    // State
-    bool loaded;
-    bool saving;
-    bool showColor;
-    bool showDepth;
-    bool showSkeleton;
-    bool rightMouseDown;
-    bool leftMouseDown;
+	bool showColor;
+	bool showDepth;
+	bool showSkeleton;
+	bool rightMouseDown;
+	bool leftMouseDown;
 
-    byte skeletonRenderFlags;
+	float cameray;
+	float cameraz;
 
-    float cameray;
-    float cameraz;
-
-    // File
-    static const std::string saveFileName;
-    std::ofstream saveStream;
-    std::ifstream loadStream;
 private:
-    // Singleton
-    Application();
-    Application(const Application& application);
-    Application& operator=(const Application& application);
+	// Singleton
+	Application();
+	Application(const Application& application);
+	Application& operator=(const Application& application);
 
 public:
-    // Singleton
-    static Application& request() { static Application application; return application; }
+	// Singleton
+	static Application& request() { static Application application; return application; }
 
-    ~Application();
+	~Application();
 
-    void startup();
-    void shutdown();
+	void startup();
+	void shutdown();
 
-    void toggleSave();
-    void toggleShowColor()     { showColor    = !showColor;    }
-    void toggleShowDepth()     { showDepth    = !showDepth;    }
-    void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
+	void loadFile();
+	void moveToNextFrame();
+	void moveToPreviousFrame();
+	void setJointFrameIndex(const float fraction);
 
-    // Rendering flags
-    void setRenderFlags(const byte flags) { skeletonRenderFlags  = flags;  }
-    void clearRenderFlags()               { skeletonRenderFlags  = 0;      }
-    void togglePosition()                 { skeletonRenderFlags ^= POS;    }
-    void toggleJoints()                   { skeletonRenderFlags ^= JOINTS; }
-    void toggleOrientation()              { skeletonRenderFlags ^= ORIENT; }
-    void toggleBones()                    { skeletonRenderFlags ^= BONES;  }
-    void toggleInferred()                 { skeletonRenderFlags ^= INFER;  }
-    void toggleJointPath()                { skeletonRenderFlags ^= PATH;   }
-    void setFilterLevel(const ESkeletonFilterLevel& level) { filterLevel = level; }
+	void toggleSave();
+	void toggleShowColor()     { showColor    = !showColor;    }
+	void toggleShowDepth()     { showDepth    = !showDepth;    }
+	void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
 
-    void loadFile();
-    void setJointIndex(const float fraction);
+	bool isSaving() const { return kinect.isSaving(); }
+	bool isLoaded() const { return kinect.getSkeleton().isLoaded(); }
+	int getNumSensors() const { return kinect.getNumSensors(); }
+	const sf::Vector2i getMousePosition() const { return sf::Mouse::getPosition(window); }
 
-    bool isSaving() const { return saving; }
-    int getNumSensors() const { return numSensors; }
-    const sf::Vector2i getMousePosition() const { return sf::Mouse::getPosition(window); }
+	Kinect& getKinect()             { return kinect; }
+	const Kinect& getKinect() const { return kinect; }
 
 private:
-    // Main methods
-    void mainLoop();
-    void processEvents();
-    void draw();
+	void mainLoop();
+	void processEvents();
+	void draw();
 
-    float getCameraRotationX();
-    float getCameraRotationY();
-    std::wstring showFileChooser();
+	float getCameraRotationX();
+	float getCameraRotationY();
+	std::wstring showFileChooser();
 
-    // OpenGL methods
-    void initOpenGL();
-    void shutdownOpenGL();
+	void initOpenGL();
+	void shutdownOpenGL();
 
-    // Kinect methods -------------------------------------
-    void updateKinectImageStreams();
-    void drawKinectImageStreams() ;
+	// Kinect methods -------------------------------------
+	// TODO : move these to Kinect class?
+	void updateKinectImageStreams();
+	void drawKinectImageStreams() ;
 
-    // Kinect skeleton methods
-    void checkForSkeletonFrame();
-    void skeletonFrameReady(NUI_SKELETON_FRAME *skeletonFrame);
-    void drawSkeletonFrame();
-    void drawJoints();
-    void drawOrientations();
-
-    void drawKinectSkeletonFrame();
-    void drawBones();
-    void drawSkeletonPosition();
-    void drawBone(NUI_SKELETON_POSITION_INDEX jointFrom , NUI_SKELETON_POSITION_INDEX jointTo);
-    void drawJointPath();
-
-    void moveToNextFrame();
-    void moveToPreviousFrame();
 };
