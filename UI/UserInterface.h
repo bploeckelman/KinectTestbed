@@ -67,12 +67,12 @@ private:
 	void onShowColorButtonClick();
 	void onShowDepthButtonClick();
 	void onShowSkeletonButtonClick();
-	//void onShowPositionButtonClick();
-	//void onShowJointsButtonClick();
-	//void onShowInferredButtonClick();
-	//void onShowOrientationButtonClick();
-	//void onShowBonesButtonClick();
-	//void onShowJointPathButtonClick();
+	void onShowPositionButtonClick();
+	void onShowJointsButtonClick();
+	void onShowInferredButtonClick();
+	void onShowOrientationButtonClick();
+	void onShowBonesButtonClick();
+	void onShowJointPathButtonClick();
 	void onProgressBarMouseMove();
 	void onFilterComboSelect();
 };
