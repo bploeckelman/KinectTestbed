@@ -45,8 +45,8 @@ Application::Application()
 	, depthTextureId(0)
 	, colorData(new GLubyte[Kinect::COLOR_STREAM_BYTES])
 	, depthData(new GLubyte[Kinect::DEPTH_STREAM_BYTES])
-	, showColor(false)
-	, showDepth(false)
+	, showColor(true)
+	, showDepth(true)
 	, showSkeleton(true)
 	, rightMouseDown(false)
 	, leftMouseDown(false)
@@ -178,7 +178,9 @@ void Application::draw()
 		Render::basis();
 
 		kinect.update();
-		kinect.getSkeleton().render();
+		if (showSkeleton)
+			kinect.getSkeleton().render();
+
 		drawKinectImageStreams();
 	glPopMatrix();
 
