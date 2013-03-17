@@ -91,6 +91,12 @@ void Application::loadFile()
 	}
 }
 
+void Application::closeFile()
+{
+	kinect.getSkeleton().clearLoadedFrames();
+	gui.setFileName("No file loaded");
+}
+
 void Application::moveToNextFrame()
 {
 	kinect.getSkeleton().nextFrame();

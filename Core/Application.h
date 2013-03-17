@@ -60,6 +60,7 @@ public:
 	void shutdown();
 
 	void loadFile();
+	void closeFile();
 	void moveToNextFrame();
 	void moveToPreviousFrame();
 	void setJointFrameIndex(const float fraction);

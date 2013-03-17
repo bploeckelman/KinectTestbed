@@ -114,6 +114,14 @@ bool Skeleton::loadFile( const std::string& filename )
 	return loaded;
 }
 
+void Skeleton::clearLoadedFrames()
+{
+	if (!loaded) return;
+	frameIndex = 0;
+	jointFrames.clear();
+	visibleJointFrame = &currentJointFrame;
+}
+
 void Skeleton::nextFrame()
 {
 	if (!loaded) return;

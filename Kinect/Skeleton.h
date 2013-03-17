@@ -7,8 +7,6 @@
 #include <vector>
 #include <map>
 
-// TODO : try to make Skeleton kinect agnostic
-
 
 class Skeleton
 {
@@ -96,8 +94,9 @@ public:
 	~Skeleton();
 
 	void render() const;
-	bool loadFile(const std::string& filename);
 	bool isLoaded() const { return loaded; }
+	bool loadFile(const std::string& filename);
+	void clearLoadedFrames();
 
 	void nextFrame();
 	void prevFrame();

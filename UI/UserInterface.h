@@ -19,6 +19,7 @@ private:
 
 	sfg::Button::Ptr quitButton;
 	sfg::Button::Ptr openButton;
+	sfg::Button::Ptr closeButton;
 
 	sfg::ToggleButton::Ptr saveButton;
 
@@ -62,6 +63,7 @@ private:
 	void onQuitButtonClick();
 	void onOpenButtonClick();
 	void onSaveButtonClick();
+	void onCloseButtonClick();
 	void onShowColorButtonClick();
 	void onShowDepthButtonClick();
 	void onShowSkeletonButtonClick();

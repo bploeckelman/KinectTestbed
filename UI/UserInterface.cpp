@@ -17,6 +17,7 @@ UserInterface::UserInterface()
 	, infoLabel(sfg::Label::Create())
 	, quitButton(sfg::Button::Create("Quit"))
 	, openButton(sfg::Button::Create("Open"))
+	, closeButton(sfg::Button::Create("Close"))
 	, saveButton(sfg::ToggleButton::Create("Save"))
 	, showColorButton(sfg::CheckButton::Create("Color"))
 	, showDepthButton(sfg::CheckButton::Create("Depth"))
@@ -57,6 +58,7 @@ void UserInterface::setupWidgetHandlers()
 			   quitButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onQuitButtonClick, this);
 			   openButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onOpenButtonClick, this);
 			   saveButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onSaveButtonClick, this);
+			  closeButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onCloseButtonClick, this);
 		  showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
 		  showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
 	   showSkeletonButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowSkeletonButtonClick, this);
@@ -107,7 +109,8 @@ void UserInterface::setupWindowConfiguration()
 	fixed->Put(infoLabel, sf::Vector2f(0,0));
 	fixed->Put(quitButton, sf::Vector2f(0  , 20));
 	fixed->Put(openButton, sf::Vector2f(50 , 20));
-	fixed->Put(saveButton, sf::Vector2f(100, 20));
+	fixed->Put(closeButton, sf::Vector2f(100, 20));
+	fixed->Put(saveButton, sf::Vector2f(150, 20));
 	fixed->Put(showColorButton, sf::Vector2f(0, 60));
 	fixed->Put(showDepthButton, sf::Vector2f(0, 100));
 	fixed->Put(showSkeletonButton, sf::Vector2f(0, 140));
@@ -131,6 +134,7 @@ void UserInterface::setupWindowConfiguration()
 
 void UserInterface::onQuitButtonClick() { Application::request().shutdown(); }
 void UserInterface::onOpenButtonClick() { Application::request().loadFile(); }
+void UserInterface::onCloseButtonClick() { Application::request().closeFile(); }
 void UserInterface::onSaveButtonClick() { Application::request().getKinect().toggleSave(); }
 void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
