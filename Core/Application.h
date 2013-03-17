@@ -64,7 +64,6 @@ public:
 	void moveToPreviousFrame();
 	void setJointFrameIndex(const float fraction);
 
-	void toggleSave();
 	void toggleShowColor()     { showColor    = !showColor;    }
 	void toggleShowDepth()     { showDepth    = !showDepth;    }
 	void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }

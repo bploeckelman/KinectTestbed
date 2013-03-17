@@ -131,7 +131,7 @@ void UserInterface::setupWindowConfiguration()
 
 void UserInterface::onQuitButtonClick() { Application::request().shutdown(); }
 void UserInterface::onOpenButtonClick() { Application::request().loadFile(); }
-void UserInterface::onSaveButtonClick() { Application::request().toggleSave(); }
+void UserInterface::onSaveButtonClick() { Application::request().getKinect().toggleSave(); }
 void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
 void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }

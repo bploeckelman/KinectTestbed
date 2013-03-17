@@ -112,11 +112,6 @@ void Application::setJointFrameIndex( const float fraction )
 	gui.setIndex(kinect.getSkeleton().getFrameIndex());
 }
 
-void Application::toggleSave()
-{
-	kinect.toggleSave();
-}
-
 void Application::mainLoop()
 {
 	clock.restart();    
