@@ -127,7 +127,7 @@ private:
 	void renderBone(EJointType fromType, EJointType toType) const;
 	void renderBones() const;
 
-	void renderJointPath(EJointType type) const;
+	void renderJointPath(const EJointType type) const;
 	void renderJointPaths() const;
 
 	void renderOrientations() const;

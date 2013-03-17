@@ -289,39 +289,23 @@ void Skeleton::renderBones() const
 	renderBone(ANKLE_RIGHT, FOOT_RIGHT);
 }
 
-void Skeleton::renderJointPath( EJointType type ) const
+// TODO - update this for greater flexibility, number of historical frames to draw, fade out, etc...
+void Skeleton::renderJointPath( const EJointType type ) const
 {
-	// TODO - update this for greater flexibility
-	/*
 	if (!loaded) return;
 
+	const unsigned int numFrames = 20;
+	const unsigned int lastFrame = ((frameIndex - numFrames) < 0) ? 0 : (frameIndex - numFrames);
+
+	glColor3f(1,1,0);
 	glPushMatrix();
-
-	// TODO: draw sequence of frames for a particular joint or subset of joints
-	// TODO: draw all frames for a particular joint or subset of joints    
-
-	glColor3f(1.f, 1.f, 0.f);
-	//glBegin(GL_LINE_STRIP);
-	//    for (int i = 0; i <= jointFrameIndex; ++i) {
-	//        auto& hip_center = jointPositionFrames[i][NUI_SKELETON_POSITION_HIP_CENTER];
-	//        glVertex3fv(glm::value_ptr(hip_center.position));
-	//    }
-	//glEnd();
 	glBegin(GL_LINE_STRIP);
-		for (int i = 0; i <= jointFrameIndex; ++i) {
-			auto& left_hand  = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_LEFT];
-			glVertex3fv(glm::value_ptr(left_hand.position));
+		for (auto i = lastFrame; i <= frameIndex; ++i) {
+			glVertex3fv(glm::value_ptr(jointFrames[i].at(type).position));
 		}
 	glEnd();
-	glBegin(GL_LINE_STRIP);
-		for (int i = 0; i < jointFrameIndex; ++i) {
-			auto& right_hand = jointPositionFrames[i][NUI_SKELETON_POSITION_HAND_RIGHT];
-			glVertex3fv(glm::value_ptr(right_hand.position));
-		}
-	glEnd();
-
 	glPopMatrix();
-	*/
+	glColor3f(1,1,1);
 }
 
 void Skeleton::renderJointPaths() const
