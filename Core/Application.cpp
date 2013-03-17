@@ -227,9 +227,9 @@ float Application::getCameraRotationY()
 	static const int scrollThreshold = 20;
 	static const float timeThreshold = 0.05f;
 	static const float rotBound      = 360.f;
-	static const float scale         = 5.f;
+	static const float scale         = 10.f;
 
-	static float rot = 180.f;
+	static float rot = 0.f;
 	static float lastTime = clock.getElapsedTime().asSeconds();
 
 	float thisTime = clock.getElapsedTime().asSeconds();
@@ -342,7 +342,7 @@ void Application::initOpenGL(){
 	GLfloat mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat mat_shininess[] = { 50.0f };
-	GLfloat light_position[] = { 0.0f, 2.0f, 1.0f, 0.0f };
+	GLfloat light_position[] = { 0.0f, 0.5f, 0.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -382,6 +382,7 @@ void Application::drawKinectImageStreams()
 	if ((showColor || showDepth) && kinect.isInitialized()) {
 		updateKinectImageStreams();
 
+		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_LIGHTING);
 
@@ -411,6 +412,7 @@ void Application::drawKinectImageStreams()
 
 		glEnable(GL_LIGHTING);
 		glEnable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
