@@ -23,7 +23,7 @@ const std::string Kinect::saveFileName("../../Res/Out/joint_frames.bin");
 Kinect::Kinect()
 	: initialized(false)
 	, saving(false)
-	, numJointsSaved()
+	, numFramesSaved()
 	, clock()
 	, deviceId("?")
 	, sensors()
@@ -136,7 +136,7 @@ void Kinect::toggleSave()
 		if (!saveStream.is_open())
 			saveStream.open(saveFileName, std::ios::binary | std::ios::app);
 	} else {
-		std::cout << "Joint frames saved: " << numJointsSaved / Skeleton::NUM_JOINT_TYPES << std::endl;
+		std::cout << "Joint frames saved: " << numFramesSaved << std::endl;
 		if (saveStream.is_open())
 			saveStream.close();
 	}
@@ -282,12 +282,14 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		joint.trackingState = static_cast<Skeleton::ETrackingState>(positionTrackingState);
 
 		// Save the joint frame entry if appropriate
-		if (saving & saveStream.is_open()) {
+		if (saving && saveStream.is_open()) {
 			saveStream.write((char *)&joint, sizeof(Skeleton::Joint));
-			++numJointsSaved;
 		}
 	}
 
+	if (saving && saveStream.is_open()) {
+		++numFramesSaved;
+	}
 }
 
 // ----------------------------------------------------------------------------

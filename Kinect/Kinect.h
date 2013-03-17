@@ -30,7 +30,7 @@ public:
 private:
 	bool initialized;
 	bool saving;
-	unsigned int numJointsSaved;
+	unsigned int numFramesSaved;
 
 	sf::Clock clock;
 
