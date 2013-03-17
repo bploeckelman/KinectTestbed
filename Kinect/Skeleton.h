@@ -64,20 +64,18 @@ public:
 	typedef std::map<EJointType, Joint> JointFrame;
 	typedef std::vector<JointFrame>     JointFrames;
 	
-	// Rendering flags == [R_POS | R_JOINTS | R_ORIENT | R_BONES | R_INFER]
-	// --------------------------------------------------------------------
-	// R_POS    = whole skeleton position
+	// Rendering flags == [R_JOINTS | R_ORIENT | R_BONES | R_INFER]
+	// ------------------------------------------------------------
 	// R_JOINTS = skeleton joints
 	// R_ORIENT = skeleton joint orientations
 	// R_BONES  = connections between skeleton joints
 	// R_INFER  = draw inferred joints/bones
 	// R_PATH   = draw path of particular joints over time
-	static const byte R_POS    = 0x01;
-	static const byte R_JOINTS = 0x02;
-	static const byte R_INFER  = 0x04;
-	static const byte R_ORIENT = 0x08;
-	static const byte R_BONES  = 0x10;
-	static const byte R_PATH   = 0x20;
+	static const byte R_JOINTS = 0x01;
+	static const byte R_INFER  = 0x02;
+	static const byte R_ORIENT = 0x04;
+	static const byte R_BONES  = 0x08;
+	static const byte R_PATH   = 0x10;
 	typedef byte RenderingFlags;
 
 private:
@@ -109,7 +107,6 @@ public:
 	unsigned int getNumFrames()  const { return jointFrames.size(); }
 	JointFrame& getCurrentJointFrame() { return currentJointFrame;  }
 
-	void togglePosition()                 { renderingFlags ^= R_POS;    }
 	void toggleJoints()                   { renderingFlags ^= R_JOINTS; }
 	void toggleOrientation()              { renderingFlags ^= R_ORIENT; }
 	void toggleBones()                    { renderingFlags ^= R_BONES;  }
@@ -124,7 +121,6 @@ public:
 	EFilteringLevel getFilterLevel() const     { return filteringLevel;  }
 
 private:
-	void renderSkeletonPosition() const;
 	void renderJoints() const;
 
 	void renderBone(EJointType fromType, EJointType toType) const;

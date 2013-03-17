@@ -54,6 +54,8 @@ public:
 	void update();
 
 	void toggleSave();
+	void toggleSeatedMode();
+
 	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
 
 	Skeleton& getSkeleton()             { return skeleton; }
@@ -61,6 +63,7 @@ public:
 
 	bool isInitialized() const { return initialized; }
 	bool isSaving()      const { return saving; }
+
 	int  getNumSensors() const { return sensors.size(); }
 	const std::string& getDeviceId() const { return deviceId; }
 
@@ -69,5 +72,7 @@ public:
 private:
 	void checkForSkeletonFrame();
 	void skeletonFrameReady(NUI_SKELETON_FRAME& skeletonFrame);
+
+	bool isSeatedModeEnabled() const { return 0 != (skeletonTrackingFlags & NUI_SKELETON_FRAME_FLAG_SEATED_SUPPORT_ENABLED); }
 
 };

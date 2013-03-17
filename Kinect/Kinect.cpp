@@ -142,6 +142,20 @@ void Kinect::toggleSave()
 	}
 }
 
+void Kinect::toggleSeatedMode()
+{
+	if (isSeatedModeEnabled()) {
+		skeletonTrackingFlags |= ~NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT;
+	} else {
+		skeletonTrackingFlags |= NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT;
+	}
+
+	HRESULT hr = getSensor()->NuiSkeletonTrackingEnable(nextSkeletonEvent, skeletonTrackingFlags);
+	if (!SUCCEEDED(hr)) {
+		std::cerr << "Failed to toggle skeleton tracking mode for Kinect sensor #0" << std::endl;
+	}
+}
+
 void Kinect::getStreamData( byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex )
 {
 	INuiSensor *sensor = getSensor(sensorIndex);

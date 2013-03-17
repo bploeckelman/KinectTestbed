@@ -171,8 +171,8 @@ void Application::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPushMatrix();
 		glTranslatef(0, -cameray, -cameraz);
-		glRotatef( 16.f - getCameraRotationX(), 1.f, 0.f, 0.f);
-		glRotatef(180.f - getCameraRotationY(), 0.f, 1.f, 0.f);
+		glRotatef(getCameraRotationX(), 1.f, 0.f, 0.f);
+		glRotatef(getCameraRotationY(), 0.f, 1.f, 0.f);
 
 		Render::ground();
 		Render::basis();
@@ -229,7 +229,7 @@ float Application::getCameraRotationY()
 	static const float rotBound      = 360.f;
 	static const float scale         = 5.f;
 
-	static float rot = 0.f;
+	static float rot = 180.f;
 	static float lastTime = clock.getElapsedTime().asSeconds();
 
 	float thisTime = clock.getElapsedTime().asSeconds();
@@ -289,7 +289,6 @@ std::wstring Application::showFileChooser() {
 			// buf now holds the directory path
 			std::wstringstream ss;
 			ss << _T("You selected the directory: ") << std::endl << _T("\t") << buffer << std::endl;
-			//MessageBox(NULL, (LPWSTR)(ss.str().c_str()), _T("Selection"), MB_OK);
 		}
 
 		lpMalloc->Free(pidl);

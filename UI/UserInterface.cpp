@@ -22,7 +22,7 @@ UserInterface::UserInterface()
 	, showColorButton(sfg::CheckButton::Create("Color"))
 	, showDepthButton(sfg::CheckButton::Create("Depth"))
 	, showSkeletonButton(sfg::CheckButton::Create("Skeleton"))
-	, showPositionButton(sfg::CheckButton::Create("Position"))
+	, enableSeatedMode(sfg::CheckButton::Create("Seated Mode"))
 	, showJointsButton(sfg::CheckButton::Create("Joints"))
 	, showOrientationButton(sfg::CheckButton::Create("Orientation"))
 	, showBonesButton(sfg::CheckButton::Create("Bones"))
@@ -62,13 +62,13 @@ void UserInterface::setupWidgetHandlers()
 		  showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
 		  showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
 	   showSkeletonButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowSkeletonButtonClick, this);
-	   showPositionButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowPositionButtonClick, this);
+		 enableSeatedMode->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onEnableSeatedModeClick, this);
 	      showBonesButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowBonesButtonClick, this);
 	     showJointsButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointsButtonClick, this);
 	   showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
 	  showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
 	showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
-		filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect) .Connect(&UserInterface::onFilterComboSelect, this);
+		 filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
 	  jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
 	// TODO: hook up other widget handlers as needed
 }
@@ -81,8 +81,8 @@ void UserInterface::setupWindowConfiguration()
 	showColorButton->SetActive(true);
 	showDepthButton->SetActive(true);
 	showSkeletonButton->SetActive(true);
+	enableSeatedMode->SetActive(false);
 
-	showPositionButton->SetActive(true);
 	showJointsButton->SetActive(true);
 	showInferredButton->SetActive(false);
 	showOrientationButton->SetActive(true);
@@ -117,13 +117,13 @@ void UserInterface::setupWindowConfiguration()
 	fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
 	fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
 	fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
-	fixed->Put(showPositionButton, sf::Vector2f(0, 180));
+	fixed->Put(enableSeatedMode, sf::Vector2f(0, 180));
 	fixed->Put(showJointsButton, sf::Vector2f(0, 220));
 	fixed->Put(showInferredButton, sf::Vector2f(0, 260));
 	fixed->Put(showOrientationButton, sf::Vector2f(0, 300));
 	fixed->Put(showBonesButton, sf::Vector2f(0, 340));
 	fixed->Put(showJointPathButton, sf::Vector2f(0, 380));
-	fixed->Put(filterJointsCombo, sf::Vector2f(0, 420));
+	fixed->Put(filterJointsCombo, sf::Vector2f(0, 1100));
 	box->Pack(fixed);
 
 	window->SetTitle("Kinect Testbed");
@@ -139,12 +139,13 @@ void UserInterface::onSaveButtonClick() { Application::request().getKinect().tog
 void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
 void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
-void UserInterface::onShowPositionButtonClick()    { Application::request().getKinect().getSkeleton().togglePosition(); }
+void UserInterface::onEnableSeatedModeClick()      { Application::request().getKinect().toggleSeatedMode(); }
 void UserInterface::onShowJointsButtonClick()      { Application::request().getKinect().getSkeleton().toggleJoints(); }
 void UserInterface::onShowInferredButtonClick()    { Application::request().getKinect().getSkeleton().toggleInferred(); }
 void UserInterface::onShowOrientationButtonClick() { Application::request().getKinect().getSkeleton().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().getKinect().getSkeleton().toggleBones(); }
 void UserInterface::onShowJointPathButtonClick()   { Application::request().getKinect().getSkeleton().toggleJointPath(); }
+
 
 void UserInterface::onProgressBarMouseMove()
 {

@@ -19,7 +19,7 @@ Skeleton::Skeleton()
 	, loaded(false)
 	, frameIndex(0)
 	, quadric(gluNewQuadric())
-	, renderingFlags(R_POS | R_JOINTS | R_ORIENT | R_BONES)
+	, renderingFlags(R_JOINTS | R_ORIENT | R_BONES)
 	, filteringLevel(MEDIUM)
 {
 	visibleJointFrame = &currentJointFrame;
@@ -28,7 +28,6 @@ Skeleton::Skeleton()
 
 Skeleton::~Skeleton()
 {
-	// TODO
 	gluDeleteQuadric(quadric);
 }
 
@@ -38,7 +37,6 @@ void Skeleton::render() const
 
 	glPushMatrix();
 	glTranslatef(0, 1, 0);
-		if (renderingFlags & R_POS)    renderSkeletonPosition();
 		if (renderingFlags & R_JOINTS) renderJoints();
 		if (renderingFlags & R_ORIENT) renderOrientations();
 		if (renderingFlags & R_BONES)  renderBones();
@@ -156,20 +154,6 @@ void Skeleton::setFrameIndex( const float fraction )
 
 	frameIndex = static_cast<int>(floor(fraction * jointFrames.size()));
 	visibleJointFrame = &jointFrames[frameIndex];
-}
-
-void Skeleton::renderSkeletonPosition() const
-{
-	JointFrame& joints = *visibleJointFrame;
-	const Joint& hipCenter = joints[HIP_CENTER];
-
-	glPointSize(20.f);
-	glColor3f(1,0,1);
-	glBegin(GL_POINTS);
-		glVertex3fv(glm::value_ptr(hipCenter.position));
-	glEnd();
-	glColor3f(1,1,1);
-	glPointSize(1.f);
 }
 
 void Skeleton::renderJoints() const

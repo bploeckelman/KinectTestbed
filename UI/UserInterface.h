@@ -26,8 +26,8 @@ private:
 	sfg::CheckButton::Ptr showColorButton;
 	sfg::CheckButton::Ptr showDepthButton;
 	sfg::CheckButton::Ptr showSkeletonButton;
+	sfg::CheckButton::Ptr enableSeatedMode;
 
-	sfg::CheckButton::Ptr showPositionButton;
 	sfg::CheckButton::Ptr showJointsButton;
 	sfg::CheckButton::Ptr showInferredButton;
 	sfg::CheckButton::Ptr showOrientationButton;
@@ -67,7 +67,7 @@ private:
 	void onShowColorButtonClick();
 	void onShowDepthButtonClick();
 	void onShowSkeletonButtonClick();
-	void onShowPositionButtonClick();
+	void onEnableSeatedModeClick();
 	void onShowJointsButtonClick();
 	void onShowInferredButtonClick();
 	void onShowOrientationButtonClick();
