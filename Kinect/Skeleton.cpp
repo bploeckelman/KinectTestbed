@@ -37,7 +37,7 @@ void Skeleton::render() const
 	if (visibleJointFrame == nullptr) return;
 
 	glPushMatrix();
-	glTranslatef(0, 1, -2); 
+	glTranslatef(0, 1, 0);
 		if (renderingFlags & R_POS)    renderSkeletonPosition();
 		if (renderingFlags & R_JOINTS) renderJoints();
 		if (renderingFlags & R_ORIENT) renderOrientations();

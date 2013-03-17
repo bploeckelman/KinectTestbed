@@ -171,8 +171,8 @@ void Application::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPushMatrix();
 		glTranslatef(0, -cameray, -cameraz);
-		glRotatef(getCameraRotationX(), 1.f, 0.f, 0.f);
-		glRotatef(getCameraRotationY(), 0.f, 1.f, 0.f);
+		glRotatef( 16.f - getCameraRotationX(), 1.f, 0.f, 0.f);
+		glRotatef(180.f - getCameraRotationY(), 0.f, 1.f, 0.f);
 
 		Render::ground();
 		Render::basis();
@@ -343,7 +343,7 @@ void Application::initOpenGL(){
 	GLfloat mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	GLfloat mat_shininess[] = { 50.0f };
-	GLfloat light_position[] = { 0.0f, 2.0f, 0.0f, 0.0f };
+	GLfloat light_position[] = { 0.0f, 2.0f, 1.0f, 0.0f };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);

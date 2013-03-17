@@ -130,7 +130,7 @@ void Render::basis(const float scale
 void Render::ground()
 {
 	static const float Y = 0.f;
-	static const float R = 10.f;
+	static const float R = 3.f;
 
 	glDisable(GL_LIGHTING);
 	glDisable(GL_CULL_FACE);
