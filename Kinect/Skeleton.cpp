@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <SFML/OpenGL.hpp>
 #include <SFML/System/Vector3.hpp>
@@ -17,6 +18,7 @@ Skeleton::Skeleton()
 	, jointFrames()
 	, loaded(false)
 	, frameIndex(0)
+	, quadric(gluNewQuadric())
 	, renderingFlags(R_POS | R_JOINTS | R_ORIENT | R_BONES)
 	, filteringLevel(MEDIUM)
 {
@@ -27,6 +29,7 @@ Skeleton::Skeleton()
 Skeleton::~Skeleton()
 {
 	// TODO
+	gluDeleteQuadric(quadric);
 }
 
 void Skeleton::render() const
@@ -218,6 +221,19 @@ void Skeleton::renderOrientations() const
 
 void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 {
+	// Cylinder parameters for bone primitive
+	static const double minRadius = 0.02;
+	static const double maxRadius = 0.04;
+	static double baseRadius = maxRadius;
+	static double topRadius  = minRadius;
+	static const int slices  = 8;
+	static const int stacks  = 4;
+
+	// Material params
+	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 	JointFrame& joints = *visibleJointFrame;
 	const Joint& fromJoint = joints[fromType];
 	const Joint& toJoint   = joints[toType];
@@ -228,31 +244,47 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 		return; // nothing to draw, one joint not tracked
 	}
 	if (fromState == INFERRED && toState == INFERRED) {
-		return; // nothing to draw, points inferred
+		return; // nothing to draw, both joints inferred
+	}
+
+	// Draw thin red lines if one joint is inferred
+	if (fromState == INFERRED || toState == INFERRED) {
+		baseRadius = 0.0;
+		topRadius  = minRadius;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+	}
+	// Draw thick green lines if both joints are tracked
+	else if (fromState == TRACKED && toState == TRACKED) {
+		baseRadius = 0.0;
+		topRadius  = maxRadius;
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
 	}
 
 	const glm::vec3& fromPosition = fromJoint.position;
 	const glm::vec3& toPosition   = toJoint.position;
+	const double boneLength = glm::distance(fromPosition, toPosition);
 
-	// Draw thin red lines if one joint is inferred
-	if (fromState == INFERRED || toState == INFERRED) {
-		glLineWidth(1.f);
-		glColor3f(1.f, 0.f, 0.f);
-		return;
-	}
-	// Draw thick green lines if both joints are tracked
-	else if (fromState == TRACKED && toState == TRACKED) {
-		glLineWidth(8.f);
-		glColor3f(0.f, 1.f, 0.f);
-	}
+	// Build an orientation matrix to place a cylinder between toPosition and fromPosition
+	const glm::vec3 z(0,0,1);
+	const glm::vec3 dir(glm::normalize(fromPosition - toPosition));
+	const glm::vec3 axis = glm::cross(z, dir);
+	const float angle = glm::degrees(acos(glm::dot(z, dir)));
+	const glm::mat4 mat(glm::rotate(glm::translate(glm::mat4(1.0), toPosition), angle, axis));
+	const glm::mat4 mat2(glm::rotate(glm::translate(glm::mat4(1.0), fromPosition), angle, axis));
 
-	glBegin(GL_LINES);
-		glVertex3fv(glm::value_ptr(fromPosition));
-		glVertex3fv(glm::value_ptr(toPosition));
-	glEnd();
+	gluQuadricNormals(quadric, GLU_SMOOTH);
+	gluQuadricOrientation(quadric, GLU_OUTSIDE);
 
-	glColor3f(1.f, 1.f, 1.f);
-	glLineWidth(1.f);
+	glPushMatrix();
+	glMultMatrixf(glm::value_ptr(mat));
+		gluCylinder(quadric, baseRadius, topRadius, boneLength, slices, stacks);
+	glPopMatrix();
+	glPushMatrix();
+	glMultMatrixf(glm::value_ptr(mat2));
+		gluDisk(quadric, 0.0, topRadius, slices, 1);
+	glPopMatrix();
+
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseWhite);
 }
 
 void Skeleton::renderBones() const

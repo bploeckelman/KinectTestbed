@@ -178,8 +178,9 @@ void Application::draw()
 		Render::basis();
 
 		kinect.update();
-		if (showSkeleton)
+		if (showSkeleton) {
 			kinect.getSkeleton().render();
+		}
 
 		drawKinectImageStreams();
 	glPopMatrix();
@@ -320,6 +321,7 @@ void Application::initOpenGL(){
 
 	glClearColor(0,0,0,0);
 	glClearDepth(1.f);
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glPointSize(10.f);
 	glEnable(GL_POINT_SMOOTH);
@@ -336,6 +338,21 @@ void Application::initOpenGL(){
 	glFrustum( -fW, fW, -fH, fH, zNear, zFar );
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+
+	GLfloat mat_ambient[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+	GLfloat mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat mat_shininess[] = { 50.0f };
+	GLfloat light_position[] = { 0.0f, 2.0f, 0.0f, 0.0f };
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glShadeModel (GL_SMOOTH);
 }
 
 void Application::shutdownOpenGL() {
@@ -366,11 +383,13 @@ void Application::drawKinectImageStreams()
 	if ((showColor || showDepth) && kinect.isInitialized()) {
 		updateKinectImageStreams();
 
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_LIGHTING);
+
 		// Draw color and depth images
 		glPushMatrix();
 		glLoadIdentity();
 		glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
-		glDisable(GL_CULL_FACE);
 		if (showColor) {
 			glBindTexture(GL_TEXTURE_2D, colorTextureId);
 			glBegin(GL_QUADS);
@@ -383,14 +402,16 @@ void Application::drawKinectImageStreams()
 		if (showDepth) {
 			glBindTexture(GL_TEXTURE_2D, depthTextureId);
 			glBegin(GL_QUADS);
-			glTexCoord2f(0, 1); glVertex3f(-2.f, -1.f, 0.f);
-			glTexCoord2f(1, 1); glVertex3f( 0.f, -1.f, 0.f);
-			glTexCoord2f(1, 0); glVertex3f( 0.f,  1.f, 0.f);
-			glTexCoord2f(0, 0); glVertex3f(-2.f,  1.f, 0.f);
+			glTexCoord2f(0, 1); glVertex3f(0.f, -3.f, 0.f);
+			glTexCoord2f(1, 1); glVertex3f(2.f, -3.f, 0.f);
+			glTexCoord2f(1, 0); glVertex3f(2.f, -1.f, 0.f);
+			glTexCoord2f(0, 0); glVertex3f(0.f, -1.f, 0.f);
 			glEnd();
 		}
+		glPopMatrix();
+
+		glEnable(GL_LIGHTING);
 		glEnable(GL_CULL_FACE);
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glPopMatrix();
 	}
 }

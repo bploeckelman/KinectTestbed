@@ -2,6 +2,8 @@
 #include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
 
+#include <SFML/OpenGL.hpp>
+
 #include <glm/glm.hpp>
 
 #include <vector>
@@ -85,6 +87,7 @@ private:
 
 	bool loaded;
 	unsigned int frameIndex;
+	GLUquadric *quadric;
 
 	RenderingFlags renderingFlags;
 	EFilteringLevel filteringLevel;
