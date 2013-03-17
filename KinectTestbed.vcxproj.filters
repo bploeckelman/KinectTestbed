@@ -10,6 +10,9 @@
     <Filter Include="Util">
       <UniqueIdentifier>{a788b343-691a-4d3d-96e3-a268530d9e79}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Kinect">
+      <UniqueIdentifier>{f2f3f933-7110-4da6-bac1-cbd9e90924ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\Main.cpp">
@@ -26,6 +29,12 @@
     </ClCompile>
     <ClCompile Include="Util\RenderUtils.cpp">
       <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Kinect\Kinect.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
+    <ClCompile Include="Kinect\Skeleton.cpp">
+      <Filter>Kinect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +55,12 @@
     </ClInclude>
     <ClInclude Include="Util\RenderUtils.h">
       <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\Kinect.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\Skeleton.h">
+      <Filter>Kinect</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
