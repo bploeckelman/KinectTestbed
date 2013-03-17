@@ -52,7 +52,6 @@ public:
 
 	bool initialize();
 	void update();
-	bool loadFile(const std::string& filename);
 
 	void toggleSave();
 	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
