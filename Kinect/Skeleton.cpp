@@ -36,7 +36,7 @@ void Skeleton::render() const
 	if (visibleJointFrame == nullptr) return;
 
 	glPushMatrix();
-	glTranslatef(0, 1, 0);
+	glTranslatef(0, 1, -1);
 		if (renderingFlags & R_JOINTS) renderJoints();
 		if (renderingFlags & R_ORIENT) renderOrientations();
 		if (renderingFlags & R_BONES)  renderBones();
@@ -158,24 +158,48 @@ void Skeleton::setFrameIndex( const float fraction )
 
 void Skeleton::renderJoints() const
 {
+	// Sphere parameters for joint primitive
+	static const double minRadius = 0.02;
+	static const double maxRadius = 0.04;
+	static double radius = maxRadius;
+	static const int slices  = 6;
+	static const int stacks  = 6;
+
+	// TODO : move these out to the constants namespace
+	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 	JointFrame& joints = *visibleJointFrame;
 
-	glPointSize(8.f);
-	glBegin(GL_POINTS);
 	for (auto i = 0; i < NUM_JOINT_TYPES; ++i) {
 		const Joint& joint = joints[(EJointType) i];
-		switch (joint.trackingState) { // skip untracked joints
+
+		// Change rendering size/material based on tracking type 
+		switch (joint.trackingState) {
+			// Skip untracked joints
 			case NOT_TRACKED: continue;
-			case TRACKED:     glColor3f(1.f, 1.f, 1.f); break;
+			case TRACKED:
+				radius = maxRadius;
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
+			break;
 			case INFERRED:
-				if (renderingFlags & R_INFER) glColor3f(1.f, 0.5f, 0.f);
-				else                          continue;
+				if (renderingFlags & R_INFER) {
+					radius = minRadius;
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+				} else {
+					continue;
+				}
 			break;
 		}
-		glVertex3fv(glm::value_ptr(joint.position));
+
+		glPushMatrix();
+		glTranslatef(joint.position.x, joint.position.y, joint.position.z);
+			gluSphere(quadric, radius, slices, stacks);
+		glPopMatrix();
 	}
-	glEnd();
-	glPointSize(1.f);
+
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseWhite);
 }
 
 void Skeleton::renderOrientations() const
@@ -215,7 +239,7 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 
 	// Material params
 	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
-	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseGood[]  = { 1.0f, 0.85f, 0.73f, 1.0f };
 	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	JointFrame& joints = *visibleJointFrame;
@@ -241,7 +265,7 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	else if (fromState == TRACKED && toState == TRACKED) {
 		baseRadius = 0.0;
 		topRadius  = maxRadius;
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
 	}
 
 	const glm::vec3& fromPosition = fromJoint.position;
@@ -313,6 +337,8 @@ void Skeleton::renderJointPath( const EJointType type ) const
 	const unsigned int numFrames = 20;
 	const unsigned int lastFrame = ((frameIndex - numFrames) < 0) ? 0 : (frameIndex - numFrames);
 
+	glDisable(GL_LIGHTING);
+
 	glColor3f(1,1,0);
 	glPushMatrix();
 	glBegin(GL_LINE_STRIP);
@@ -322,6 +348,8 @@ void Skeleton::renderJointPath( const EJointType type ) const
 	glEnd();
 	glPopMatrix();
 	glColor3f(1,1,1);
+
+	glEnable(GL_LIGHTING);
 }
 
 void Skeleton::renderJointPaths() const

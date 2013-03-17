@@ -174,10 +174,29 @@ void Application::draw()
 		glRotatef(getCameraRotationX(), 1.f, 0.f, 0.f);
 		glRotatef(getCameraRotationY(), 0.f, 1.f, 0.f);
 
-		Render::ground();
 		Render::basis();
 
 		kinect.update();
+
+		// Draw reflected skeleton first
+		if (showSkeleton) {
+			glPushMatrix();
+			glScalef(1.f, -1.f, 1.f);
+			kinect.getSkeleton().render();
+			glPopMatrix();
+		}
+
+		glClear (GL_DEPTH_BUFFER_BIT);
+		glPushAttrib (0xffffffff);
+		/* Create imperfect reflector effect by blending ground 
+		   over the reflected scene with alpha of 0.05 */
+		glEnable (GL_BLEND);
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		Render::ground(0.5f);
+		glDisable(GL_BLEND);
+		glPopAttrib();
+
+		// Draw normal skeleton
 		if (showSkeleton) {
 			kinect.getSkeleton().render();
 		}

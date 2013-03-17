@@ -127,7 +127,7 @@ void Render::basis(const float scale
 	glEnable(GL_LIGHTING);
 }
 
-void Render::ground()
+void Render::ground( const float alpha )
 {
 	static const float Y = 0.f;
 	static const float R = 3.f;
@@ -144,7 +144,7 @@ void Render::ground()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	const float radius = 10.f;
-	glColor4f(1,1,1,0.75f);
+	glColor4f(1,1,1,alpha);
 	glBegin(GL_TRIANGLE_STRIP);
 		glNormal3f(0, 1, 0); glTexCoord2f(   0.f,    0.f); glVertex3f( R, Y,  R);
 		glNormal3f(0, 1, 0); glTexCoord2f(radius,    0.f); glVertex3f( R, Y, -R);
