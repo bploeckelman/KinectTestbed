@@ -159,11 +159,11 @@ void Skeleton::setFrameIndex( const float fraction )
 void Skeleton::renderJoints() const
 {
 	// Sphere parameters for joint primitive
-	static const double minRadius = 0.02;
-	static const double maxRadius = 0.04;
+	static const double minRadius = 0.01;
+	static const double maxRadius = 0.03;
 	static double radius = maxRadius;
-	static const int slices  = 6;
-	static const int stacks  = 6;
+	static const int slices = 10;
+	static const int stacks = 10;
 
 	// TODO : move these out to the constants namespace
 	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -234,8 +234,8 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	static const double maxRadius = 0.04;
 	static double baseRadius = maxRadius;
 	static double topRadius  = minRadius;
-	static const int slices  = 8;
-	static const int stacks  = 4;
+	static const int slices  = 16;
+	static const int stacks  = 8;
 
 	// Material params
 	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -257,13 +257,13 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 
 	// Draw thin red lines if one joint is inferred
 	if (fromState == INFERRED || toState == INFERRED) {
-		baseRadius = 0.0;
+		baseRadius = minRadius;
 		topRadius  = minRadius;
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
 	}
 	// Draw thick green lines if both joints are tracked
 	else if (fromState == TRACKED && toState == TRACKED) {
-		baseRadius = 0.0;
+		baseRadius = maxRadius;
 		topRadius  = maxRadius;
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
 	}
@@ -283,12 +283,16 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	gluQuadricNormals(quadric, GLU_SMOOTH);
 	gluQuadricOrientation(quadric, GLU_OUTSIDE);
 
+	// Draw one end cap
+	glPushMatrix();
+	glMultMatrixf(glm::value_ptr(mat2));
+		gluDisk(quadric, 0.0, topRadius, slices, 1);
+	glPopMatrix();
+	// Draw the cylinder and the other end cap
 	glPushMatrix();
 	glMultMatrixf(glm::value_ptr(mat));
 		gluCylinder(quadric, baseRadius, topRadius, boneLength, slices, stacks);
-	glPopMatrix();
-	glPushMatrix();
-	glMultMatrixf(glm::value_ptr(mat2));
+	gluQuadricOrientation(quadric, GLU_INSIDE);
 		gluDisk(quadric, 0.0, topRadius, slices, 1);
 	glPopMatrix();
 
