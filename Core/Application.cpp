@@ -35,10 +35,11 @@
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 
+const sf::ContextSettings contextSettings(16, 0, 2); // depth bits, stencil bits, aa level
 
 // ----------------------------------------------------------------------------
 Application::Application()
-	: window(Application::videoMode, "Kinect Testbed")
+	: window(Application::videoMode, "Kinect Testbed", sf::Style::Fullscreen, contextSettings)
 	, clock()
 	, gui()
 	, colorTextureId(0)
