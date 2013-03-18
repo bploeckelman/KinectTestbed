@@ -50,6 +50,7 @@ Application::Application()
 	, showSkeleton(true)
 	, rightMouseDown(false)
 	, leftMouseDown(false)
+	, shiftDown(false)
 	, cameray(constants::initial_camera_y)
 	, cameraz(constants::initial_camera_z)
 {
@@ -141,6 +142,11 @@ void Application::processEvents()
 		if (event.type == sf::Event::KeyPressed) {
 			if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToNextFrame();
 			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = true;
+		}
+
+		if (event.type == sf::Event::KeyReleased) {
+			if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = false;
 		}
 
 		if (event.type == sf::Event::MouseButtonPressed) {
@@ -153,11 +159,11 @@ void Application::processEvents()
 		}
 
 		if (event.type == sf::Event::MouseWheelMoved) {
-			const int threshold = 2;
+			const int threshold = 1;
 			static int accum = 0;
 			accum += event.mouseWheel.delta;
 			if (accum < -threshold || accum > threshold) {
-				cameraz -= 0.1f * accum / threshold;
+				cameraz -= (shiftDown ? 1.f : 0.1f) * accum / threshold;
 				accum = 0;
 			}
 		}

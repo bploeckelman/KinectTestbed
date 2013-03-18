@@ -40,6 +40,7 @@ private:
 	bool showSkeleton;
 	bool rightMouseDown;
 	bool leftMouseDown;
+	bool shiftDown;
 
 	float cameray;
 	float cameraz;
