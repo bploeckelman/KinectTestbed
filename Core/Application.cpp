@@ -59,6 +59,9 @@ Application::Application()
 	, camerax(0.f)
 	, cameray(constants::initial_camera_y)
 	, cameraz(constants::initial_camera_z)
+	, lastBinormal(constants::worldX)
+	, lastNormal(constants::worldY)
+	, lastTangent(constants::worldZ)
 	, projection(1.f)
 	, modelview(1.f)
 {
@@ -217,6 +220,10 @@ void Application::draw()
 				tempTangent = glm::normalize(glm::cross(binormal, constants::worldY));
 				normal      = glm::normalize(glm::cross(tempTangent, binormal));
 				tangent     = glm::normalize(glm::cross(binormal, normal));
+			} else {
+				binormal = lastBinormal;
+				normal   = lastNormal;
+				tangent  = lastTangent;
 			}
 
 			// Only enable hand distance zoom control if both hands are above the head
@@ -225,6 +232,10 @@ void Application::draw()
 				cameraz = (dist < constants::min_zoom) ? constants::min_zoom 
 						: (dist > constants::max_zoom) ? constants::max_zoom : dist;
 			//}
+		} else {
+			binormal = lastBinormal;
+			normal   = lastNormal;
+			tangent  = lastTangent;
 		}
 	}
 
@@ -285,6 +296,10 @@ void Application::draw()
 	gui.draw(window);
 
 	window.display();
+
+	lastBinormal = binormal;
+	lastNormal   = normal;
+	lastTangent  = tangent;
 }
 
 // TODO : this is ugly as hell, make it cleaner 

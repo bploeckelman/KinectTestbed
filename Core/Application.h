@@ -52,6 +52,10 @@ private:
 	float cameray;
 	float cameraz;
 
+	glm::vec3 lastBinormal;
+	glm::vec3 lastNormal;
+	glm::vec3 lastTangent;
+
 	glm::mat4 projection;
 	glm::mat4 modelview;
 
