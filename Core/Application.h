@@ -40,6 +40,9 @@ private:
 	bool showSkeleton;
 	bool handControl;
 
+	bool autoPlay;
+	float lastFrameTime;
+
 	bool rightMouseDown;
 	bool leftMouseDown;
 	bool shiftDown;
@@ -48,6 +51,7 @@ private:
 	float camerax;
 	float cameray;
 	float cameraz;
+
 	glm::mat4 projection;
 	glm::mat4 modelview;
 
@@ -72,13 +76,15 @@ public:
 	void moveToPreviousFrame();
 	void setJointFrameIndex(const float fraction);
 
+	void toggleAutoPlay()      { autoPlay     = !autoPlay;     }
 	void toggleShowColor()     { showColor    = !showColor;    }
 	void toggleShowDepth()     { showDepth    = !showDepth;    }
 	void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
 	void toggleHandControl()   { handControl  = !handControl;  }
 
-	bool isSaving() const { return kinect.isSaving(); }
-	bool isLoaded() const { return kinect.getSkeleton().isLoaded(); }
+	bool isSaving()     const { return kinect.isSaving(); }
+	bool isLoaded()     const { return kinect.getSkeleton().isLoaded(); }
+	bool isAutoPlay()   const { return autoPlay; }
 	int getNumSensors() const { return kinect.getNumSensors(); }
 	const sf::Vector2i getMousePosition() const { return sf::Mouse::getPosition(window); }
 

@@ -50,6 +50,9 @@ Application::Application()
 	, showColor(true)
 	, showDepth(true)
 	, showSkeleton(true)
+	, handControl(false)
+	, autoPlay(false)
+	, lastFrameTime(0.f)
 	, rightMouseDown(false)
 	, leftMouseDown(false)
 	, shiftDown(false)
@@ -182,6 +185,7 @@ void Application::draw()
 
 	Skeleton& skeleton = kinect.getSkeleton();
 
+	bool useLast = false;
 	glm::vec3 binormal = constants::worldX;
 	glm::vec3 normal   = constants::worldY;
 	glm::vec3 tangent  = constants::worldZ;
@@ -239,6 +243,14 @@ void Application::draw()
 		glLoadMatrixf(glm::value_ptr(modelview));
 
 		kinect.update();
+
+		if (autoPlay && skeleton.isLoaded()) {
+			const float thisFrameTime = clock.getElapsedTime().asSeconds();
+			if (thisFrameTime - lastFrameTime > gui.getPlayRate()) {
+				lastFrameTime = thisFrameTime;
+				moveToNextFrame();
+			}
+		}
 
 		// Draw reflected skeleton first
 		if (showSkeleton) {
