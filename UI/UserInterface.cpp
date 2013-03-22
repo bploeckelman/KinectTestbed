@@ -28,6 +28,7 @@ UserInterface::UserInterface()
 	, showBonesButton(sfg::CheckButton::Create("Bones"))
 	, showInferredButton(sfg::CheckButton::Create("Inferred"))
 	, showJointPathButton(sfg::CheckButton::Create("Joint Path"))
+	, enableHandControlButton(sfg::CheckButton::Create("Hand Controls"))
 	, jointFramesProgress(sfg::ProgressBar::Create())
 	, jointFramesFilename(sfg::Label::Create())
 	, jointFrameIndex(sfg::Label::Create())
@@ -68,6 +69,7 @@ void UserInterface::setupWidgetHandlers()
 	   showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
 	  showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
 	showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
+	enableHandControlButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onEnableHandControlButtonClick, this);
 		 filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
 	  jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
 	// TODO: hook up other widget handlers as needed
@@ -81,13 +83,14 @@ void UserInterface::setupWindowConfiguration()
 	showColorButton->SetActive(true);
 	showDepthButton->SetActive(true);
 	showSkeletonButton->SetActive(true);
-	enableSeatedMode->SetActive(false);
+	enableSeatedMode->SetActive(true);
 
 	showJointsButton->SetActive(true);
 	showInferredButton->SetActive(false);
-	showOrientationButton->SetActive(true);
+	showOrientationButton->SetActive(false);
 	showBonesButton->SetActive(true);
 	showJointPathButton->SetActive(false);
+	enableHandControlButton->SetActive(false);
 
 	jointFramesFilename->SetText(sf::String(""));
 	jointFramesFilename->SetLineWrap(true);
@@ -123,6 +126,7 @@ void UserInterface::setupWindowConfiguration()
 	fixed->Put(showOrientationButton, sf::Vector2f(0, 300));
 	fixed->Put(showBonesButton, sf::Vector2f(0, 340));
 	fixed->Put(showJointPathButton, sf::Vector2f(0, 380));
+	fixed->Put(enableHandControlButton, sf::Vector2f(0, 420));
 	fixed->Put(filterJointsCombo, sf::Vector2f(0, 1100));
 	box->Pack(fixed);
 
@@ -145,7 +149,7 @@ void UserInterface::onShowInferredButtonClick()    { Application::request().getK
 void UserInterface::onShowOrientationButtonClick() { Application::request().getKinect().getSkeleton().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().getKinect().getSkeleton().toggleBones(); }
 void UserInterface::onShowJointPathButtonClick()   { Application::request().getKinect().getSkeleton().toggleJointPath(); }
-
+void UserInterface::onEnableHandControlButtonClick() { Application::request().toggleHandControl(); }
 
 void UserInterface::onProgressBarMouseMove()
 {

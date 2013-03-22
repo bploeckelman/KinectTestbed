@@ -33,6 +33,7 @@ private:
 	sfg::CheckButton::Ptr showOrientationButton;
 	sfg::CheckButton::Ptr showBonesButton;
 	sfg::CheckButton::Ptr showJointPathButton;
+	sfg::CheckButton::Ptr enableHandControlButton;
 
 	sfg::ComboBox::Ptr filterJointsCombo;
 
@@ -73,6 +74,7 @@ private:
 	void onShowOrientationButtonClick();
 	void onShowBonesButtonClick();
 	void onShowJointPathButtonClick();
+	void onEnableHandControlButtonClick();
 	void onProgressBarMouseMove();
 	void onFilterComboSelect();
 };

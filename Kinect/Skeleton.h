@@ -106,6 +106,10 @@ public:
 	unsigned int getFrameIndex() const { return frameIndex;         }
 	unsigned int getNumFrames()  const { return jointFrames.size(); }
 	JointFrame& getCurrentJointFrame() { return currentJointFrame;  }
+	const Joint& getCurrentRightHand() { return currentJointFrame.at(HAND_RIGHT); }
+	const Joint& getCurrentLeftHand()  { return currentJointFrame.at(HAND_LEFT);  }
+
+	GLUquadric* getQuadric() { return quadric; }
 
 	void toggleJoints()                   { renderingFlags ^= R_JOINTS; }
 	void toggleOrientation()              { renderingFlags ^= R_ORIENT; }

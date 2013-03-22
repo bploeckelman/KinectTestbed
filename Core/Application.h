@@ -38,12 +38,18 @@ private:
 	bool showColor;
 	bool showDepth;
 	bool showSkeleton;
+	bool handControl;
+
 	bool rightMouseDown;
 	bool leftMouseDown;
 	bool shiftDown;
 
+	// TODO : extract camera control out to its own class 
+	float camerax;
 	float cameray;
 	float cameraz;
+	glm::mat4 projection;
+	glm::mat4 modelview;
 
 private:
 	// Singleton
@@ -69,6 +75,7 @@ public:
 	void toggleShowColor()     { showColor    = !showColor;    }
 	void toggleShowDepth()     { showDepth    = !showDepth;    }
 	void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
+	void toggleHandControl()   { handControl  = !handControl;  }
 
 	bool isSaving() const { return kinect.isSaving(); }
 	bool isLoaded() const { return kinect.getSkeleton().isLoaded(); }
@@ -94,5 +101,4 @@ private:
 	// TODO : move these to Kinect class?
 	void updateKinectImageStreams();
 	void drawKinectImageStreams() ;
-
 };

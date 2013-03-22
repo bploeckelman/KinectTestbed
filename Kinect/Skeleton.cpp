@@ -19,7 +19,7 @@ Skeleton::Skeleton()
 	, loaded(false)
 	, frameIndex(0)
 	, quadric(gluNewQuadric())
-	, renderingFlags(R_JOINTS | R_ORIENT | R_BONES)
+	, renderingFlags(R_JOINTS | R_BONES)
 	, filteringLevel(MEDIUM)
 {
 	visibleJointFrame = &currentJointFrame;
@@ -170,6 +170,7 @@ void Skeleton::renderJoints() const
 	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
 	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
+	gluQuadricOrientation(quadric, GLU_OUTSIDE);
 	JointFrame& joints = *visibleJointFrame;
 
 	for (auto i = 0; i < NUM_JOINT_TYPES; ++i) {
