@@ -13,6 +13,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <NuiApi.h>
 #include <NuiSensor.h>
@@ -351,18 +352,15 @@ void Application::initOpenGL(){
 	glPointSize(10.f);
 	glEnable(GL_POINT_SMOOTH);
 
+	// Set viewport and projection
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	const float aspect = (float) WINDOW_WIDTH / (float) WINDOW_HEIGHT;
+	const glm::mat4 proj(glm::perspective(constants::camera_fov, aspect, constants::camera_z_near, constants::camera_z_far));
 	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	//glOrtho(0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 1, -1);
-	GLfloat zNear  = 1.0f;
-	GLfloat zFar   = 100.0f;
-	GLfloat aspect = float(WINDOW_WIDTH)/float(WINDOW_HEIGHT);
-	GLfloat fH = tan( 66.f / 360.0f * 3.14159f ) * zNear;
-	GLfloat fW = fH * aspect;
-	glFrustum( -fW, fW, -fH, fH, zNear, zFar );
+	glLoadMatrixf(glm::value_ptr(proj));
+
 	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	glLoadMatrixf(glm::value_ptr(glm::mat4(1)));
 
 	GLfloat mat_ambient[] = { 0.3f, 0.3f, 0.3f, 1.0f };
 	GLfloat mat_diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
