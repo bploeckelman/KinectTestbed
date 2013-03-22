@@ -112,6 +112,9 @@ void Application::closeFile()
 void Application::moveToNextFrame()
 {
 	kinect.getSkeleton().nextFrame();
+	if (autoPlay && kinect.getSkeleton().getFrameIndex() >= kinect.getSkeleton().getNumFrames() - 1) {
+		kinect.getSkeleton().setFrameIndex(0);
+	}
 	gui.setProgress(kinect.getSkeleton().getFrameIndex() / (float) (kinect.getSkeleton().getNumFrames() - 1));
 	gui.setIndex(kinect.getSkeleton().getFrameIndex());
 }
