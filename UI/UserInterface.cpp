@@ -15,10 +15,13 @@ UserInterface::UserInterface()
 	, window(sfg::Window::Create())
 	, box(sfg::Box::Create(sfg::Box::HORIZONTAL, 0.f))
 	, infoLabel(sfg::Label::Create())
+	, playRateLabel(sfg::Label::Create())
 	, quitButton(sfg::Button::Create("Quit"))
 	, openButton(sfg::Button::Create("Open"))
 	, closeButton(sfg::Button::Create("Close"))
 	, saveButton(sfg::ToggleButton::Create("Save"))
+	, playButton(sfg::ToggleButton::Create("Play"))
+	, playRateScrollbar(sfg::Scrollbar::Create(sfg::Adjustment::Create(0.0033f, 0.0015f, 0.5f, 0.0005f, 0.01f)))
 	, showColorButton(sfg::CheckButton::Create("Color"))
 	, showDepthButton(sfg::CheckButton::Create("Depth"))
 	, showSkeletonButton(sfg::CheckButton::Create("Skeleton"))
@@ -28,6 +31,7 @@ UserInterface::UserInterface()
 	, showBonesButton(sfg::CheckButton::Create("Bones"))
 	, showInferredButton(sfg::CheckButton::Create("Inferred"))
 	, showJointPathButton(sfg::CheckButton::Create("Joint Path"))
+	, enableHandControlButton(sfg::CheckButton::Create("Hand Controls"))
 	, jointFramesProgress(sfg::ProgressBar::Create())
 	, jointFramesFilename(sfg::Label::Create())
 	, jointFrameIndex(sfg::Label::Create())
@@ -58,6 +62,7 @@ void UserInterface::setupWidgetHandlers()
 			   quitButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onQuitButtonClick, this);
 			   openButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onOpenButtonClick, this);
 			   saveButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onSaveButtonClick, this);
+			   playButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onPlayButtonClick, this);
 			  closeButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onCloseButtonClick, this);
 		  showColorButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowColorButtonClick, this);
 		  showDepthButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowDepthButtonClick, this);
@@ -68,7 +73,9 @@ void UserInterface::setupWidgetHandlers()
 	   showInferredButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowInferredButtonClick, this);
 	  showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
 	showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
-		 filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
+	enableHandControlButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onEnableHandControlButtonClick, this);
+	    playRateScrollbar->GetSignal(sfg::Scrollbar::OnLeftClick).Connect(&UserInterface::onPlayRateScrollbarClick, this);
+		filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
 	  jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
 	// TODO: hook up other widget handlers as needed
 }
@@ -81,13 +88,14 @@ void UserInterface::setupWindowConfiguration()
 	showColorButton->SetActive(true);
 	showDepthButton->SetActive(true);
 	showSkeletonButton->SetActive(true);
-	enableSeatedMode->SetActive(false);
+	enableSeatedMode->SetActive(true);
 
 	showJointsButton->SetActive(true);
 	showInferredButton->SetActive(false);
-	showOrientationButton->SetActive(true);
+	showOrientationButton->SetActive(false);
 	showBonesButton->SetActive(true);
 	showJointPathButton->SetActive(false);
+	enableHandControlButton->SetActive(false);
 
 	jointFramesFilename->SetText(sf::String(""));
 	jointFramesFilename->SetLineWrap(true);
@@ -100,30 +108,48 @@ void UserInterface::setupWindowConfiguration()
 	jointFramesProgress->SetFraction(0.0);
 	jointFramesProgress->SetRequisition(sf::Vector2f(1250, 50));
 
+	playButton->SetActive(false);
+	playButton->SetRequisition(sf::Vector2f(60, 40));
+	playRateScrollbar->SetRequisition(sf::Vector2f(150, 40));
+
+	std::stringstream ss;
+	ss << "Animation rate (seconds/frame): " << + getPlayRate();
+	playRateLabel->SetText(ss.str());
+	playRateLabel->SetLineWrap(true);
+
 	filterJointsCombo->AppendItem("No joint filtering");
 	filterJointsCombo->AppendItem("Low joint filtering");
 	filterJointsCombo->AppendItem("Medium joint filtering");
 	filterJointsCombo->AppendItem("High joint filtering");
 
 	sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
+
 	fixed->Put(infoLabel, sf::Vector2f(0,0));
+
 	fixed->Put(quitButton, sf::Vector2f(0  , 20));
 	fixed->Put(openButton, sf::Vector2f(50 , 20));
 	fixed->Put(closeButton, sf::Vector2f(100, 20));
 	fixed->Put(saveButton, sf::Vector2f(150, 20));
+
 	fixed->Put(showColorButton, sf::Vector2f(0, 60));
 	fixed->Put(showDepthButton, sf::Vector2f(0, 100));
 	fixed->Put(showSkeletonButton, sf::Vector2f(0, 140));
-	fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
-	fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
-	fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
 	fixed->Put(enableSeatedMode, sf::Vector2f(0, 180));
 	fixed->Put(showJointsButton, sf::Vector2f(0, 220));
 	fixed->Put(showInferredButton, sf::Vector2f(0, 260));
 	fixed->Put(showOrientationButton, sf::Vector2f(0, 300));
 	fixed->Put(showBonesButton, sf::Vector2f(0, 340));
 	fixed->Put(showJointPathButton, sf::Vector2f(0, 380));
-	fixed->Put(filterJointsCombo, sf::Vector2f(0, 1100));
+	fixed->Put(enableHandControlButton, sf::Vector2f(0, 420));
+	fixed->Put(filterJointsCombo, sf::Vector2f(0, 460));
+
+	fixed->Put(playButton, sf::Vector2f(0, 600));
+	fixed->Put(playRateScrollbar, sf::Vector2f(80, 600));
+	fixed->Put(playRateLabel, sf::Vector2f(240, 615));
+	fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
+	fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
+	fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
+
 	box->Pack(fixed);
 
 	window->SetTitle("Kinect Testbed");
@@ -132,10 +158,10 @@ void UserInterface::setupWindowConfiguration()
 	desktop.Add(window);
 }
 
-void UserInterface::onQuitButtonClick() { Application::request().shutdown(); }
-void UserInterface::onOpenButtonClick() { Application::request().loadFile(); }
+void UserInterface::onQuitButtonClick()  { Application::request().shutdown(); }
+void UserInterface::onOpenButtonClick()  { Application::request().loadFile(); }
 void UserInterface::onCloseButtonClick() { Application::request().closeFile(); }
-void UserInterface::onSaveButtonClick() { Application::request().getKinect().toggleSave(); }
+void UserInterface::onSaveButtonClick()  { Application::request().getKinect().toggleSave(); }
 void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
 void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
 void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
@@ -145,7 +171,20 @@ void UserInterface::onShowInferredButtonClick()    { Application::request().getK
 void UserInterface::onShowOrientationButtonClick() { Application::request().getKinect().getSkeleton().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().getKinect().getSkeleton().toggleBones(); }
 void UserInterface::onShowJointPathButtonClick()   { Application::request().getKinect().getSkeleton().toggleJointPath(); }
+void UserInterface::onEnableHandControlButtonClick() { Application::request().toggleHandControl(); }
 
+void UserInterface::onPlayButtonClick()  {
+	Application::request().toggleAutoPlay();
+	const bool isPlaying = Application::request().isAutoPlay();
+	playButton->SetLabel(isPlaying ? "Pause" : "Play");
+}
+
+void UserInterface::onPlayRateScrollbarClick()
+{
+	std::stringstream ss;
+	ss << "Animation rate (seconds/frame): " << + getPlayRate();
+	playRateLabel->SetText(ss.str());
+}
 
 void UserInterface::onProgressBarMouseMove()
 {

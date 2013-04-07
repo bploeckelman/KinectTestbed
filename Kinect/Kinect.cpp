@@ -30,7 +30,7 @@ Kinect::Kinect()
 	, colorStream()
 	, depthStream()
 	, nextSkeletonEvent()
-	, skeletonTrackingFlags(0)
+	, skeletonTrackingFlags(NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT)
 	, skeleton()
 	, saveStream()
 {}

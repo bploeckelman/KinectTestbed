@@ -16,12 +16,15 @@ private:
 	sfg::Box::Ptr box;
 
 	sfg::Label::Ptr infoLabel;
+	sfg::Label::Ptr playRateLabel;
 
 	sfg::Button::Ptr quitButton;
 	sfg::Button::Ptr openButton;
 	sfg::Button::Ptr closeButton;
 
 	sfg::ToggleButton::Ptr saveButton;
+	sfg::ToggleButton::Ptr playButton;
+	sfg::Scrollbar::Ptr playRateScrollbar;
 
 	sfg::CheckButton::Ptr showColorButton;
 	sfg::CheckButton::Ptr showDepthButton;
@@ -33,6 +36,7 @@ private:
 	sfg::CheckButton::Ptr showOrientationButton;
 	sfg::CheckButton::Ptr showBonesButton;
 	sfg::CheckButton::Ptr showJointPathButton;
+	sfg::CheckButton::Ptr enableHandControlButton;
 
 	sfg::ComboBox::Ptr filterJointsCombo;
 
@@ -55,6 +59,8 @@ public:
 		jointFrameIndex->SetText(sf::String(ss.str()));
 	}
 
+	float getPlayRate() const { return playRateScrollbar->GetAdjustment().get()->GetUpper() - playRateScrollbar->GetValue(); }
+
 private:
 	void setupWidgetHandlers();
 	void setupWindowConfiguration();
@@ -64,6 +70,8 @@ private:
 	void onOpenButtonClick();
 	void onSaveButtonClick();
 	void onCloseButtonClick();
+	void onPlayButtonClick();
+	void onPlayRateScrollbarClick();
 	void onShowColorButtonClick();
 	void onShowDepthButtonClick();
 	void onShowSkeletonButtonClick();
@@ -73,6 +81,7 @@ private:
 	void onShowOrientationButtonClick();
 	void onShowBonesButtonClick();
 	void onShowJointPathButtonClick();
+	void onEnableHandControlButtonClick();
 	void onProgressBarMouseMove();
 	void onFilterComboSelect();
 };
