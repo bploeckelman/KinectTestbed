@@ -30,6 +30,8 @@ public:
 private:
 	bool initialized;
 	bool saving;
+	bool isLayering;
+	float performanceTimer;
 	unsigned int numFramesSaved;
 
 	sf::Clock clock;
@@ -43,6 +45,7 @@ private:
 	DWORD  skeletonTrackingFlags;
 
 	Skeleton skeleton;
+	Skeleton::JointFrames layerFrames;
 
 	std::ofstream saveStream;
 
@@ -52,6 +55,8 @@ public:
 
 	bool initialize();
 	void update();
+
+	void startLayering();
 
 	void toggleSave();
 	void toggleSeatedMode();

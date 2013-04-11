@@ -1,5 +1,6 @@
 #include "Kinect.h"
 #include "Core/Constants.h"
+#include "Core/Application.h"
 
 #include <NuiApi.h>
 
@@ -23,6 +24,8 @@ const std::string Kinect::saveFileName("../../Res/Out/joint_frames.bin");
 Kinect::Kinect()
 	: initialized(false)
 	, saving(false)
+	, isLayering(false)
+	, performanceTimer(0.f)
 	, numFramesSaved()
 	, clock()
 	, deviceId("?")
@@ -32,6 +35,7 @@ Kinect::Kinect()
 	, nextSkeletonEvent()
 	, skeletonTrackingFlags(NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT)
 	, skeleton()
+	, layerFrames()
 	, saveStream()
 {}
 
@@ -125,6 +129,56 @@ bool Kinect::initialize()
 void Kinect::update()
 {
 	checkForSkeletonFrame();
+
+	// TODO handle capturing layering performance 
+	if (isLayering) {
+		performanceTimer += clock.getElapsedTime().asSeconds();
+		//std::cout << "Performance timer = " << performanceTimer << std::endl;
+
+		if (performanceTimer >= skeleton.getAnimationDuration()) {
+		//if (layerFrames.size() >= skeleton.getNumFrames()) {
+			// TODO apply layer performance update to existing animation
+			// TODO alert user and let them choose when to apply
+			// or apply in real time??
+			std::cout << "Finished capturing layered performance in "
+					  << performanceTimer << " seconds" << std::endl;
+			isLayering = false;
+			performanceTimer = 0.f;
+
+			MessageBox(NULL,_T("Finished capturing new performance"),_T("Capture Completed"),MB_OK);
+			MessageBox(NULL,_T("NOTE: applying new performance to existing animation not ready yet..."),_T("TODO"),MB_OK);
+
+			skeleton.applyPerformance(layerFrames);
+		}
+
+		clock.restart();
+	}
+}
+
+void Kinect::startLayering()
+{
+	if (!skeleton.isLoaded()) {
+		return;
+	}
+
+	std::cout << "Loaded animation duration: " << skeleton.getAnimationDuration() << " seconds." << std::endl;
+	MessageBox(NULL,_T("Ready to capture new performance..."),_T("Ready"),MB_OK);
+
+	if (isLayering) {
+		performanceTimer = 0.f;
+		std::cout << "Restarting layered performance animation capture..." << std::endl;
+	}
+	isLayering = true;
+	layerFrames.clear();
+	clock.restart();
+
+	if (!Application::request().isAutoPlay()) {
+		Application::request().toggleAutoPlay();
+	}
+	skeleton.setFrameIndex(0);
+
+	// TODO start on screen 3..2..1 countdown to capturing layered performance
+	// TODO then start capturing current skeleton data for a time corresponding to the duration of the loaded skeleton animation
 }
 
 void Kinect::toggleSave()
@@ -278,6 +332,12 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		std::cerr << "Failed to calculate bone orientations Kinect sensor #0" << std::endl;
 	}
 
+	if (isLayering) {
+		Skeleton::JointFrame* jointFrame = new Skeleton::JointFrame();
+		layerFrames.push_back(*jointFrame);
+		std::cout << "Pushed new joint frame into layerFrames vector, new size: " << layerFrames.size() << std::endl;
+	}
+
 	// For each joint type...
 	for (auto i = 0; i < NUI_SKELETON_POSITION_COUNT; ++i) {
 		// Get joint data in Kinect API form
@@ -298,6 +358,10 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		// Save the joint frame entry if appropriate
 		if (saving && saveStream.is_open()) {
 			saveStream.write((char *)&joint, sizeof(Skeleton::Joint));
+		}
+
+		if (isLayering) {
+			layerFrames.back()[toJointType(i)] = joint;
 		}
 	}
 

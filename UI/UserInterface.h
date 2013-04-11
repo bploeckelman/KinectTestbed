@@ -21,6 +21,7 @@ private:
 	sfg::Button::Ptr quitButton;
 	sfg::Button::Ptr openButton;
 	sfg::Button::Ptr closeButton;
+	sfg::Button::Ptr layerButton;
 
 	sfg::ToggleButton::Ptr saveButton;
 	sfg::ToggleButton::Ptr playButton;
@@ -70,6 +71,7 @@ private:
 	void onOpenButtonClick();
 	void onSaveButtonClick();
 	void onCloseButtonClick();
+	void onLayerButtonClick();
 	void onPlayButtonClick();
 	void onPlayRateScrollbarClick();
 	void onShowColorButtonClick();

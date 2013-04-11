@@ -94,7 +94,7 @@ public:
 	Skeleton();
 	~Skeleton();
 
-	void render() const;
+	void render(); //const;
 	bool isLoaded() const { return loaded; }
 	bool loadFile(const std::string& filename);
 	void clearLoadedFrames();
@@ -102,9 +102,19 @@ public:
 	void nextFrame();
 	void prevFrame();
 
+	void applyPerformance(JointFrames& newFrames);
+
 	void setFrameIndex(const float fraction);
 	unsigned int getFrameIndex() const { return frameIndex;         }
 	unsigned int getNumFrames()  const { return jointFrames.size(); }
+
+	float getAnimationDuration() const {
+		if (!loaded) return 0.f;
+		const float firstTime = jointFrames.front().at(SHOULDER_CENTER).timestamp;
+		const float lastTime  = jointFrames.back().at(SHOULDER_CENTER).timestamp;
+		return lastTime - firstTime;
+	}
+
 	JointFrame& getCurrentJointFrame() { return currentJointFrame;  }
 	const Joint& getCurrentRightHand() { return currentJointFrame.at(HAND_RIGHT); }
 	const Joint& getCurrentLeftHand()  { return currentJointFrame.at(HAND_LEFT);  }

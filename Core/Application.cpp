@@ -40,7 +40,7 @@ const sf::ContextSettings contextSettings(16, 0, 2); // depth bits, stencil bits
 
 // ----------------------------------------------------------------------------
 Application::Application()
-	: window(Application::videoMode, "Kinect Testbed", sf::Style::Fullscreen, contextSettings)
+	: window(Application::videoMode, "Kinect Testbed")//, sf::Style::Fullscreen, contextSettings)
 	, clock()
 	, gui()
 	, colorTextureId(0)

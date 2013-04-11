@@ -31,10 +31,11 @@ Skeleton::~Skeleton()
 	gluDeleteQuadric(quadric);
 }
 
-void Skeleton::render() const
+void Skeleton::render() //const
 {
 	if (visibleJointFrame == nullptr) return;
 
+	visibleJointFrame = &currentJointFrame;
 	glPushMatrix();
 	glTranslatef(0, 1, -1);
 		if (renderingFlags & R_JOINTS) renderJoints();
@@ -43,6 +44,19 @@ void Skeleton::render() const
 		if (renderingFlags & R_PATH)   renderJointPaths();
 	glPopMatrix();
 	glColor3f(1,1,1);
+
+	if (loaded) {
+		visibleJointFrame = &jointFrames[frameIndex];
+		glPushMatrix();
+		glTranslatef(0, 1, -1);
+			if (renderingFlags & R_JOINTS) renderJoints();
+			if (renderingFlags & R_ORIENT) renderOrientations();
+			if (renderingFlags & R_BONES)  renderBones();
+			if (renderingFlags & R_PATH)   renderJointPaths();
+		glPopMatrix();
+		glColor3f(1,1,1);
+	}
+
 }
 
 bool Skeleton::loadFile( const std::string& filename )
@@ -147,6 +161,40 @@ void Skeleton::prevFrame()
 	}
 }
 
+void Skeleton::applyPerformance( JointFrames& newFrames )
+{
+	if (jointFrames.size() != newFrames.size()) {
+		std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
+
+		return;
+	}
+
+	Joint& initialCurrentHand = jointFrames.front()[HAND_LEFT];
+	Joint& initialNewHand = newFrames.front()[HAND_LEFT];
+
+	// For each animation frame
+	unsigned int i = 0;
+	// no wonder it didn't change... iterate over ref not val you stupid derp!
+	for (auto& currentFrame : jointFrames) {
+		// Get the corresponding performance frame
+		JointFrame& newFrame = newFrames[i++];
+
+		// Just update the hand for now
+		Joint& currentHand = currentFrame[HAND_LEFT];
+		Joint& newHand = newFrame[HAND_LEFT];
+
+		// New position = initial position
+		// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
+		// TODO : calculate K(t) and C'(X(t) - X0)
+		//std::cout << "Initial pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << "   ";
+		currentHand.position = glm::vec3(
+			initialCurrentHand.position.x + (newHand.position.x - initialNewHand.position.x),
+			initialCurrentHand.position.y + (newHand.position.x - initialNewHand.position.y),
+			initialCurrentHand.position.z + (newHand.position.x - initialNewHand.position.z));
+		//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
+	}
+}
+
 void Skeleton::setFrameIndex( const float fraction )
 {
 	if (!loaded) return;
@@ -169,6 +217,9 @@ void Skeleton::renderJoints() const
 	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
 	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
 	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	static const GLfloat diffuseRed2[]   = { 0.5f, 0.2f, 0.0f, 1.0f };
+	static const GLfloat diffuseGreen2[] = { 0.2f, 0.5f, 0.0f, 1.0f };
+	static const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
 	gluQuadricOrientation(quadric, GLU_OUTSIDE);
 	JointFrame& joints = *visibleJointFrame;
@@ -182,12 +233,18 @@ void Skeleton::renderJoints() const
 			case NOT_TRACKED: continue;
 			case TRACKED:
 				radius = maxRadius;
-				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
+				if (visibleJointFrame == &currentJointFrame) 
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
+				else
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen2);
 			break;
 			case INFERRED:
 				if (renderingFlags & R_INFER) {
 					radius = minRadius;
+				if (visibleJointFrame == &currentJointFrame) 
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+				else
+					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
 				} else {
 					continue;
 				}
@@ -242,6 +299,9 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
 	static const GLfloat diffuseGood[]  = { 1.0f, 0.85f, 0.73f, 1.0f };
 	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	static const GLfloat diffuseRed2[]   = { 0.5f, 0.0f, 0.0f, 1.0f };
+	static const GLfloat diffuseGood2[]  = { 0.5f, 0.25f, 0.13f, 1.0f };
+	static const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
 	JointFrame& joints = *visibleJointFrame;
 	const Joint& fromJoint = joints[fromType];
@@ -260,13 +320,19 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	if (fromState == INFERRED || toState == INFERRED) {
 		baseRadius = minRadius;
 		topRadius  = minRadius;
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+		if (visibleJointFrame == &currentJointFrame)
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+		else
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
 	}
 	// Draw thick green lines if both joints are tracked
 	else if (fromState == TRACKED && toState == TRACKED) {
 		baseRadius = maxRadius;
 		topRadius  = maxRadius;
-		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
+		if (visibleJointFrame == &currentJointFrame)
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
+		else
+			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood2);
 	}
 
 	const glm::vec3& fromPosition = fromJoint.position;
