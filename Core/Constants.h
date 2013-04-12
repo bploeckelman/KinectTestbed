@@ -1,6 +1,11 @@
 #pragma once
+#include <Windows.h>
+#define WIN32_LEAN_AND_MEAN
+#include <NuiApi.h>
 
 #include <glm/glm.hpp>
+
+#include <numeric>
 
 namespace constants
 {
@@ -25,6 +30,9 @@ namespace constants
 	const float camera_z_near = 0.1f;
 	const float camera_z_far  = 100.f;
 	const float camera_fov    = 66.f;
+
+	const float min_float = std::numeric_limits<float>::min();
+	const float max_float = std::numeric_limits<float>::max();
 
 	const glm::vec3 worldX(1,0,0);
 	const glm::vec3 worldY(0,1,0);

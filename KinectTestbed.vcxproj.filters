@@ -36,6 +36,9 @@
     <ClCompile Include="Kinect\Skeleton.cpp">
       <Filter>Kinect</Filter>
     </ClCompile>
+    <ClCompile Include="Kinect\Performance.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Config.h">
@@ -60,6 +63,12 @@
       <Filter>Kinect</Filter>
     </ClInclude>
     <ClInclude Include="Kinect\Skeleton.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\Performance.h">
+      <Filter>Kinect</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\Types.h">
       <Filter>Kinect</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,7 +13,7 @@
 #include <tchar.h>
 
 std::string toStdString(const BSTR bstr);
-Skeleton::EJointType toJointType(unsigned int i);
+EJointType toJointType(unsigned int i);
 NUI_SKELETON_POSITION_INDEX toPositionIndex(unsigned int i);
 glm::mat4 toMat4(const Matrix4& m);
 
@@ -136,7 +136,6 @@ void Kinect::update()
 		//std::cout << "Performance timer = " << performanceTimer << std::endl;
 
 		if (performanceTimer >= skeleton.getAnimationDuration()) {
-		//if (layerFrames.size() >= skeleton.getNumFrames()) {
 			// TODO apply layer performance update to existing animation
 			// TODO alert user and let them choose when to apply
 			// or apply in real time??
@@ -148,6 +147,15 @@ void Kinect::update()
 			MessageBox(NULL,_T("Finished capturing new performance"),_T("Capture Completed"),MB_OK);
 			MessageBox(NULL,_T("NOTE: applying new performance to existing animation not ready yet..."),_T("TODO"),MB_OK);
 
+			float lastTimeStamp = 0.f;
+			for (unsigned int i = 0; i < layerFrames.size(); ++i) {
+				JointFrame& frame = layerFrames[i];
+				for (auto& joint : frame) {
+					joint.second.timestamp += lastTimeStamp;
+					lastTimeStamp = joint.second.timestamp;
+				}
+			}
+			//normalizeTimestamps(layerFrames);
 			skeleton.applyPerformance(layerFrames);
 		}
 
@@ -319,10 +327,10 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 
 	// Set filtering level
 	switch (skeleton.getFilterLevel()) {
-		case Skeleton::OFF:    break;
-		case Skeleton::LOW:    NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_low);  break;
-		case Skeleton::MEDIUM: NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_med);  break;
-		case Skeleton::HIGH:   NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_high); break;
+		case OFF:    break;
+		case LOW:    NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_low);  break;
+		case MEDIUM: NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_med);  break;
+		case HIGH:   NuiTransformSmooth(&skeletonFrame, constants::joint_smooth_params_high); break;
 	}
 
 	// Get bone orientations for this skeleton's joints
@@ -333,8 +341,7 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 	}
 
 	if (isLayering) {
-		Skeleton::JointFrame* jointFrame = new Skeleton::JointFrame();
-		layerFrames.push_back(*jointFrame);
+		layerFrames.push_back(JointFrame());
 		std::cout << "Pushed new joint frame into layerFrames vector, new size: " << layerFrames.size() << std::endl;
 	}
 
@@ -348,16 +355,16 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		const Matrix4& matrix4 = boneOrientation.absoluteRotation.rotationMatrix;
 
 		// Update the joint frame entry for this joint type
-		Skeleton::Joint& joint = skeleton.getCurrentJointFrame()[toJointType(i)];
+		Joint& joint = skeleton.getCurrentJointFrame()[toJointType(i)];
 		joint.timestamp     = timestamp;
 		joint.position      = glm::vec3(position.x, position.y, position.z);
 		joint.orientation   = toMat4(matrix4);;
 		joint.type          = toJointType(i);
-		joint.trackingState = static_cast<Skeleton::ETrackingState>(positionTrackingState);
+		joint.trackingState = static_cast<ETrackingState>(positionTrackingState);
 
 		// Save the joint frame entry if appropriate
 		if (saving && saveStream.is_open()) {
-			saveStream.write((char *)&joint, sizeof(Skeleton::Joint));
+			saveStream.write((char *)&joint, sizeof(Joint));
 		}
 
 		if (isLayering) {
@@ -382,10 +389,10 @@ std::string toStdString( const BSTR bstr )
 	return str;
 }
 
-Skeleton::EJointType toJointType( unsigned int i )
+EJointType toJointType( unsigned int i )
 {
-	assert(i < Skeleton::NUM_JOINT_TYPES);
-	return static_cast<Skeleton::EJointType>(i);
+	assert(i < NUM_JOINT_TYPES);
+	return static_cast<EJointType>(i);
 }
 
 NUI_SKELETON_POSITION_INDEX toPositionIndex( unsigned int i )

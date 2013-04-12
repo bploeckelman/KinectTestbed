@@ -45,7 +45,7 @@ private:
 	DWORD  skeletonTrackingFlags;
 
 	Skeleton skeleton;
-	Skeleton::JointFrames layerFrames;
+	AnimationFrames layerFrames;
 
 	std::ofstream saveStream;
 

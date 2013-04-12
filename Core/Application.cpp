@@ -196,10 +196,10 @@ void Application::draw()
 	glm::vec3 normal   = constants::worldY;
 	glm::vec3 tangent  = constants::worldZ;
 	if (handControl && !skeleton.getCurrentJointFrame().empty()) {
-		const Skeleton::Joint& rightHand = skeleton.getCurrentRightHand();
-		const Skeleton::Joint& leftHand  = skeleton.getCurrentLeftHand();
-		//const Skeleton::Joint& head      = skeleton.getCurrentJointFrame().at(Skeleton::HEAD);
-		if (rightHand.trackingState == Skeleton::TRACKED && leftHand.trackingState == Skeleton::TRACKED) {
+		const Joint& rightHand = skeleton.getCurrentRightHand();
+		const Joint& leftHand  = skeleton.getCurrentLeftHand();
+		//const Joint& head      = skeleton.getCurrentJointFrame().at(Skeleton::HEAD);
+		if (rightHand.trackingState == TRACKED && leftHand.trackingState == TRACKED) {
 			// Build a coordinate frame, but only if hands are reasonably far apart
 			if (glm::distance(rightHand.position, leftHand.position) > 0.35f) {
 				// Build a coordinate frame using left hand as origin and norm(right - left) as Y axis vector 

@@ -7,6 +7,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 
 #include "Core/Application.h"
+#include "Kinect/Skeleton.h"
 
 
 UserInterface::UserInterface()
@@ -211,8 +212,8 @@ void UserInterface::onFilterComboSelect()
 {
 	// TODO: map combo box index to string
 	const sf::String& selected(filterJointsCombo->GetSelectedText());
-		 if (selected == "Joint filtering - Off")    Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::OFF);
-	else if (selected == "Joint filtering - Low")    Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::LOW);
-	else if (selected == "Joint filtering - Medium") Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::MEDIUM);
-	else if (selected == "Joint filtering - High")   Application::request().getKinect().getSkeleton().setFilterLevel(Skeleton::HIGH);
+	     if (selected == "Joint filtering - Off")    Application::request().getKinect().getSkeleton().setFilterLevel(OFF);
+	else if (selected == "Joint filtering - Low")    Application::request().getKinect().getSkeleton().setFilterLevel(LOW);
+	else if (selected == "Joint filtering - Medium") Application::request().getKinect().getSkeleton().setFilterLevel(MEDIUM);
+	else if (selected == "Joint filtering - High")   Application::request().getKinect().getSkeleton().setFilterLevel(HIGH);
 }

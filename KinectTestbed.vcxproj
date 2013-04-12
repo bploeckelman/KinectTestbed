@@ -14,6 +14,7 @@
     <ClCompile Include="Core\Application.cpp" />
     <ClCompile Include="Core\Main.cpp" />
     <ClCompile Include="Kinect\Kinect.cpp" />
+    <ClCompile Include="Kinect\Performance.cpp" />
     <ClCompile Include="Kinect\Skeleton.cpp" />
     <ClCompile Include="UI\UserInterface.cpp" />
     <ClCompile Include="Util\ImageManager.cpp" />
@@ -24,7 +25,9 @@
     <ClInclude Include="Core\Config.h" />
     <ClInclude Include="Core\Constants.h" />
     <ClInclude Include="Kinect\Kinect.h" />
+    <ClInclude Include="Kinect\Performance.h" />
     <ClInclude Include="Kinect\Skeleton.h" />
+    <ClInclude Include="Kinect\Types.h" />
     <ClInclude Include="UI\UserInterface.h" />
     <ClInclude Include="Util\ImageManager.h" />
     <ClInclude Include="Util\RenderUtils.h" />

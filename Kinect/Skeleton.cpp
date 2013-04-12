@@ -1,4 +1,5 @@
 #include "Skeleton.h"
+#include "Performance.h"
 #include "Util/RenderUtils.h"
 
 #include <glm/glm.hpp>
@@ -14,15 +15,14 @@
 
 Skeleton::Skeleton()
 	: visibleJointFrame(nullptr)
-	, currentJointFrame()
-	, jointFrames()
+	, liveJointFrame()
 	, loaded(false)
 	, frameIndex(0)
 	, quadric(gluNewQuadric())
 	, renderingFlags(R_JOINTS | R_BONES)
 	, filteringLevel(MEDIUM)
 {
-	visibleJointFrame = &currentJointFrame;
+	visibleJointFrame = &liveJointFrame;
 }
 
 
@@ -35,7 +35,7 @@ void Skeleton::render() //const
 {
 	if (visibleJointFrame == nullptr) return;
 
-	visibleJointFrame = &currentJointFrame;
+	visibleJointFrame = &liveJointFrame;
 	glPushMatrix();
 	glTranslatef(0, 1, -1);
 		if (renderingFlags & R_JOINTS) renderJoints();
@@ -45,8 +45,8 @@ void Skeleton::render() //const
 	glPopMatrix();
 	glColor3f(1,1,1);
 
-	if (loaded) {
-		visibleJointFrame = &jointFrames[frameIndex];
+	if (performance.isLoaded()) {
+		visibleJointFrame = &performance.getCurrentFrame();
 		glPushMatrix();
 		glTranslatef(0, 1, -1);
 			if (renderingFlags & R_JOINTS) renderJoints();
@@ -59,140 +59,50 @@ void Skeleton::render() //const
 
 }
 
-bool Skeleton::loadFile( const std::string& filename )
-{
-	if (loaded) {
-		jointFrames.clear();
-		frameIndex = 0;
-		loaded = false;
-	}
-
-	sf::Vector3f mn( 1e30f,  1e30f,  1e30f);
-	sf::Vector3f mx(-1e30f, -1e30f, -1e30f);
-
-	std::ifstream loadStream;
-	loadStream.open(filename, std::ios::binary | std::ios::in);
-	if (loadStream.is_open()) {
-		std::cout << "Opened file: " << filename.c_str() << std::endl
-				  << "Loading joints positions..." << std::endl;
-
-		Skeleton::JointFrame inputJointFrame;    
-		Skeleton::Joint joint;
-		int numJointsRead = 0, totalJointsRead = 0, totalFramesRead = 0;
-		while (loadStream.good()) {
-			memset(&joint, 0, sizeof(Skeleton::Joint));
-			loadStream.read((char *)&joint, sizeof(Skeleton::Joint));
-			inputJointFrame[joint.type] = joint;
-			++totalJointsRead;
-			
-			mn.x = std::min(mn.x, joint.position.x);
-			mn.y = std::min(mn.y, joint.position.y);
-			mn.z = std::min(mn.z, joint.position.z);
-
-			mx.x = std::max(mx.x, joint.position.x);
-			mx.y = std::max(mx.y, joint.position.y);
-			mx.z = std::max(mx.z, joint.position.z);
-
-			// Done reading joints for current frame, save it and continue with next frame 
-			if (++numJointsRead == NUM_JOINT_TYPES) {
-				jointFrames.push_back(inputJointFrame);
-				numJointsRead = 0; 
-				++totalFramesRead;
-			}
-		}
-
-		loadStream.close();
-		loaded = true;
-		std::cout << "Loaded " << totalJointsRead << " joints in " << totalFramesRead << " frames." << std::endl
-				  << "Done loading skeleton data from '" << filename.c_str() << "'." << std::endl;
-	}
-
-	std::cout << "min,max = (" << mn.x << "," << mn.y << "," << mn.z << ")"
-			  <<        " , (" << mx.x << "," << mx.y << "," << mx.z << ")"
-			  << std::endl;
-
-	// Normalize the z values for each joint in each frame
-	for (auto frame : jointFrames) {
-		for (auto joints : frame) {
-			Skeleton::Joint& joint = joints.second;
-			joint.position.z /= mx.z;
-		}
-	}
-
-	frameIndex = 0;
-	if (loaded) {
-		visibleJointFrame = &jointFrames[frameIndex];
-	} else {
-		visibleJointFrame = &currentJointFrame;
-	}
-
-	return loaded;
-}
-
-void Skeleton::clearLoadedFrames()
-{
-	if (!loaded) return;
-	frameIndex = 0;
-	jointFrames.clear();
-	visibleJointFrame = &currentJointFrame;
-}
 
 void Skeleton::nextFrame()
 {
-	if (!loaded) return;
-	
-	const int nextFrame = frameIndex + 1;
-	const int numFrames = jointFrames.size();
-	if (nextFrame >= 0 && nextFrame < numFrames) {
-		frameIndex = nextFrame;
-		visibleJointFrame = &jointFrames[frameIndex];
-	}
+	performance.moveToNextFrame();
 }
 
 void Skeleton::prevFrame()
 {
-	if (!loaded) return;
-
-	const int prevFrame = frameIndex - 1;
-	const int numFrames = jointFrames.size();
-	if (prevFrame >= 0 && prevFrame < numFrames) {
-		frameIndex = prevFrame;
-		visibleJointFrame = &jointFrames[frameIndex];
-	}
+	performance.moveToPrevFrame();
 }
 
-void Skeleton::applyPerformance( JointFrames& newFrames )
+void Skeleton::applyPerformance( AnimationFrames& newFrames )
 {
-	if (jointFrames.size() != newFrames.size()) {
-		std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
-
-		return;
-	}
+	std::cout << "Warning: applying new performance not yet implemented." << std::endl;
+	//if (jointFrames.size() != newFrames.size()) {
+	//	std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
+	//	return;
+	//}
+	AnimationFrames& jointFrames = performance.getFrames();
 
 	Joint& initialCurrentHand = jointFrames.front()[HAND_LEFT];
 	Joint& initialNewHand = newFrames.front()[HAND_LEFT];
 
+	// TODO : Move to Performance
 	// For each animation frame
-	unsigned int i = 0;
-	// no wonder it didn't change... iterate over ref not val you stupid derp!
-	for (auto& currentFrame : jointFrames) {
-		// Get the corresponding performance frame
-		JointFrame& newFrame = newFrames[i++];
+	//unsigned int i = 0;
+	//for (auto& currentFrame : jointFrames) {
+	//	// Get the corresponding performance frame
+	//	JointFrame& newFrame = newFrames[i++];
 
-		// Just update the hand for now
-		Joint& currentHand = currentFrame[HAND_LEFT];
-		Joint& newHand = newFrame[HAND_LEFT];
+	//	// Just update the hand for now
+	//	Joint& currentHand = currentFrame[HAND_LEFT];
+	//	Joint& newHand = newFrame[HAND_LEFT];
 
-		// New position = initial position
-		// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
-		// TODO : calculate K(t) and C'(X(t) - X0)
-		//std::cout << "Initial pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << "   ";
-		currentHand.position = glm::vec3(
-			initialCurrentHand.position.x + (newHand.position.x - initialNewHand.position.x),
-			initialCurrentHand.position.y + (newHand.position.x - initialNewHand.position.y),
-			initialCurrentHand.position.z + (newHand.position.x - initialNewHand.position.z));
-		//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
-	}
+	//	// New position = initial position
+	//	// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
+	//	// TODO : calculate K(t) and C'(X(t) - X0)
+	//	//std::cout << "Initial pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << "   ";
+	//	currentHand.position = glm::vec3(
+	//		initialCurrentHand.position.x + (newHand.position.x - initialNewHand.position.x),
+	//		initialCurrentHand.position.y + (newHand.position.x - initialNewHand.position.y),
+	//		initialCurrentHand.position.z + (newHand.position.x - initialNewHand.position.z));
+	//	//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
+	//}
 }
 
 void Skeleton::setFrameIndex( const float fraction )
@@ -200,8 +110,9 @@ void Skeleton::setFrameIndex( const float fraction )
 	if (!loaded) return;
 	assert(fraction >= 0.f && fraction <= 1.f);
 
-	frameIndex = static_cast<int>(floor(fraction * jointFrames.size()));
-	visibleJointFrame = &jointFrames[frameIndex];
+	frameIndex = static_cast<int>(floor(fraction * performance.getNumFrames()));
+	performance.moveToFrame(frameIndex);
+	visibleJointFrame = &performance.getFrames()[frameIndex];
 }
 
 void Skeleton::renderJoints() const
@@ -233,7 +144,7 @@ void Skeleton::renderJoints() const
 			case NOT_TRACKED: continue;
 			case TRACKED:
 				radius = maxRadius;
-				if (visibleJointFrame == &currentJointFrame) 
+				if (visibleJointFrame == &liveJointFrame) 
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
 				else
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen2);
@@ -241,7 +152,7 @@ void Skeleton::renderJoints() const
 			case INFERRED:
 				if (renderingFlags & R_INFER) {
 					radius = minRadius;
-				if (visibleJointFrame == &currentJointFrame) 
+				if (visibleJointFrame == &liveJointFrame) 
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
 				else
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
@@ -320,7 +231,7 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	if (fromState == INFERRED || toState == INFERRED) {
 		baseRadius = minRadius;
 		topRadius  = minRadius;
-		if (visibleJointFrame == &currentJointFrame)
+		if (visibleJointFrame == &liveJointFrame)
 			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
 		else
 			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
@@ -329,7 +240,7 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	else if (fromState == TRACKED && toState == TRACKED) {
 		baseRadius = maxRadius;
 		topRadius  = maxRadius;
-		if (visibleJointFrame == &currentJointFrame)
+		if (visibleJointFrame == &liveJointFrame)
 			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
 		else
 			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood2);
@@ -405,6 +316,7 @@ void Skeleton::renderJointPath( const EJointType type ) const
 {
 	if (!loaded) return;
 
+	const AnimationFrames& jointFrames = performance.getFrames();
 	const unsigned int numFrames = 20;
 	const unsigned int lastFrame = ((frameIndex - numFrames) < 0) ? 0 : (frameIndex - numFrames);
 
