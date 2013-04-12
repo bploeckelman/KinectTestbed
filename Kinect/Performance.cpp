@@ -104,18 +104,18 @@ void Performance::clearLoadedFrames()
 	loaded = false;
 }
 
-JointFrame& Performance::getCurrentFrame() {
-	assert(!frames.empty() && "Frames must not be empty in order to get a frame.");
-	return frames[currentFrameIndex];
+JointFrame& Performance::getCurrentFrame()
+{
+	return getFrame(currentFrameIndex);
 }
 
-const JointFrame& Performance::getFrame( unsigned int i /*= 0*/ ) const
+JointFrame& Performance::getFrame( unsigned int i /*= 0*/ )
 {
 	assert(!frames.empty() && "Frames must not be empty in order to get a frame.");
 	return frames[i];
 }
 
-const JointFrame& Performance::getFrameNearestTime( float seconds ) const
+JointFrame& Performance::getFrameNearestTime( float seconds )
 {
 	assert(!frames.empty() && "Frames must not be empty in order to get a frame.");
 	assert(seconds >= 0.f && "'Seconds' must be zero or positive");
@@ -151,12 +151,13 @@ const JointFrame& Performance::getFrameNearestTime( float seconds ) const
 //	return outFrames;
 //}
 
+AnimationFrames& Performance::getFrames()
+{
+	return frames;
+}
+
 const AnimationFrames& Performance::getFrames() const
 {
 	return frames;
 }
 
-AnimationFrames& Performance::getFrames()
-{
-	return frames;
-}

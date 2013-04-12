@@ -30,18 +30,20 @@ public:
 
 	float getDuration() const;
 	int  getNumFrames() const;
+
 	unsigned int getCurrentFrameIndex() const;
+	void setCurrentFrameIndex(unsigned int i);
 
 	void moveToFrame(unsigned int i);
 	void moveToNextFrame();
 	void moveToPrevFrame();
 
 	JointFrame& getCurrentFrame();
-	const JointFrame& getFrame(unsigned int i = 0) const;
-	const JointFrame& getFrameNearestTime(float seconds) const;
+	JointFrame& getFrame(unsigned int i = 0);
+	JointFrame& getFrameNearestTime(float seconds);
 
-	const AnimationFrames& getFrames() const;
 	AnimationFrames& getFrames();
+	const AnimationFrames& getFrames() const;
 	//AnimationFrames getFrames(unsigned int from, unsigned int to);
 
 }; // end class Performance
@@ -49,7 +51,9 @@ public:
 
 inline bool Performance::isLoaded()     const { return loaded; }
 inline int  Performance::getNumFrames() const { return frames.size(); }
+
 inline unsigned int Performance::getCurrentFrameIndex() const { return currentFrameIndex; }
+inline void Performance::setCurrentFrameIndex(unsigned int i) { assert(i < frames.size()); currentFrameIndex = i; }
 
 inline float Performance::getDuration() const {
 	if (!loaded) return 0.f;

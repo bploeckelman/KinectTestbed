@@ -130,7 +130,7 @@ void Application::setJointFrameIndex( const float fraction )
 {
 	kinect.getSkeleton().setFrameIndex(fraction);
 	gui.setProgress(fraction);
-	gui.setIndex(kinect.getSkeleton().getFrameIndex());
+	gui.setIndex(kinect.getSkeleton().getPerformance().getCurrentFrameIndex());
 }
 
 void Application::mainLoop()
@@ -259,8 +259,23 @@ void Application::draw()
 		kinect.update();
 
 		if (autoPlay && skeleton.isLoaded()) {
+			// Calculate the delta time between this frame and the next
+			// Use 60 fps as a default delta time
 			const float thisFrameTime = clock.getElapsedTime().asSeconds();
-			if (thisFrameTime - lastFrameTime > gui.getPlayRate()) {
+			const float delta = thisFrameTime - lastFrameTime;
+			float frameDelta = 0.016f; // 60 fps
+
+			const unsigned int nextIndex = skeleton.getFrameIndex() + 1;
+			if (nextIndex < skeleton.getNumFrames()) {
+				const JointFrame& thisFrame = skeleton.getPerformance().getCurrentFrame();
+				const JointFrame& nextFrame = skeleton.getPerformance().getFrames()[nextIndex];
+				const float nextFrameTime = nextFrame.at(SHOULDER_CENTER).timestamp;
+				const float thisFrameTime = thisFrame.at(SHOULDER_CENTER).timestamp;
+				frameDelta = nextFrameTime - thisFrameTime;
+				//std::cout << "Animation frame delta = " << frameDelta << std::endl;
+			}
+
+			if (delta > frameDelta) {
 				lastFrameTime = thisFrameTime;
 				moveToNextFrame();
 			}
@@ -285,10 +300,7 @@ void Application::draw()
 
 		Render::basis();
 
-		// Draw normal skeleton
-		if (showSkeleton) {
-			skeleton.render();
-		}
+		skeleton.render();
 
 		// Draw hand/camera orientation basis
 		//Render::basis(1.f, constants::origin + constants::worldY, binormal, normal, tangent);

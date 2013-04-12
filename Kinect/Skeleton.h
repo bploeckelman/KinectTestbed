@@ -22,6 +22,7 @@ private:
 	Performance performance;
 
 	bool loaded;
+	bool useMaterials;
 	unsigned int frameIndex;
 	GLUquadric *quadric;
 
@@ -45,6 +46,8 @@ public:
 	void setFrameIndex(const float fraction);
 	unsigned int getFrameIndex() const { return performance.getCurrentFrameIndex(); }
 	unsigned int getNumFrames()  const { return performance.getNumFrames(); }
+
+	Performance& getPerformance() { return performance; }
 
 	float getAnimationDuration() const {
 		if (!loaded) return 0.f;

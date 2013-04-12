@@ -17,6 +17,7 @@ Skeleton::Skeleton()
 	: visibleJointFrame(nullptr)
 	, liveJointFrame()
 	, loaded(false)
+	, useMaterials(true)
 	, frameIndex(0)
 	, quadric(gluNewQuadric())
 	, renderingFlags(R_JOINTS | R_BONES)
@@ -34,6 +35,8 @@ Skeleton::~Skeleton()
 void Skeleton::render() //const
 {
 	if (visibleJointFrame == nullptr) return;
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	visibleJointFrame = &liveJointFrame;
 	glPushMatrix();
@@ -43,7 +46,7 @@ void Skeleton::render() //const
 		if (renderingFlags & R_BONES)  renderBones();
 		if (renderingFlags & R_PATH)   renderJointPaths();
 	glPopMatrix();
-	glColor3f(1,1,1);
+	glColor4f(1,1,1,1);
 
 	if (performance.isLoaded()) {
 		visibleJointFrame = &performance.getCurrentFrame();
@@ -54,7 +57,30 @@ void Skeleton::render() //const
 			if (renderingFlags & R_BONES)  renderBones();
 			if (renderingFlags & R_PATH)   renderJointPaths();
 		glPopMatrix();
-		glColor3f(1,1,1);
+		glColor4f(1,1,1,1);
+
+		// Draw last three frames
+		const unsigned int currentFrameIndex = performance.getCurrentFrameIndex();
+		const unsigned int numFrames = 5;
+		const unsigned int lastFrameIndex = currentFrameIndex - numFrames;
+		if (currentFrameIndex > numFrames) {
+			useMaterials = false;
+			for (unsigned int i = currentFrameIndex; i >= lastFrameIndex; --i) {
+				visibleJointFrame = &performance.getFrame(i);
+				const float alpha = 1.f - ((currentFrameIndex - i) / (float) numFrames);
+				glColor4f(1,1,1, alpha);
+				glPushMatrix();
+				glTranslatef(0, 1, -1);
+					if (renderingFlags & R_JOINTS) renderJoints();
+					if (renderingFlags & R_ORIENT) renderOrientations();
+					if (renderingFlags & R_BONES)  renderBones();
+					if (renderingFlags & R_PATH)   renderJointPaths();
+				glPopMatrix();
+			}
+			useMaterials = true;
+		}
+		glDisable(GL_BLEND);
+		glColor4f(1,1,1,1);
 	}
 
 }
@@ -107,10 +133,11 @@ void Skeleton::applyPerformance( AnimationFrames& newFrames )
 
 void Skeleton::setFrameIndex( const float fraction )
 {
-	if (!loaded) return;
+	if (!performance.isLoaded()) return;
 	assert(fraction >= 0.f && fraction <= 1.f);
 
 	frameIndex = static_cast<int>(floor(fraction * performance.getNumFrames()));
+	performance.setCurrentFrameIndex(frameIndex);
 	performance.moveToFrame(frameIndex);
 	visibleJointFrame = &performance.getFrames()[frameIndex];
 }
@@ -144,6 +171,7 @@ void Skeleton::renderJoints() const
 			case NOT_TRACKED: continue;
 			case TRACKED:
 				radius = maxRadius;
+				if (!useMaterials) break;
 				if (visibleJointFrame == &liveJointFrame) 
 					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
 				else
@@ -152,10 +180,11 @@ void Skeleton::renderJoints() const
 			case INFERRED:
 				if (renderingFlags & R_INFER) {
 					radius = minRadius;
-				if (visibleJointFrame == &liveJointFrame) 
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
-				else
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+					if (!useMaterials) break;
+					if (visibleJointFrame == &liveJointFrame) 
+						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+					else
+						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
 				} else {
 					continue;
 				}
@@ -231,19 +260,23 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	if (fromState == INFERRED || toState == INFERRED) {
 		baseRadius = minRadius;
 		topRadius  = minRadius;
-		if (visibleJointFrame == &liveJointFrame)
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
-		else
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+		if (useMaterials) {
+			if (visibleJointFrame == &liveJointFrame)
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+			else
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+		}
 	}
 	// Draw thick green lines if both joints are tracked
 	else if (fromState == TRACKED && toState == TRACKED) {
 		baseRadius = maxRadius;
 		topRadius  = maxRadius;
-		if (visibleJointFrame == &liveJointFrame)
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
-		else
-			glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood2);
+		if (useMaterials) {
+			if (visibleJointFrame == &liveJointFrame)
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
+			else
+				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood2);
+		}
 	}
 
 	const glm::vec3& fromPosition = fromJoint.position;
