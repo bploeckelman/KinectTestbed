@@ -43,8 +43,8 @@ public:
 	void applyPerformance(AnimationFrames& newFrames);
 
 	void setFrameIndex(const float fraction);
-	unsigned int getFrameIndex() const { return frameIndex;         }
-	unsigned int getNumFrames()  const { return performance.getNumFrames(); } //jointFrames.size(); }
+	unsigned int getFrameIndex() const { return performance.getCurrentFrameIndex(); }
+	unsigned int getNumFrames()  const { return performance.getNumFrames(); }
 
 	float getAnimationDuration() const {
 		if (!loaded) return 0.f;

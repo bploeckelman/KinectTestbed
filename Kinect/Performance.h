@@ -30,6 +30,7 @@ public:
 
 	float getDuration() const;
 	int  getNumFrames() const;
+	unsigned int getCurrentFrameIndex() const;
 
 	void moveToFrame(unsigned int i);
 	void moveToNextFrame();
@@ -48,6 +49,7 @@ public:
 
 inline bool Performance::isLoaded()     const { return loaded; }
 inline int  Performance::getNumFrames() const { return frames.size(); }
+inline unsigned int Performance::getCurrentFrameIndex() const { return currentFrameIndex; }
 
 inline float Performance::getDuration() const {
 	if (!loaded) return 0.f;
