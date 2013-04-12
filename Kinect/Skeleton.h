@@ -23,6 +23,7 @@ private:
 
 	bool loaded;
 	bool useMaterials;
+	float alpha;
 	unsigned int frameIndex;
 	GLUquadric *quadric;
 

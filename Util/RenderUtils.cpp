@@ -13,6 +13,7 @@
 #include <SFML/Graphics/Texture.hpp>
 
 using glm::vec3;
+using glm::vec4;
 using glm::value_ptr;
 
 
@@ -89,7 +90,7 @@ void Render::pyramid( const vec3& pos, const float radius, const float height )
 	glPopMatrix();
 }
 
-void Render::vector( const vec3& vec, const vec3& point, const vec3& color )
+void Render::vector( const glm::vec3& vec, const glm::vec3& point , const glm::vec4& color/*=glm::vec4(1,1,1,1)*/ )
 {
 	glColor4fv(value_ptr(color));
 
@@ -102,22 +103,23 @@ void Render::vector( const vec3& vec, const vec3& point, const vec3& color )
 		glVertex3fv(value_ptr(point + vec));
 	glEnd();
 
-	glColor3f(1,1,1);
+	glColor4f(1,1,1,1);
 }
 
-void Render::basis(const float scale
-				 , const vec3& pos
-				 , const vec3& x
-				 , const vec3& y
-				 , const vec3& z)
+void Render::basis( const float scale/*=1.f */
+				  , const vec3& pos/*=vec3(0,0,0) */
+				  , const vec3& x/*=vec3(1,0,0) */
+				  , const vec3& y/*=vec3(0,1,0) */
+				  , const vec3& z/*=vec3(0,0,1)*/
+				  , const float alpha/*=1.f*/ )
 {
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_LIGHTING);
 
 	//static const vec3 origin(0,0,0);
-	static const vec3 red   (1,0,0);
-	static const vec3 green (0,1,0);
-	static const vec3 blue  (0,0,1);
+	const vec4 red   (1,0,0,alpha);
+	const vec4 green (0,1,0,alpha);
+	const vec4 blue  (0,0,1,alpha);
 
 	vector(x * scale, pos, red);
 	vector(y * scale, pos, green);

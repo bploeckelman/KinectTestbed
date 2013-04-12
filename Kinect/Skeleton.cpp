@@ -18,6 +18,7 @@ Skeleton::Skeleton()
 	, liveJointFrame()
 	, loaded(false)
 	, useMaterials(true)
+	, alpha(1.f)
 	, frameIndex(0)
 	, quadric(gluNewQuadric())
 	, renderingFlags(R_JOINTS | R_BONES)
@@ -35,9 +36,8 @@ Skeleton::~Skeleton()
 void Skeleton::render() //const
 {
 	if (visibleJointFrame == nullptr) return;
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// Draw the current live joint frame
 	visibleJointFrame = &liveJointFrame;
 	glPushMatrix();
 	glTranslatef(0, 1, -1);
@@ -48,7 +48,46 @@ void Skeleton::render() //const
 	glPopMatrix();
 	glColor4f(1,1,1,1);
 
+	// Draw the current performance joint frame
 	if (performance.isLoaded()) {
+		// Draw last several frames
+		const unsigned int currentFrameIndex = performance.getCurrentFrameIndex();
+		unsigned int numFrames = 30;
+		const int deltaFrames = currentFrameIndex - numFrames;
+		unsigned int lastFrameIndex;
+		if (deltaFrames < 0) {
+			lastFrameIndex = 0;
+			numFrames = currentFrameIndex + 1;
+		} else {
+			lastFrameIndex = deltaFrames;
+		}
+
+		// Draw previous frames up to 'numFrames' blurred
+		useMaterials = false;
+		glDisable(GL_LIGHTING);
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		for (unsigned int i = currentFrameIndex, count = 1; i >= 0 && count <= numFrames; --i, ++count) {
+			visibleJointFrame = &performance.getFrame(i);
+			alpha = 1.f - ((currentFrameIndex - i) / (float) numFrames);
+			glColor4f(alpha, alpha, 0, alpha);
+			glPushMatrix();
+			glTranslatef(0, 1, -1);
+				if (renderingFlags & R_JOINTS) renderJoints();
+				if (renderingFlags & R_ORIENT) { 
+					renderOrientations();
+					glColor4f(alpha, alpha, 0, alpha);
+				}
+				if (renderingFlags & R_BONES)  renderBones();
+				if (renderingFlags & R_PATH)   { glDisable(GL_BLEND); renderJointPaths(); glEnable(GL_BLEND); }
+			glPopMatrix();
+		}
+		glColor4f(1,1,1,1);
+		glEnable(GL_LIGHTING);
+		glDisable(GL_BLEND);
+		useMaterials = true;
+
+		// Draw current frame unblurred and lit
 		visibleJointFrame = &performance.getCurrentFrame();
 		glPushMatrix();
 		glTranslatef(0, 1, -1);
@@ -58,31 +97,7 @@ void Skeleton::render() //const
 			if (renderingFlags & R_PATH)   renderJointPaths();
 		glPopMatrix();
 		glColor4f(1,1,1,1);
-
-		// Draw last three frames
-		const unsigned int currentFrameIndex = performance.getCurrentFrameIndex();
-		const unsigned int numFrames = 5;
-		const unsigned int lastFrameIndex = currentFrameIndex - numFrames;
-		if (currentFrameIndex > numFrames) {
-			useMaterials = false;
-			for (unsigned int i = currentFrameIndex; i >= lastFrameIndex; --i) {
-				visibleJointFrame = &performance.getFrame(i);
-				const float alpha = 1.f - ((currentFrameIndex - i) / (float) numFrames);
-				glColor4f(1,1,1, alpha);
-				glPushMatrix();
-				glTranslatef(0, 1, -1);
-					if (renderingFlags & R_JOINTS) renderJoints();
-					if (renderingFlags & R_ORIENT) renderOrientations();
-					if (renderingFlags & R_BONES)  renderBones();
-					if (renderingFlags & R_PATH)   renderJointPaths();
-				glPopMatrix();
-			}
-			useMaterials = true;
-		}
-		glDisable(GL_BLEND);
-		glColor4f(1,1,1,1);
 	}
-
 }
 
 
@@ -152,12 +167,12 @@ void Skeleton::renderJoints() const
 	static const int stacks = 10;
 
 	// TODO : move these out to the constants namespace
-	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
-	static const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, 1.0f };
-	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	static const GLfloat diffuseRed2[]   = { 0.5f, 0.2f, 0.0f, 1.0f };
-	static const GLfloat diffuseGreen2[] = { 0.2f, 0.5f, 0.0f, 1.0f };
-	static const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, alpha };
+	const GLfloat diffuseGreen[] = { 0.0f, 1.0f, 0.0f, alpha };
+	const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, alpha };
+	const GLfloat diffuseRed2[]   = { 0.5f, 0.2f, 0.0f, alpha };
+	const GLfloat diffuseGreen2[] = { 0.2f, 0.5f, 0.0f, alpha };
+	const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, alpha };
 
 	gluQuadricOrientation(quadric, GLU_OUTSIDE);
 	JointFrame& joints = *visibleJointFrame;
@@ -170,21 +185,27 @@ void Skeleton::renderJoints() const
 			// Skip untracked joints
 			case NOT_TRACKED: continue;
 			case TRACKED:
-				radius = maxRadius;
-				if (!useMaterials) break;
-				if (visibleJointFrame == &liveJointFrame) 
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
-				else
-					glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen2);
+				if (useMaterials) {
+					radius = maxRadius;
+					if (visibleJointFrame == &liveJointFrame) 
+						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen);
+					else
+						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGreen2);
+				} else {
+					radius = maxRadius * 0.5f;
+				}
 			break;
 			case INFERRED:
 				if (renderingFlags & R_INFER) {
-					radius = minRadius;
-					if (!useMaterials) break;
-					if (visibleJointFrame == &liveJointFrame) 
-						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
-					else
-						glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+					if (useMaterials) {
+						radius = minRadius;
+						if (visibleJointFrame == &liveJointFrame) 
+							glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
+						else
+							glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+					} else {
+						radius = minRadius * 0.5f;
+					}
 				} else {
 					continue;
 				}
@@ -221,7 +242,7 @@ void Skeleton::renderOrientations() const
 		const glm::vec3 x(m[0][0], m[0][1], m[0][2]);
 		const glm::vec3 y(m[1][0], m[1][1], m[1][2]);
 		const glm::vec3 z(m[2][0], m[2][1], m[2][2]);
-		Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z));
+		Render::basis(scale, joint.position, glm::normalize(x), glm::normalize(y), glm::normalize(z), alpha);
 	}
 }
 
@@ -236,12 +257,12 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	static const int stacks  = 8;
 
 	// Material params
-	static const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, 1.0f };
-	static const GLfloat diffuseGood[]  = { 1.0f, 0.85f, 0.73f, 1.0f };
-	static const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	static const GLfloat diffuseRed2[]   = { 0.5f, 0.0f, 0.0f, 1.0f };
-	static const GLfloat diffuseGood2[]  = { 0.5f, 0.25f, 0.13f, 1.0f };
-	static const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	const GLfloat diffuseRed[]   = { 1.0f, 0.0f, 0.0f, alpha };
+	const GLfloat diffuseGood[]  = { 1.0f, 0.85f, 0.73f, alpha };
+	const GLfloat diffuseWhite[] = { 1.0f, 1.0f, 1.0f, alpha };
+	const GLfloat diffuseRed2[]   = { 0.5f, 0.0f, 0.0f, alpha };
+	const GLfloat diffuseGood2[]  = { 0.5f, 0.25f, 0.13f, alpha };
+	const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, alpha };
 
 	JointFrame& joints = *visibleJointFrame;
 	const Joint& fromJoint = joints[fromType];
@@ -258,24 +279,30 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 
 	// Draw thin red lines if one joint is inferred
 	if (fromState == INFERRED || toState == INFERRED) {
-		baseRadius = minRadius;
-		topRadius  = minRadius;
 		if (useMaterials) {
+			baseRadius = minRadius;
+			topRadius  = minRadius;
 			if (visibleJointFrame == &liveJointFrame)
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed);
 			else
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseRed2);
+		} else {
+			baseRadius = minRadius * 0.5f;
+			topRadius  = minRadius * 0.5f;
 		}
 	}
 	// Draw thick green lines if both joints are tracked
 	else if (fromState == TRACKED && toState == TRACKED) {
-		baseRadius = maxRadius;
-		topRadius  = maxRadius;
 		if (useMaterials) {
+			baseRadius = maxRadius;
+			topRadius  = maxRadius;
 			if (visibleJointFrame == &liveJointFrame)
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood);
 			else
 				glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseGood2);
+		} else {
+			baseRadius = maxRadius * 0.5f;
+			topRadius  = maxRadius * 0.5f;
 		}
 	}
 
@@ -307,7 +334,9 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 		gluDisk(quadric, 0.0, topRadius, slices, 1);
 	glPopMatrix();
 
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseWhite);
+	if (useMaterials) {
+		glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseWhite);
+	}
 }
 
 void Skeleton::renderBones() const
@@ -355,7 +384,7 @@ void Skeleton::renderJointPath( const EJointType type ) const
 
 	glDisable(GL_LIGHTING);
 
-	glColor3f(1,1,0);
+	glColor4f(1,1,0, alpha );
 	glPushMatrix();
 	glBegin(GL_LINE_STRIP);
 		for (auto i = lastFrame; i <= frameIndex; ++i) {
@@ -363,7 +392,7 @@ void Skeleton::renderJointPath( const EJointType type ) const
 		}
 	glEnd();
 	glPopMatrix();
-	glColor3f(1,1,1);
+	glColor4f(1,1,1, alpha );
 
 	glEnable(GL_LIGHTING);
 }

@@ -16,7 +16,7 @@ private:
 	sfg::Box::Ptr box;
 
 	sfg::Label::Ptr infoLabel;
-	sfg::Label::Ptr playRateLabel;
+	sfg::Label::Ptr playLabel;
 
 	sfg::Button::Ptr quitButton;
 	sfg::Button::Ptr openButton;
@@ -25,7 +25,6 @@ private:
 
 	sfg::ToggleButton::Ptr saveButton;
 	sfg::ToggleButton::Ptr playButton;
-	sfg::Scrollbar::Ptr playRateScrollbar;
 
 	sfg::CheckButton::Ptr showColorButton;
 	sfg::CheckButton::Ptr showDepthButton;
@@ -52,6 +51,7 @@ public:
 	void handleEvent(sf::Event &event);
 
 	void setInfo    (const std::string &info) { infoLabel->SetText(sf::String(info)); }
+	void setPlayLabel(const std::string &text) { playLabel->SetText(sf::String(text)); }
 	void setFileName(const std::string &name) { jointFramesFilename->SetText(sf::String(name)); }
 	void setProgress(float fraction) { jointFramesProgress->SetFraction(fraction); }
 	void setIndex(int index) {
@@ -59,8 +59,6 @@ public:
 		ss << "[" << index << "]";
 		jointFrameIndex->SetText(sf::String(ss.str()));
 	}
-
-	float getPlayRate() const { return playRateScrollbar->GetAdjustment().get()->GetUpper() - playRateScrollbar->GetValue(); }
 
 private:
 	void setupWidgetHandlers();
@@ -73,7 +71,6 @@ private:
 	void onCloseButtonClick();
 	void onLayerButtonClick();
 	void onPlayButtonClick();
-	void onPlayRateScrollbarClick();
 	void onShowColorButtonClick();
 	void onShowDepthButtonClick();
 	void onShowSkeletonButtonClick();

@@ -261,10 +261,7 @@ void Application::draw()
 		if (autoPlay && skeleton.isLoaded()) {
 			// Calculate the delta time between this frame and the next
 			// Use 60 fps as a default delta time
-			const float thisFrameTime = clock.getElapsedTime().asSeconds();
-			const float delta = thisFrameTime - lastFrameTime;
-			float frameDelta = 0.016f; // 60 fps
-
+			float frameDelta = 0.01667f; // 60 fps
 			const unsigned int nextIndex = skeleton.getFrameIndex() + 1;
 			if (nextIndex < skeleton.getNumFrames()) {
 				const JointFrame& thisFrame = skeleton.getPerformance().getCurrentFrame();
@@ -275,8 +272,13 @@ void Application::draw()
 				//std::cout << "Animation frame delta = " << frameDelta << std::endl;
 			}
 
-			if (delta > frameDelta) {
+			const float thisFrameTime = clock.getElapsedTime().asSeconds();
+			const float delta = thisFrameTime - lastFrameTime;
+			if (delta >= frameDelta) {
 				lastFrameTime = thisFrameTime;
+				std::stringstream ss;
+				ss << "Frame delta: " << frameDelta << ",  actual delta: " << delta << " (seconds)";
+				gui.setPlayLabel(ss.str());
 				moveToNextFrame();
 			}
 		}

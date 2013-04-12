@@ -16,14 +16,13 @@ UserInterface::UserInterface()
 	, window(sfg::Window::Create())
 	, box(sfg::Box::Create(sfg::Box::HORIZONTAL, 0.f))
 	, infoLabel(sfg::Label::Create())
-	, playRateLabel(sfg::Label::Create())
+	, playLabel(sfg::Label::Create())
 	, quitButton(sfg::Button::Create("Quit"))
 	, openButton(sfg::Button::Create("Open"))
 	, closeButton(sfg::Button::Create("Close"))
 	, saveButton(sfg::ToggleButton::Create("Save"))
 	, layerButton(sfg::Button::Create("Layer"))
 	, playButton(sfg::ToggleButton::Create("Play"))
-	, playRateScrollbar(sfg::Scrollbar::Create(sfg::Adjustment::Create(0.0033f, 0.0015f, 0.5f, 0.0005f, 0.01f)))
 	, showColorButton(sfg::CheckButton::Create("Color"))
 	, showDepthButton(sfg::CheckButton::Create("Depth"))
 	, showSkeletonButton(sfg::CheckButton::Create("Skeleton"))
@@ -77,7 +76,6 @@ void UserInterface::setupWidgetHandlers()
 	  showJointPathButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowJointPathButtonClick, this);
 	showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
 	enableHandControlButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onEnableHandControlButtonClick, this);
-	    playRateScrollbar->GetSignal(sfg::Scrollbar::OnLeftClick).Connect(&UserInterface::onPlayRateScrollbarClick, this);
 		filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
 	  jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
 	// TODO: hook up other widget handlers as needed
@@ -113,12 +111,11 @@ void UserInterface::setupWindowConfiguration()
 
 	playButton->SetActive(false);
 	playButton->SetRequisition(sf::Vector2f(60, 40));
-	playRateScrollbar->SetRequisition(sf::Vector2f(150, 40));
 
 	std::stringstream ss;
-	ss << "Animation rate (seconds/frame): " << + getPlayRate();
-	playRateLabel->SetText(ss.str());
-	playRateLabel->SetLineWrap(true);
+	ss << "Animation info...";
+	playLabel->SetText(ss.str());
+	playLabel->SetLineWrap(true);
 
 	filterJointsCombo->AppendItem("No joint filtering");
 	filterJointsCombo->AppendItem("Low joint filtering");
@@ -148,8 +145,7 @@ void UserInterface::setupWindowConfiguration()
 	fixed->Put(filterJointsCombo, sf::Vector2f(0, 460));
 
 	fixed->Put(playButton, sf::Vector2f(0, 600));
-	fixed->Put(playRateScrollbar, sf::Vector2f(80, 600));
-	fixed->Put(playRateLabel, sf::Vector2f(240, 615));
+	fixed->Put(playLabel, sf::Vector2f(80, 615));
 	fixed->Put(jointFramesProgress, sf::Vector2f(0, 650));
 	fixed->Put(jointFramesFilename, sf::Vector2f(50, 655));
 	fixed->Put(jointFrameIndex, sf::Vector2f(10, 655));
@@ -182,13 +178,6 @@ void UserInterface::onPlayButtonClick()  {
 	Application::request().toggleAutoPlay();
 	const bool isPlaying = Application::request().isAutoPlay();
 	playButton->SetLabel(isPlaying ? "Pause" : "Play");
-}
-
-void UserInterface::onPlayRateScrollbarClick()
-{
-	std::stringstream ss;
-	ss << "Animation rate (seconds/frame): " << + getPlayRate();
-	playRateLabel->SetText(ss.str());
 }
 
 void UserInterface::onProgressBarMouseMove()
