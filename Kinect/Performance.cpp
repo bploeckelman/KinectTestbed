@@ -14,8 +14,16 @@ Performance::Performance()
 	, frames()
 {}
 
+Performance::Performance( const AnimationFrames& frames )
+	: loaded(true)
+	, currentFrameIndex(0)
+	, frames(frames)
+{}
+
 Performance::~Performance()
 {}
+
+// TODO : bool Performance::loadFrames( const AnimationFrames& frames ) {}
 
 bool Performance::loadFile( const std::string& filename )
 {
@@ -65,8 +73,8 @@ bool Performance::loadFile( const std::string& filename )
 
 	std::cout << "Loaded " << totalJointsRead << " joints in "
 			  << totalFramesRead << " frames in "
-			  << timer.getElapsedTime().asSeconds() << " seconds." << std::endl
-			  << "Done loading skeleton data from '" << filename.c_str() << "'." << std::endl;
+			  << timer.getElapsedTime().asSeconds() << " seconds." << std::endl;
+			  //<< "Done loading skeleton data from '" << filename.c_str() << "'." << std::endl;
 
 	std::cout << "min,max = (" << mn.x << "," << mn.y << "," << mn.z << ")"
 			  <<        " , (" << mx.x << "," << mx.y << "," << mx.z << ")"
@@ -123,6 +131,7 @@ JointFrame& Performance::getFrameNearestTime( float seconds )
 	float nearestDelta = constants::max_float;
 	unsigned int nearestIndex = 0;
 	for (unsigned int i = 0; i < frames.size(); ++i) {
+		// TODO : move timestamp from individual Joint to entire JointFrame
 		const float frameTimeStamp = frames[i].at(SHOULDER_CENTER).timestamp;
 		const float currentDelta = fabs(frameTimeStamp - seconds);
 		if (currentDelta < nearestDelta) {

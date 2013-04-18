@@ -1,6 +1,7 @@
 #include "Skeleton.h"
 #include "Performance.h"
 #include "Util/RenderUtils.h"
+#include "Core/Application.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -16,6 +17,7 @@
 Skeleton::Skeleton()
 	: visibleJointFrame(nullptr)
 	, liveJointFrame()
+	, performance(nullptr)
 	, loaded(false)
 	, useMaterials(true)
 	, alpha(1.f)
@@ -25,6 +27,8 @@ Skeleton::Skeleton()
 	, filteringLevel(MEDIUM)
 {
 	visibleJointFrame = &liveJointFrame;
+	performances.push_back(Performance());
+	performance = &performances.back();
 }
 
 
@@ -37,22 +41,37 @@ void Skeleton::render() //const
 {
 	if (visibleJointFrame == nullptr) return;
 
-	// Draw the current live joint frame
-	visibleJointFrame = &liveJointFrame;
-	glPushMatrix();
-	glTranslatef(0, 1, -1);
-		if (renderingFlags & R_JOINTS) renderJoints();
-		if (renderingFlags & R_ORIENT) renderOrientations();
-		if (renderingFlags & R_BONES)  renderBones();
-		if (renderingFlags & R_PATH)   renderJointPaths();
-	glPopMatrix();
-	glColor4f(1,1,1,1);
+	if (performance == nullptr) return;
+
+	UserInterface& gui = Application::request().getGUI();
+	unsigned int selectedPerformanceIndex = gui.getPerformancesCombo()->GetSelectedItem();
+
+	if (selectedPerformanceIndex == 0) {
+		// Draw the current live joint frame
+		visibleJointFrame = &liveJointFrame;
+		glPushMatrix();
+		glTranslatef(0, 1, -1);
+			if (renderingFlags & R_JOINTS) renderJoints();
+			if (renderingFlags & R_ORIENT) renderOrientations();
+			if (renderingFlags & R_BONES)  renderBones();
+			if (renderingFlags & R_PATH)   renderJointPaths();
+		glPopMatrix();
+		glColor4f(1,1,1,1);
+		return;
+	}
+
+	// Set the current performance
+	if (selectedPerformanceIndex < performances.size()) {
+		performance = &performances[selectedPerformanceIndex];
+	} else {
+		performance = nullptr;
+	}
 
 	// Draw the current performance joint frame
-	if (performance.isLoaded()) {
+	if (performance != nullptr && performance->isLoaded()) {
 		// Draw last several frames
-		const unsigned int currentFrameIndex = performance.getCurrentFrameIndex();
-		unsigned int numFrames = 30;
+		const unsigned int currentFrameIndex = performance->getCurrentFrameIndex();
+		unsigned int numFrames = 20;
 		const int deltaFrames = currentFrameIndex - numFrames;
 		unsigned int lastFrameIndex;
 		if (deltaFrames < 0) {
@@ -68,7 +87,7 @@ void Skeleton::render() //const
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		for (unsigned int i = currentFrameIndex, count = 1; i >= 0 && count <= numFrames; --i, ++count) {
-			visibleJointFrame = &performance.getFrame(i);
+			visibleJointFrame = &performance->getFrame(i);
 			alpha = 1.f - ((currentFrameIndex - i) / (float) numFrames);
 			glColor4f(alpha, alpha, 0, alpha);
 			glPushMatrix();
@@ -88,7 +107,7 @@ void Skeleton::render() //const
 		useMaterials = true;
 
 		// Draw current frame unblurred and lit
-		visibleJointFrame = &performance.getCurrentFrame();
+		visibleJointFrame = &performance->getCurrentFrame();
 		glPushMatrix();
 		glTranslatef(0, 1, -1);
 			if (renderingFlags & R_JOINTS) renderJoints();
@@ -103,14 +122,28 @@ void Skeleton::render() //const
 
 void Skeleton::nextFrame()
 {
-	performance.moveToNextFrame();
+	performance->moveToNextFrame();
 }
 
 void Skeleton::prevFrame()
 {
-	performance.moveToPrevFrame();
+	performance->moveToPrevFrame();
 }
 
+void Skeleton::addPerformance( const Performance& newPerformance )
+{
+	if (!newPerformance.isLoaded()) {
+		std::cerr << "Warning: attempted to add unloaded performance to skeleton; ignored" << std::endl;
+		return;
+	}
+
+	performances.push_back(newPerformance);
+	Application::request().getGUI().addPerformance(performances.size());
+	Application::request().getGUI().getPerformancesCombo()->SelectItem(performances.size());
+	performance = &performances.back();
+}
+
+// TODO : change to (const Performance& performance) + overloaded to index from performances vector
 void Skeleton::applyPerformance( AnimationFrames& newFrames )
 {
 	std::cout << "Warning: applying new performance not yet implemented." << std::endl;
@@ -118,7 +151,7 @@ void Skeleton::applyPerformance( AnimationFrames& newFrames )
 	//	std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
 	//	return;
 	//}
-	AnimationFrames& jointFrames = performance.getFrames();
+	AnimationFrames& jointFrames = performance->getFrames();
 
 	Joint& initialCurrentHand = jointFrames.front()[HAND_LEFT];
 	Joint& initialNewHand = newFrames.front()[HAND_LEFT];
@@ -148,13 +181,13 @@ void Skeleton::applyPerformance( AnimationFrames& newFrames )
 
 void Skeleton::setFrameIndex( const float fraction )
 {
-	if (!performance.isLoaded()) return;
+	if (!performance->isLoaded()) return;
 	assert(fraction >= 0.f && fraction <= 1.f);
 
-	frameIndex = static_cast<int>(floor(fraction * performance.getNumFrames()));
-	performance.setCurrentFrameIndex(frameIndex);
-	performance.moveToFrame(frameIndex);
-	visibleJointFrame = &performance.getFrames()[frameIndex];
+	frameIndex = static_cast<int>(floor(fraction * performance->getNumFrames()));
+	performance->setCurrentFrameIndex(frameIndex);
+	performance->moveToFrame(frameIndex);
+	visibleJointFrame = &performance->getFrames()[frameIndex];
 }
 
 void Skeleton::renderJoints() const
@@ -378,7 +411,7 @@ void Skeleton::renderJointPath( const EJointType type ) const
 {
 	if (!loaded) return;
 
-	const AnimationFrames& jointFrames = performance.getFrames();
+	const AnimationFrames& jointFrames = performance->getFrames();
 	const unsigned int numFrames = 20;
 	const unsigned int lastFrame = ((frameIndex - numFrames) < 0) ? 0 : (frameIndex - numFrames);
 

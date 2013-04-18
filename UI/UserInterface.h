@@ -61,6 +61,23 @@ public:
 		jointFrameIndex->SetText(sf::String(ss.str()));
 	}
 
+	void addPerformance(unsigned int index) {
+		std::stringstream ss;
+		ss << "Perf #" << index;
+		performancesCombo->AppendItem(ss.str());
+	}
+	void removePerformance( unsigned int index ) {
+		// TODO : handle removing more cleanly... make it a map maybe? with unique id #s instead of vector?
+		if (index == 0) {
+			std::cout << "Live performance can't be closed" << std::endl;
+			return;
+		} 
+
+		performancesCombo->RemoveItem(index);
+	}
+
+	sfg::ComboBox::Ptr& getPerformancesCombo() { return performancesCombo; }
+
 private:
 	void setupWidgetHandlers();
 	void setupWindowConfiguration();

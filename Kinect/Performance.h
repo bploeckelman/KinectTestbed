@@ -22,6 +22,7 @@ private:
 
 public:
 	Performance();
+	Performance(const AnimationFrames& frames);
 	~Performance();
 
 	bool isLoaded() const;

@@ -96,7 +96,9 @@ void Application::loadFile()
 {
 	std::wstring wfilename(showFileChooser());
 	std::string filename; filename.assign(wfilename.begin(), wfilename.end());
-	if (kinect.getSkeleton().loadFile(filename)) {
+	Performance p;
+	if (p.loadFile(filename)) {
+		kinect.getSkeleton().addPerformance(p);
 		gui.setFileName(filename);
 	} else {
 		gui.setFileName("No file loaded");
@@ -105,7 +107,18 @@ void Application::loadFile()
 
 void Application::closeFile()
 {
-	kinect.getSkeleton().clearLoadedFrames();
+	Performance *performance = &kinect.getSkeleton().getPerformance();	
+	//kinect.getSkeleton().clearLoadedFrames();
+	// TODO : this is super lame, make it more reasonable
+	std::vector<Performance>& performances = kinect.getSkeleton().getPerformances();
+	for (size_t i = 0; i < performances.size(); ++i) {
+		Performance *p = &performances[i]; 
+		if (p == performance) {
+			gui.removePerformance(i);
+			break;
+		}
+	}
+	performance->clearLoadedFrames();
 	gui.setFileName("No file loaded");
 }
 

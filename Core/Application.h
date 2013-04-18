@@ -94,6 +94,8 @@ public:
 
 	Kinect& getKinect()             { return kinect; }
 	const Kinect& getKinect() const { return kinect; }
+	UserInterface& getGUI()             { return gui; }
+	const UserInterface& getGUI() const { return gui; }
 
 private:
 	void mainLoop();

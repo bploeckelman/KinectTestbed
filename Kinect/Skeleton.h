@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include <iostream>
 #include <vector>
 #include <map>
 
@@ -19,7 +20,8 @@ class Skeleton
 private:
 	JointFrame *visibleJointFrame;
 	JointFrame liveJointFrame;
-	Performance performance;
+	Performance *performance;
+	std::vector<Performance> performances;
 
 	bool loaded;
 	bool useMaterials;
@@ -35,24 +37,37 @@ public:
 	~Skeleton();
 
 	void render(); //const;
-	bool isLoaded() const { return performance.isLoaded(); }
-	bool loadFile(const std::string& filename) { return performance.loadFile(filename); }
-	void clearLoadedFrames() { performance.clearLoadedFrames(); }
+	bool isLoaded() const { return performance != nullptr && performance->isLoaded(); }
+	bool loadFile(const std::string& filename) {
+		performances.push_back(Performance());
+		return performances.back().loadFile(filename);
+	}
+	void clearLoadedFrames() { performance->clearLoadedFrames(); }
 
 	void nextFrame();
 	void prevFrame();
 
+	void addPerformance( const Performance& newPerformance );
 	void applyPerformance(AnimationFrames& newFrames);
 
 	void setFrameIndex(const float fraction);
-	unsigned int getFrameIndex() const { return performance.getCurrentFrameIndex(); }
-	unsigned int getNumFrames()  const { return performance.getNumFrames(); }
+	unsigned int getFrameIndex() const { return performance->getCurrentFrameIndex(); }
+	unsigned int getNumFrames()  const { return performance->getNumFrames(); }
 
-	Performance& getPerformance() { return performance; }
+	void setPerformance( unsigned int index ) {
+		//assert(index < performances.size());
+		if (index < performances.size()) {
+			performance = &performances[index];
+		} else {
+			std::cout << "Warning: attempted to set performance to bad index #" << index << std::endl;
+		}
+	}
+	Performance& getPerformance() { return *performance; }
+	std::vector<Performance>& getPerformances() { return performances; }
 
 	float getAnimationDuration() const {
 		if (!loaded) return 0.f;
-		const AnimationFrames& jointFrames = performance.getFrames();
+		const AnimationFrames& jointFrames = performance->getFrames();
 		const float firstTime = jointFrames.front().at(SHOULDER_CENTER).timestamp;
 		const float lastTime  = jointFrames.back().at(SHOULDER_CENTER).timestamp;
 		return lastTime - firstTime;

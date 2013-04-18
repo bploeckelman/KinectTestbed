@@ -156,7 +156,8 @@ void Kinect::update()
 				}
 			}
 			//normalizeTimestamps(layerFrames);
-			skeleton.applyPerformance(layerFrames);
+			skeleton.addPerformance(Performance(layerFrames));
+			//skeleton.applyPerformance(layerFrames);
 		}
 
 		clock.restart();
