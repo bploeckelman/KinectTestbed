@@ -37,6 +37,7 @@ UserInterface::UserInterface()
 	, jointFramesFilename(sfg::Label::Create())
 	, jointFrameIndex(sfg::Label::Create())
 	, filterJointsCombo(sfg::ComboBox::Create())
+	, performancesCombo(sfg::ComboBox::Create())
 {
 	setupWidgetHandlers();
 	setupWindowConfiguration();
@@ -77,6 +78,7 @@ void UserInterface::setupWidgetHandlers()
 	showOrientationButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onShowOrientationButtonClick, this);
 	enableHandControlButton->GetSignal(sfg::Button::OnLeftClick).Connect(&UserInterface::onEnableHandControlButtonClick, this);
 		filterJointsCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onFilterComboSelect, this);
+		performancesCombo->GetSignal(sfg::ComboBox::OnSelect).Connect(&UserInterface::onPerformanceComboSelect, this);
 	  jointFramesProgress->GetSignal(sfg::ProgressBar::OnMouseMove).Connect(&UserInterface::onProgressBarMouseMove, this);
 	// TODO: hook up other widget handlers as needed
 }
@@ -117,10 +119,14 @@ void UserInterface::setupWindowConfiguration()
 	playLabel->SetText(ss.str());
 	playLabel->SetLineWrap(true);
 
-	filterJointsCombo->AppendItem("No joint filtering");
-	filterJointsCombo->AppendItem("Low joint filtering");
-	filterJointsCombo->AppendItem("Medium joint filtering");
-	filterJointsCombo->AppendItem("High joint filtering");
+	filterJointsCombo->AppendItem("No filtering");
+	filterJointsCombo->AppendItem("Low filtering");
+	filterJointsCombo->AppendItem("Medium filtering");
+	filterJointsCombo->AppendItem("High filtering");
+	filterJointsCombo->SelectItem(2);
+
+	performancesCombo->AppendItem("Live");
+	performancesCombo->SelectItem(0);
 
 	sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
 
@@ -143,6 +149,7 @@ void UserInterface::setupWindowConfiguration()
 	fixed->Put(showJointPathButton, sf::Vector2f(0, 380));
 	fixed->Put(enableHandControlButton, sf::Vector2f(0, 420));
 	fixed->Put(filterJointsCombo, sf::Vector2f(0, 460));
+	fixed->Put(performancesCombo, sf::Vector2f(120, 50));
 
 	fixed->Put(playButton, sf::Vector2f(0, 600));
 	fixed->Put(playLabel, sf::Vector2f(80, 615));
@@ -205,4 +212,15 @@ void UserInterface::onFilterComboSelect()
 	else if (selected == "Joint filtering - Low")    Application::request().getKinect().getSkeleton().setFilterLevel(LOW);
 	else if (selected == "Joint filtering - Medium") Application::request().getKinect().getSkeleton().setFilterLevel(MEDIUM);
 	else if (selected == "Joint filtering - High")   Application::request().getKinect().getSkeleton().setFilterLevel(HIGH);
+}
+
+void UserInterface::onPerformanceComboSelect()
+{
+	const sf::String& selected(performancesCombo->GetSelectedText());
+	// TODO : map combo box text to vector index of performances 
+	if (selected == "Live") {
+		std::cout << "Rendering live performance" << std::endl;
+	} else {
+		std::cout << "Rendering other performance (not yet implemented)" << std::endl;
+	}
 }

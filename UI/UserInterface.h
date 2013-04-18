@@ -39,6 +39,7 @@ private:
 	sfg::CheckButton::Ptr enableHandControlButton;
 
 	sfg::ComboBox::Ptr filterJointsCombo;
+	sfg::ComboBox::Ptr performancesCombo;
 
 	sfg::ProgressBar::Ptr jointFramesProgress;
 	sfg::Label::Ptr jointFramesFilename;
@@ -83,5 +84,6 @@ private:
 	void onEnableHandControlButtonClick();
 	void onProgressBarMouseMove();
 	void onFilterComboSelect();
+	void onPerformanceComboSelect();
 };
 
