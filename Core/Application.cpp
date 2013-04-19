@@ -96,10 +96,11 @@ void Application::loadFile()
 {
 	std::wstring wfilename(showFileChooser());
 	std::string filename; filename.assign(wfilename.begin(), wfilename.end());
-	Performance p(filename);
+	const std::string& name = filename.substr(filename.find_last_of("\\") + 1);
+	Performance p(name);
 	if (p.loadFile(filename)) {
 		kinect.getSkeleton().addPerformance(p);
-		gui.setFileName(filename);
+		gui.setFileName(name);
 	} else {
 		gui.setFileName("No file loaded");
 	}

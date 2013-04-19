@@ -127,7 +127,7 @@ void UserInterface::setupWindowConfiguration()
 
 	performancesCombo->AppendItem("Live");
 	performancesCombo->SelectItem(0);
-	performancesCombo->SetRequisition(sf::Vector2f(300,20));
+	performancesCombo->SetRequisition(sf::Vector2f(150,20));
 
 	sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
 
