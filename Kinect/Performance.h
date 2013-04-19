@@ -58,12 +58,14 @@ inline bool Performance::isLoaded()     const { return loaded; }
 inline int  Performance::getNumFrames() const { return frames.size(); }
 
 inline unsigned int Performance::getCurrentFrameIndex() const { return currentFrameIndex; }
-inline void Performance::setCurrentFrameIndex(unsigned int i) { assert(i < frames.size()); currentFrameIndex = i; }
+inline void Performance::setCurrentFrameIndex(unsigned int i) {
+	currentFrameIndex = (i < frames.size()) ? currentFrameIndex : 0;
+}
 
 inline float Performance::getDuration() const {
 	if (!loaded) return 0.f;
-	const float lastTimestamp  = frames.back().at(SHOULDER_CENTER).timestamp;
-	const float firstTimestamp = frames.front().at(SHOULDER_CENTER).timestamp;
+	const float lastTimestamp  = frames.back().timestamp;
+	const float firstTimestamp = frames.front().timestamp;
 	return (lastTimestamp - firstTimestamp);
 }
 

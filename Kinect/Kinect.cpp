@@ -148,16 +148,13 @@ void Kinect::update()
 			MessageBox(NULL,_T("NOTE: applying new performance to existing animation not ready yet..."),_T("TODO"),MB_OK);
 
 			float lastTimeStamp = 0.f;
-			for (unsigned int i = 0; i < layerFrames.size(); ++i) {
-				JointFrame& frame = layerFrames[i];
-				for (auto& joint : frame) {
-					joint.second.timestamp += lastTimeStamp;
-					lastTimeStamp = joint.second.timestamp;
-				}
+			for(auto& frame : layerFrames) {
+				frame.timestamp += lastTimeStamp;
+				lastTimeStamp = frame.timestamp;
 			}
 			//normalizeTimestamps(layerFrames);
 			std::stringstream ss;
-			ss << "Perf #" << skeleton.getPerformances().size();
+			ss << "Performance #" << skeleton.getPerformances().size();
 			skeleton.addPerformance(Performance(ss.str(), layerFrames));
 			skeleton.applyPerformance(skeleton.getPerformances().back());
 		}
@@ -345,6 +342,12 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 
 	if (isLayering) {
 		layerFrames.push_back(JointFrame());
+		if (layerFrames.size() == 1) {
+			layerFrames.back().timestamp = 0.f;
+		} else {
+			const JointFrame& prevFrame = *(layerFrames.end() - 1);
+			layerFrames.back().timestamp = prevFrame.timestamp + timestamp;
+		}
 		std::cout << "Pushed new joint frame into layerFrames vector, new size: " << layerFrames.size() << std::endl;
 	}
 
@@ -358,8 +361,7 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		const Matrix4& matrix4 = boneOrientation.absoluteRotation.rotationMatrix;
 
 		// Update the joint frame entry for this joint type
-		Joint& joint = skeleton.getCurrentJointFrame()[toJointType(i)];
-		joint.timestamp     = timestamp;
+		Joint& joint = skeleton.getCurrentJointFrame().joints[toJointType(i)];
 		joint.position      = glm::vec3(position.x, position.y, position.z);
 		joint.orientation   = toMat4(matrix4);;
 		joint.type          = toJointType(i);
@@ -371,11 +373,12 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 		}
 
 		if (isLayering) {
-			layerFrames.back()[toJointType(i)] = joint;
+			layerFrames.back().joints[toJointType(i)] = joint;
 		}
 	}
 
 	if (saving && saveStream.is_open()) {
+		saveStream.write((char *)&skeleton.getCurrentJointFrame().timestamp, sizeof(float));
 		++numFramesSaved;
 	}
 }

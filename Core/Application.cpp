@@ -109,6 +109,12 @@ void Application::loadFile()
 void Application::closeFile()
 {
 	Performance *performance = &kinect.getSkeleton().getPerformance();	
+	if (performance->getName() == "Live") {
+		// TODO : message box?
+		std::cout << "Live performance cannot be closed" << std::endl;
+		return;
+	}
+
 	// TODO : this is super lame, make it more reasonable
 	auto& performances = kinect.getSkeleton().getPerformances();
 	for(auto& p = performances.begin(); p != performances.end(); ++p) {
@@ -210,7 +216,7 @@ void Application::draw()
 	glm::vec3 binormal = constants::worldX;
 	glm::vec3 normal   = constants::worldY;
 	glm::vec3 tangent  = constants::worldZ;
-	if (handControl && !skeleton.getCurrentJointFrame().empty()) {
+	if (handControl && !skeleton.getCurrentJointFrame().joints.empty()) {
 		const Joint& rightHand = skeleton.getCurrentRightHand();
 		const Joint& leftHand  = skeleton.getCurrentLeftHand();
 		//const Joint& head      = skeleton.getCurrentJointFrame().at(Skeleton::HEAD);
@@ -281,8 +287,8 @@ void Application::draw()
 			if (nextIndex < skeleton.getNumFrames()) {
 				const JointFrame& thisFrame = skeleton.getPerformance().getCurrentFrame();
 				const JointFrame& nextFrame = skeleton.getPerformance().getFrames()[nextIndex];
-				const float nextFrameTime = nextFrame.at(SHOULDER_CENTER).timestamp;
-				const float thisFrameTime = thisFrame.at(SHOULDER_CENTER).timestamp;
+				const float nextFrameTime = nextFrame.timestamp;
+				const float thisFrameTime = thisFrame.timestamp;
 				frameDelta = nextFrameTime - thisFrameTime;
 				//std::cout << "Animation frame delta = " << frameDelta << std::endl;
 			}

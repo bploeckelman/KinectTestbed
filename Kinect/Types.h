@@ -44,8 +44,6 @@ enum EFilteringLevel {
 };
 
 typedef struct tag_joint {
-	float     timestamp; // in seconds
-
 	glm::vec3 position;
 	glm::mat4 orientation;
 
@@ -53,7 +51,10 @@ typedef struct tag_joint {
 	ETrackingState trackingState;
 } Joint;
 
-typedef std::map<EJointType, Joint> JointFrame;
+typedef struct tag_joint_frame {
+	float     timestamp; // in seconds
+	std::map<EJointType, Joint> joints;
+} JointFrame;
 typedef std::vector<JointFrame>     AnimationFrames;
 
 // Rendering flags == [R_JOINTS | R_ORIENT | R_BONES | R_INFER]

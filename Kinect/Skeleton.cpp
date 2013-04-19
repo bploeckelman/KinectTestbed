@@ -159,8 +159,8 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 	//}
 	//AnimationFrames& performanceFrames = performance->getFrames();
 
-	Joint& initialCurrentHand = performance->getFrame(0)[HAND_LEFT];//.front()[HAND_LEFT];
-	Joint& initialNewHand = newPerformance.getFrame(0)[HAND_LEFT];//front()[HAND_LEFT];
+	Joint& initialCurrentHand = performance->getFrame(0).joints[HAND_LEFT];
+	Joint& initialNewHand = newPerformance.getFrame(0).joints[HAND_LEFT];
 
 	const glm::vec3& y0pos(initialCurrentHand.position);
 	const glm::vec3& x0pos(initialNewHand.position);
@@ -192,8 +192,9 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 
 void Skeleton::setFrameIndex( const float fraction )
 {
-	if (!performance->isLoaded()) return;
 	assert(fraction >= 0.f && fraction <= 1.f);
+	if (!performance->isLoaded() || performance->getFrames().empty())
+		return;
 
 	frameIndex = static_cast<int>(floor(fraction * performance->getNumFrames()));
 	performance->setCurrentFrameIndex(frameIndex);
@@ -219,10 +220,9 @@ void Skeleton::renderJoints() const
 	const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, alpha };
 
 	gluQuadricOrientation(quadric, GLU_OUTSIDE);
-	JointFrame& joints = *visibleJointFrame;
 
 	for (auto i = 0; i < NUM_JOINT_TYPES; ++i) {
-		const Joint& joint = joints[(EJointType) i];
+		const Joint& joint = (*visibleJointFrame).joints[(EJointType) i];
 
 		// Change rendering size/material based on tracking type 
 		switch (joint.trackingState) {
@@ -267,11 +267,9 @@ void Skeleton::renderJoints() const
 
 void Skeleton::renderOrientations() const
 {
-	JointFrame& joints = *visibleJointFrame;
-
 	glPointSize(1.f);
 	for (auto i = 0; i < NUM_JOINT_TYPES; ++i) {
-		const Joint& joint = joints[(EJointType) i];
+		const Joint& joint = (*visibleJointFrame).joints[(EJointType) i];
 
 		float scale = 0.075f;
 		switch (joint.trackingState) { // skip untracked joints
@@ -308,9 +306,9 @@ void Skeleton::renderBone( EJointType fromType, EJointType toType ) const
 	const GLfloat diffuseGood2[]  = { 0.5f, 0.25f, 0.13f, alpha };
 	const GLfloat diffuseWhite2[] = { 0.5f, 0.5f, 0.5f, alpha };
 
-	JointFrame& joints = *visibleJointFrame;
-	const Joint& fromJoint = joints[fromType];
-	const Joint& toJoint   = joints[toType];
+	JointFrame& frame = *visibleJointFrame;
+	const Joint& fromJoint = frame.joints[fromType];
+	const Joint& toJoint   = frame.joints[toType];
 
 	const ETrackingState fromState = fromJoint.trackingState;
 	const ETrackingState toState   = toJoint.trackingState;
@@ -432,7 +430,7 @@ void Skeleton::renderJointPath( const EJointType type ) const
 	glPushMatrix();
 	glBegin(GL_LINE_STRIP);
 		for (auto i = lastFrame; i <= frameIndex; ++i) {
-			glVertex3fv(glm::value_ptr(jointFrames[i].at(type).position));
+			glVertex3fv(glm::value_ptr(jointFrames[i].joints.at(type).position));
 		}
 	glEnd();
 	glPopMatrix();

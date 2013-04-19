@@ -73,14 +73,15 @@ public:
 	float getAnimationDuration() const {
 		if (!loaded) return 0.f;
 		const AnimationFrames& jointFrames = performance->getFrames();
-		const float firstTime = jointFrames.front().at(SHOULDER_CENTER).timestamp;
-		const float lastTime  = jointFrames.back().at(SHOULDER_CENTER).timestamp;
+		const float firstTime = jointFrames.front().timestamp;
+		const float lastTime  = jointFrames.back().timestamp;
 		return lastTime - firstTime;
 	}
 
 	JointFrame& getCurrentJointFrame() { return liveJointFrame;  }
-	const Joint& getCurrentRightHand() { return liveJointFrame.at(HAND_RIGHT); }
-	const Joint& getCurrentLeftHand()  { return liveJointFrame.at(HAND_LEFT);  }
+	const Joint& getCurrentJoint(const EJointType& jointType) { return liveJointFrame.joints.at(jointType); }
+	const Joint& getCurrentRightHand() { return liveJointFrame.joints.at(HAND_RIGHT); }
+	const Joint& getCurrentLeftHand()  { return liveJointFrame.joints.at(HAND_LEFT);  }
 
 	GLUquadric* getQuadric() { return quadric; }
 
@@ -111,10 +112,8 @@ private:
 
 
 inline void normalizeTimestamps( AnimationFrames& animationFrames ) {
-	const float initialTime = animationFrames.front().at(SHOULDER_CENTER).timestamp;
+	const float initialTime = animationFrames.front().timestamp;
 	for (auto& frame : animationFrames) {
-		for (auto& joint : frame) {
-			joint.second.timestamp -= initialTime;
-		}
+		frame.timestamp -= initialTime;
 	}
 }

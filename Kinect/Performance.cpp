@@ -51,7 +51,7 @@ bool Performance::loadFile( const std::string& filename )
 		// Load the next joint from the file
 		memset(&joint, 0, sizeof(Joint));
 		loadStream.read((char *)&joint, sizeof(Joint));
-		inputFrame[joint.type] = joint;
+		inputFrame.joints[joint.type] = joint;
 		++totalJointsRead;
 		
 		// Calculate minimum and maximum joint positions
@@ -64,6 +64,7 @@ bool Performance::loadFile( const std::string& filename )
 
 		// Done reading joints for current frame, save it and continue with next frame 
 		if (++numJointsRead == NUM_JOINT_TYPES) {
+			loadStream.read((char *)&inputFrame.timestamp, sizeof(float));
 			frames.push_back(inputFrame);
 			numJointsRead = 0; 
 			++totalFramesRead;
@@ -84,7 +85,7 @@ bool Performance::loadFile( const std::string& filename )
 
 	// Normalize the z values for each joint in each frame
 	for (auto& frame : frames) {
-		for (auto joints : frame) {
+		for (auto joints : frame.joints) {
 			Joint& joint = joints.second;
 			joint.position.z /= mx.z;
 		}
@@ -93,12 +94,10 @@ bool Performance::loadFile( const std::string& filename )
 	//currentFrameIndex = 0;
 	if (loaded) {
 		//normalizeTimestamps(frames);
-		const float initialTime = frames.front().at(SHOULDER_CENTER).timestamp;
-		for (auto& frame : frames) {
-			for (auto& joint : frame) {
-				joint.second.timestamp -= initialTime;
-			}
-		}
+		//const float initialTime = frames.front().timestamp;
+		//for (auto& frame : frames) {
+		//	frame.timestamp -= initialTime;
+		//}
 		//visibleJointFrame = &jointFrames[frameIndex];
 	} else {
 		//visibleJointFrame = &currentJointFrame;
@@ -134,7 +133,7 @@ JointFrame& Performance::getFrameNearestTime( float seconds )
 	unsigned int nearestIndex = 0;
 	for (unsigned int i = 0; i < frames.size(); ++i) {
 		// TODO : move timestamp from individual Joint to entire JointFrame
-		const float frameTimeStamp = frames[i].at(SHOULDER_CENTER).timestamp;
+		const float frameTimeStamp = frames[i].timestamp;
 		const float currentDelta = fabs(frameTimeStamp - seconds);
 		if (currentDelta < nearestDelta) {
 			nearestDelta = currentDelta;
