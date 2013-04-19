@@ -27,7 +27,7 @@ Skeleton::Skeleton()
 	, filteringLevel(MEDIUM)
 {
 	visibleJointFrame = &liveJointFrame;
-	performances.push_back(Performance());
+	performances.push_back(Performance("Live"));
 	performance = &performances.back();
 }
 
@@ -44,9 +44,9 @@ void Skeleton::render() //const
 	if (performance == nullptr) return;
 
 	UserInterface& gui = Application::request().getGUI();
-	unsigned int selectedPerformanceIndex = gui.getPerformancesCombo()->GetSelectedItem();
+	const std::string& selected = gui.getPerformancesCombo()->GetSelectedText();
 
-	if (selectedPerformanceIndex == 0) {
+	if (selected == "Live") {
 		// Draw the current live joint frame
 		visibleJointFrame = &liveJointFrame;
 		glPushMatrix();
@@ -61,9 +61,15 @@ void Skeleton::render() //const
 	}
 
 	// Set the current performance
-	if (selectedPerformanceIndex < performances.size()) {
-		performance = &performances[selectedPerformanceIndex];
-	} else {
+	bool found = false;
+	for (auto& p : performances) {
+		if (selected == p.getName()) {
+			performance = &p;
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
 		performance = nullptr;
 	}
 
@@ -138,24 +144,29 @@ void Skeleton::addPerformance( const Performance& newPerformance )
 	}
 
 	performances.push_back(newPerformance);
-	Application::request().getGUI().addPerformance(performances.size());
+	Application::request().getGUI().addPerformance(newPerformance.getName());
 	Application::request().getGUI().getPerformancesCombo()->SelectItem(performances.size());
 	performance = &performances.back();
 }
 
 // TODO : change to (const Performance& performance) + overloaded to index from performances vector
-void Skeleton::applyPerformance( AnimationFrames& newFrames )
+void Skeleton::applyPerformance( Performance& newPerformance )
 {
 	std::cout << "Warning: applying new performance not yet implemented." << std::endl;
 	//if (jointFrames.size() != newFrames.size()) {
 	//	std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
 	//	return;
 	//}
-	AnimationFrames& jointFrames = performance->getFrames();
+	//AnimationFrames& performanceFrames = performance->getFrames();
 
-	Joint& initialCurrentHand = jointFrames.front()[HAND_LEFT];
-	Joint& initialNewHand = newFrames.front()[HAND_LEFT];
+	Joint& initialCurrentHand = performance->getFrame(0)[HAND_LEFT];//.front()[HAND_LEFT];
+	Joint& initialNewHand = newPerformance.getFrame(0)[HAND_LEFT];//front()[HAND_LEFT];
 
+	const glm::vec3& y0pos(initialCurrentHand.position);
+	const glm::vec3& x0pos(initialNewHand.position);
+	std::cout << "Applying new performance..." << std::endl
+		      << "Y(0)[hand_left] : pos(" << y0pos.x << "," << y0pos.y << "," << y0pos.z << ")" << std::endl
+		      << "X(0)[hand_left] : pos(" << x0pos.x << "," << x0pos.y << "," << x0pos.z << ")" << std::endl;
 	// TODO : Move to Performance
 	// For each animation frame
 	//unsigned int i = 0;

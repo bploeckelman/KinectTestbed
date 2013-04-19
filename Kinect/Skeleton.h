@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 
 #include <iostream>
-#include <vector>
+#include <list>
 #include <map>
 
 #include "Performance.h"
@@ -21,7 +21,7 @@ private:
 	JointFrame *visibleJointFrame;
 	JointFrame liveJointFrame;
 	Performance *performance;
-	std::vector<Performance> performances;
+	std::list<Performance> performances;
 
 	bool loaded;
 	bool useMaterials;
@@ -39,7 +39,7 @@ public:
 	void render(); //const;
 	bool isLoaded() const { return performance != nullptr && performance->isLoaded(); }
 	bool loadFile(const std::string& filename) {
-		performances.push_back(Performance());
+		performances.push_back(Performance(filename));
 		return performances.back().loadFile(filename);
 	}
 	void clearLoadedFrames() { performance->clearLoadedFrames(); }
@@ -48,22 +48,27 @@ public:
 	void prevFrame();
 
 	void addPerformance( const Performance& newPerformance );
-	void applyPerformance(AnimationFrames& newFrames);
+	void applyPerformance(Performance& newPerformance);
 
 	void setFrameIndex(const float fraction);
 	unsigned int getFrameIndex() const { return performance->getCurrentFrameIndex(); }
 	unsigned int getNumFrames()  const { return performance->getNumFrames(); }
 
-	void setPerformance( unsigned int index ) {
-		//assert(index < performances.size());
-		if (index < performances.size()) {
-			performance = &performances[index];
-		} else {
-			std::cout << "Warning: attempted to set performance to bad index #" << index << std::endl;
+	void setPerformance( const std::string& name ) {
+		bool success = false;
+		for (auto p : performances) {
+			if (name == p.getName()) {
+				performance = &p;
+				success = true;
+				break;
+			}
+		}
+		if (!success) {
+			std::cout << "Warning: no such performance '" << name << "'" << std::endl;
 		}
 	}
 	Performance& getPerformance() { return *performance; }
-	std::vector<Performance>& getPerformances() { return performances; }
+	std::list<Performance>& getPerformances() { return performances; }
 
 	float getAnimationDuration() const {
 		if (!loaded) return 0.f;

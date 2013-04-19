@@ -8,16 +8,18 @@
 #include <fstream>
 
 
-Performance::Performance()
+Performance::Performance( const std::string& name )
 	: loaded(false)
 	, currentFrameIndex(0)
 	, frames()
+	, name(name)
 {}
 
-Performance::Performance( const AnimationFrames& frames )
+Performance::Performance( const std::string& name, const AnimationFrames& frames )
 	: loaded(true)
 	, currentFrameIndex(0)
 	, frames(frames)
+	, name(name)
 {}
 
 Performance::~Performance()

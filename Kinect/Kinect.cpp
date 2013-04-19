@@ -156,8 +156,10 @@ void Kinect::update()
 				}
 			}
 			//normalizeTimestamps(layerFrames);
-			skeleton.addPerformance(Performance(layerFrames));
-			//skeleton.applyPerformance(layerFrames);
+			std::stringstream ss;
+			ss << "Perf #" << skeleton.getPerformances().size();
+			skeleton.addPerformance(Performance(ss.str(), layerFrames));
+			skeleton.applyPerformance(skeleton.getPerformances().back());
 		}
 
 		clock.restart();

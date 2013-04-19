@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include <string>
 #include <vector>
 #include <map>
 
@@ -19,10 +20,11 @@ private:
 	bool loaded;
 	unsigned int currentFrameIndex;
 	AnimationFrames frames;
+	std::string name;
 
 public:
-	Performance();
-	Performance(const AnimationFrames& frames);
+	Performance(const std::string& name);
+	Performance(const std::string& name, const AnimationFrames& frames);
 	~Performance();
 
 	bool isLoaded() const;
@@ -38,6 +40,8 @@ public:
 	void moveToFrame(unsigned int i);
 	void moveToNextFrame();
 	void moveToPrevFrame();
+
+	const std::string& getName() const { return name; }
 
 	JointFrame& getCurrentFrame();
 	JointFrame& getFrame(unsigned int i = 0);

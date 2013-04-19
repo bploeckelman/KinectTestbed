@@ -127,7 +127,7 @@ void UserInterface::setupWindowConfiguration()
 
 	performancesCombo->AppendItem("Live");
 	performancesCombo->SelectItem(0);
-	performancesCombo->SetRequisition(sf::Vector2f(100,20));
+	performancesCombo->SetRequisition(sf::Vector2f(300,20));
 
 	sfg::Fixed::Ptr fixed = sfg::Fixed::Create();
 
@@ -221,5 +221,5 @@ void UserInterface::onPerformanceComboSelect()
 	const unsigned int index = performancesCombo->GetSelectedItem();
 	// TODO : map combo box text to vector index of performances 
 	std::cout << "Rendering performance '" << selected.toAnsiString() << "', gui index[" << index << "]" << std::endl;
-	Application::request().getKinect().getSkeleton().setPerformance(index);
+	Application::request().getKinect().getSkeleton().setPerformance(selected);
 }
