@@ -157,10 +157,15 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 	//	std::cerr << "Warning: unable to apply performance - number of new frames doesn't match number of existing frames" << std::endl;
 	//	return;
 	//}
-	//AnimationFrames& performanceFrames = performance->getFrames();
-
-	Joint& initialCurrentHand = performance->getFrame(0).joints[HAND_LEFT];
-	Joint& initialNewHand = newPerformance.getFrame(0).joints[HAND_LEFT];
+	// HACK : need to have a way to specify which other performance to apply this one to
+	// NOTE : could have non-member function that takes 2 performance&'s and applies one to the other in place
+	auto p = performances.begin();
+	std::advance(p, 1); // 0 = live, 1 = base performance
+	Performance& currentPerformance = *p;//*performance;
+	AnimationFrames& currentFrames = currentPerformance.getFrames();
+	AnimationFrames& newFrames = newPerformance.getFrames();
+	Joint& initialCurrentHand = currentFrames[0].joints[HAND_LEFT];
+	Joint& initialNewHand = newFrames[0].joints[HAND_LEFT];
 
 	const glm::vec3& y0pos(initialCurrentHand.position);
 	const glm::vec3& x0pos(initialNewHand.position);
@@ -169,25 +174,31 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 		      << "X(0)[hand_left] : pos(" << x0pos.x << "," << x0pos.y << "," << x0pos.z << ")" << std::endl;
 	// TODO : Move to Performance
 	// For each animation frame
-	//unsigned int i = 0;
-	//for (auto& currentFrame : jointFrames) {
-	//	// Get the corresponding performance frame
-	//	JointFrame& newFrame = newFrames[i++];
+	unsigned int i = 0;
+	for (unsigned int i = 0; i < currentFrames.size(); ++i) {
+		// Get the corresponding pair of frames
+		JointFrame& currFrame = currentFrames[i];
+		JointFrame& newFrame = newFrames[i];
 
-	//	// Just update the hand for now
-	//	Joint& currentHand = currentFrame[HAND_LEFT];
-	//	Joint& newHand = newFrame[HAND_LEFT];
+		// Just update the hand for now
+		Joint& currentHand = currFrame.joints[HAND_LEFT];
+		Joint& newHand = newFrame.joints[HAND_LEFT];
 
-	//	// New position = initial position
-	//	// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
-	//	// TODO : calculate K(t) and C'(X(t) - X0)
-	//	//std::cout << "Initial pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << "   ";
-	//	currentHand.position = glm::vec3(
-	//		initialCurrentHand.position.x + (newHand.position.x - initialNewHand.position.x),
-	//		initialCurrentHand.position.y + (newHand.position.x - initialNewHand.position.y),
-	//		initialCurrentHand.position.z + (newHand.position.x - initialNewHand.position.z));
-	//	//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
-	//}
+		// Absolute Mapping
+		// current_new_position = current_initial_position + rotation_hierarchy * inv_camera@(current_new_position - initial_new_position)
+		// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
+		glm::vec4 updatedPosition;
+		glm::vec3 t = newHand.position - x0pos;
+		glm::vec4 xtSubx0(t.x, t.y, t.z, 1);
+		glm::vec4 y0(y0pos.x, y0pos.y, y0pos.z, 1);
+
+		// TODO : calculate K(t) and C'(X(t) - X0)
+		glm::mat4 k(1);
+		glm::mat4 c(1);
+		updatedPosition = y0 + (k * c * xtSubx0);
+		currentHand.position = glm::vec3(updatedPosition.x, updatedPosition.y, updatedPosition.z);
+		std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
+	}
 }
 
 void Skeleton::setFrameIndex( const float fraction )

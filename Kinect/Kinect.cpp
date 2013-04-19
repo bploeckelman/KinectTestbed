@@ -135,7 +135,8 @@ void Kinect::update()
 		performanceTimer += clock.getElapsedTime().asSeconds();
 		//std::cout << "Performance timer = " << performanceTimer << std::endl;
 
-		if (performanceTimer >= skeleton.getAnimationDuration()) {
+		//if (performanceTimer >= skeleton.getAnimationDuration()) {
+		if (layerFrames.size() == skeleton.getPerformance().getNumFrames()) {
 			// TODO apply layer performance update to existing animation
 			// TODO alert user and let them choose when to apply
 			// or apply in real time??
