@@ -187,7 +187,7 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 		JointFrame& newFrame = newFrames[i];
 		JointFrame& prevNewFrame = newFrames[i - 1];
 
-		// Just update the hand for now
+		// Just update the left arm for now
 		Joint& currentHand = currFrame.joints[HAND_LEFT];
 		Joint& newHand = newFrame.joints[HAND_LEFT];
 		Joint& prevNewHand = prevNewFrame.joints[HAND_LEFT];
@@ -204,47 +204,87 @@ void Skeleton::applyPerformance( Performance& newPerformance )
 		Joint& newShoulder = newFrame.joints[SHOULDER_LEFT];
 		Joint& prevNewShoulder = prevNewFrame.joints[SHOULDER_LEFT];
 
-		// Absolute Mapping
-		// Y'(t) = Y0 + C'(X(t) - X0)
-		// Yr'(t) = C' * Xr(t) * inv(Xr0) * Yr0
-
-		// Additive Mapping
-		// Y'(t) = Y0 + C'(X(t) - X(t - dt))
-		glm::vec3 t = newHand.position - prevNewHand.position;
-		glm::vec4 xtSubxtdt(t.x, t.y, t.z, 1);
-		glm::vec4 y0(y0pos.x, y0pos.y, y0pos.z, 1);
+		glm::vec3 t;
+		glm::vec4 xtSubxtdt;
+		glm::vec4 xtSubx0;
+		glm::vec4 y0;
+		glm::vec4 x0;
+		glm::vec4 pos;
 		glm::mat4 c(1);
+		glm::mat4 k(1);
 
-		glm::vec4 pos = y0 + c * xtSubxtdt;
-		currentHand.position = glm::vec3(pos.x, pos.y, pos.z);
+		enum ELayerMapping { Additive, Absolute, Trajectory };
+		const ELayerMapping mapping = Additive;
+		if (mapping == Additive) {
+			// Additive Mapping
+			// Y'(t) = Y0 + C'(X(t) - X(t - dt))
+			t = newHand.position - prevNewHand.position;
+			xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(y0pos, 1);
+			pos = y0 + c * xtSubxtdt;
+			currentHand.position = glm::vec3(pos.x, pos.y, pos.z);
 
-		t = newWrist.position - prevNewWrist.position;
-		xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
-		y0 = glm::vec4(initialCurrentWrist.position.x, initialCurrentWrist.position.y, initialCurrentWrist.position.z, 1);
-		pos = y0 + c * xtSubxtdt;
-		currentWrist.position = glm::vec3(pos.x, pos.y, pos.z);
+			t = newWrist.position - prevNewWrist.position;
+			xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentWrist.position, 1);
+			pos = y0 + c * xtSubxtdt;
+			currentWrist.position = glm::vec3(pos.x, pos.y, pos.z);
 
-		t = newElbow.position - prevNewElbow.position;
-		xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
-		y0 = glm::vec4(initialCurrentElbow.position.x, initialCurrentElbow.position.y, initialCurrentElbow.position.z, 1);
-		pos = y0 + c * xtSubxtdt;
-		currentElbow.position = glm::vec3(pos.x, pos.y, pos.z);
+			t = newElbow.position - prevNewElbow.position;
+			xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentElbow.position, 1);
+			pos = y0 + c * xtSubxtdt;
+			currentElbow.position = glm::vec3(pos.x, pos.y, pos.z);
 
-		t = newShoulder.position - prevNewShoulder.position;
-		xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
-		y0 = glm::vec4(initialCurrentShoulder.position.x, initialCurrentShoulder.position.y, initialCurrentShoulder.position.z, 1);
-		pos = y0 + c * xtSubxtdt;
-		currentShoulder.position = glm::vec3(pos.x, pos.y, pos.z);
+			t = newShoulder.position - prevNewShoulder.position;
+			xtSubxtdt = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentShoulder.position, 1);
+			pos = y0 + c * xtSubxtdt;
+			currentShoulder.position = glm::vec3(pos.x, pos.y, pos.z);
+		}
+		else if (mapping == Absolute) {
+			// Absolute Mapping
+			// Y'(t) = Y0 + C'(X(t) - X0)
+			// Yr'(t) = C' * Xr(t) * inv(Xr0) * Yr0
+			t = newHand.position - initialNewHand.position;
+			xtSubx0 = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentHand.position, 1);
+			pos = y0 + c * xtSubx0;
+			currentHand.position = glm::vec3(pos.x, pos.y, pos.z);
+			// TODO : Yr'(t) rotation
 
-		// Trajectory-Relative Mapping
-		// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
-		// current_new_position = current_initial_position + rotation_hierarchy * inv_camera@(current_new_position - initial_new_position)
-		// TODO : calculate K(t) and C'(X(t) - X0)
-		//glm::mat4 k(1);
-		//glm::mat4 c(1);
-		//updatedPosition = y0 + (k * c * xtSubx0);
-		//currentHand.position = glm::vec3(updatedPosition.x, updatedPosition.y, updatedPosition.z);
-		//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
+			t = newWrist.position - initialNewWrist.position;
+			xtSubx0 = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentWrist.position, 1);
+			pos = y0 + c * xtSubx0;
+			currentWrist.position = glm::vec3(pos.x, pos.y, pos.z);
+			// TODO : Yr'(t) rotation
+
+			t = newElbow.position - initialNewElbow.position;
+			xtSubx0 = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentElbow.position, 1);
+			pos = y0 + c * xtSubx0;
+			currentElbow.position = glm::vec3(pos.x, pos.y, pos.z);
+			// TODO : Yr'(t) rotation
+
+			t = newShoulder.position - initialNewShoulder.position;
+			xtSubx0 = glm::vec4(t.x, t.y, t.z, 1);
+			y0 = glm::vec4(initialCurrentShoulder.position, 1);
+			pos = y0 + c * xtSubx0;
+			currentShoulder.position = glm::vec3(pos.x, pos.y, pos.z);
+			// TODO : Yr'(t) rotation
+		}
+		else if (mapping == Trajectory) {
+			// Trajectory-Relative Mapping
+			// Y'(t) = Y0 + K(t) * C'(X(t) - X0)
+			// current_new_position = current_initial_position + rotation_hierarchy * inv_camera@(current_new_position - initial_new_position)
+			// TODO : calculate K(t) and C'(X(t) - X0)
+			//glm::mat4 k(1);
+			//glm::mat4 c(1);
+			//updatedPosition = y0 + (k * c * xtSubx0);
+			//currentHand.position = glm::vec3(updatedPosition.x, updatedPosition.y, updatedPosition.z);
+			//std::cout << "Updated pos(" << i << ") = (" << currentHand.position.x << "," << currentHand.position.y << "," << currentHand.position.z << std::endl;
+		}
 	}
 }
 
