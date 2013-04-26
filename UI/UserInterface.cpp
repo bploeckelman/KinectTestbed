@@ -88,10 +88,10 @@ void UserInterface::setupWindowConfiguration()
 	infoLabel->SetText("Sensor [?] : ?");
 	infoLabel->SetLineWrap(true);
 
-	showColorButton->SetActive(true);
-	showDepthButton->SetActive(true);
+	showColorButton->SetActive(false);
+	showDepthButton->SetActive(false);
 	showSkeletonButton->SetActive(true);
-	enableSeatedMode->SetActive(true);
+	enableSeatedMode->SetActive(false);
 
 	showJointsButton->SetActive(true);
 	showInferredButton->SetActive(false);
