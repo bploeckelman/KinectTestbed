@@ -158,7 +158,7 @@ void Application::mainLoop()
 	clock.restart();    
 	while (window.isOpen()) {
 		processEvents();
-		draw();
+		render();
 	}
 }
 
@@ -204,7 +204,7 @@ void Application::processEvents()
 	}
 }
 
-void Application::draw()
+void Application::render()
 {
 	window.setActive();
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -90,7 +90,7 @@ public:
 private:
 	void mainLoop();
 	void processEvents();
-	void draw();
+	void render();
 
 	// TODO : fix these horrible methods
 	float getCameraRotationX();
