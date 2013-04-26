@@ -376,6 +376,7 @@ void Kinect::skeletonFrameReady( NUI_SKELETON_FRAME& skeletonFrame )
 	}
 
 	if (saving && saveStream.is_open()) {
+		skeleton.getCurrentJointFrame().timestamp = clock.getElapsedTime().asSeconds();
 		saveStream.write((char *)&skeleton.getCurrentJointFrame().timestamp, sizeof(float));
 		++numFramesSaved;
 	}
