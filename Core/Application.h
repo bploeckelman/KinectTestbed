@@ -82,9 +82,6 @@ private:
 	void processEvents();
 	void render();
 
-	// TODO : make non-member function
-	std::wstring showFileChooser();
-
 	// TODO : move to opengl environment class?
 	void initOpenGL();
 	void shutdownOpenGL();

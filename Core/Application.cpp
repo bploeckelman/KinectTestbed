@@ -38,6 +38,8 @@ using namespace constants;
 const sf::VideoMode Application::videoMode = sf::VideoMode(window_width, window_height, window_bpp);
 const sf::ContextSettings contextSettings(depth_bits, stencil_bits, aa_level);
 
+std::wstring showFileChooser();
+
 // ----------------------------------------------------------------------------
 Application::Application()
 	: window(Application::videoMode, "Kinect Testbed", screen_mode, contextSettings)
@@ -263,55 +265,6 @@ void Application::render()
 }
 
 // ----------------------------------------------------------------------------
-std::wstring Application::showFileChooser() {
-	BROWSEINFO      bi;
-	char            pszBuffer[MAX_PATH]; 
-	LPWSTR          buffer = (LPWSTR)pszBuffer;
-	LPITEMIDLIST    pidl; 
-	LPMALLOC        lpMalloc;
-
-	// Initialize COM
-	if(CoInitializeEx(0,COINIT_APARTMENTTHREADED) != S_OK)
-	{
-		MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
-		CoUninitialize();
-		return std::wstring();
-	}
-
-	// Get a pointer to the shell memory allocator
-	if(SHGetMalloc(&lpMalloc) != S_OK)
-	{
-		MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
-		CoUninitialize();
-		return std::wstring();
-	}
-
-	bi.hwndOwner        =   NULL; 
-	bi.pidlRoot         =   NULL;
-	bi.pszDisplayName   =   buffer;
-	bi.lpszTitle        =   _T("Select a joint data file"); 
-	bi.ulFlags          =   BIF_BROWSEINCLUDEFILES;
-	bi.lpfn             =   NULL; 
-	bi.lParam           =   0;
-
-	if(pidl = SHBrowseForFolder(&bi))
-	{
-		// Copy the path directory to the buffer
-		if(SHGetPathFromIDList(pidl, buffer))
-		{
-			// buf now holds the directory path
-			std::wstringstream ss;
-			ss << _T("You selected the directory: ") << std::endl << _T("\t") << buffer << std::endl;
-		}
-
-		lpMalloc->Free(pidl);
-	}
-	lpMalloc->Release();
-	CoUninitialize();
-
-	return buffer;
-}
-
 void Application::initOpenGL(){
 	glGenTextures(1, &colorTextureId);
 	glBindTexture(GL_TEXTURE_2D, colorTextureId);
@@ -419,4 +372,49 @@ void Application::drawKinectImageStreams()
 		glEnable(GL_DEPTH_TEST);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+}
+
+// ----------------------------------------------------------------------------
+std::wstring showFileChooser() {
+	// Initialize COM
+	if(CoInitializeEx(0,COINIT_APARTMENTTHREADED) != S_OK) {
+		MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
+		CoUninitialize();
+		return std::wstring();
+	}
+
+	// Get a pointer to the shell memory allocator
+	LPMALLOC lpMalloc;
+	if(SHGetMalloc(&lpMalloc) != S_OK) {
+		MessageBox(NULL,_T("Error opening browse window"),_T("ERROR"),MB_OK);
+		CoUninitialize();
+		return std::wstring();
+	}
+
+	char   pszBuffer[MAX_PATH];
+	LPWSTR filepath = (LPWSTR)pszBuffer;
+
+	BROWSEINFO browseInfo;
+	browseInfo.hwndOwner       = NULL;
+	browseInfo.pidlRoot        = NULL;
+	browseInfo.pszDisplayName  = filepath;
+	browseInfo.lpszTitle       = _T("Select a joint data file");
+	browseInfo.ulFlags         = BIF_BROWSEINCLUDEFILES;
+	browseInfo.lpfn            = NULL;
+	browseInfo.lParam          = 0;
+
+	LPITEMIDLIST itemIdList;
+	if(itemIdList = SHBrowseForFolder(&browseInfo)) {
+		// Copy the path directory to the buffer
+		if(SHGetPathFromIDList(itemIdList, filepath)) {
+			// buf now holds the directory path
+			std::wstringstream ss;
+			ss << _T("You selected: ") << filepath << std::endl;
+		}
+		lpMalloc->Free(itemIdList);
+	}
+	lpMalloc->Release();
+	CoUninitialize();
+
+	return filepath;
 }
