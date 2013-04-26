@@ -25,6 +25,8 @@ private:
 
 	sf::Clock clock;
 	sf::RenderWindow window;
+
+	Kinect kinect;
 	UserInterface gui;
 
 	// TODO : move to OpenGLEnvironment class?
@@ -33,16 +35,9 @@ private:
 	GLubyte *colorData;
 	GLubyte *depthData;
 
-	Kinect kinect;
+	// TODO : add Performances and Skeletons
 
-	bool showColor;
-	bool showDepth;
-	bool showSkeleton;
-	bool handControl;
-
-	bool autoPlay;
-	float lastFrameTime;
-
+	// TODO : encapsulate in Input class?
 	bool rightMouseDown;
 	bool leftMouseDown;
 	bool shiftDown;
@@ -74,43 +69,58 @@ public:
 	void startup();
 	void shutdown();
 
+	// TODO : move these elsewhere?
 	void loadFile();
 	void closeFile();
 	void moveToNextFrame();
 	void moveToPreviousFrame();
 	void setJointFrameIndex(const float fraction);
+	bool isSaving() const;
+	bool isLoaded() const;
+	int getNumSensors() const;
 
-	void toggleAutoPlay()      { autoPlay     = !autoPlay;     }
-	void toggleShowColor()     { showColor    = !showColor;    }
-	void toggleShowDepth()     { showDepth    = !showDepth;    }
-	void toggleShowSkeleton()  { showSkeleton = !showSkeleton; }
-	void toggleHandControl()   { handControl  = !handControl;  }
+	const sf::Vector2i getMousePosition() const;
 
-	bool isSaving()     const { return kinect.isSaving(); }
-	bool isLoaded()     const { return kinect.getSkeleton().isLoaded(); }
-	bool isAutoPlay()   const { return autoPlay; }
-	int getNumSensors() const { return kinect.getNumSensors(); }
-	const sf::Vector2i getMousePosition() const { return sf::Mouse::getPosition(window); }
+	Kinect& getKinect();
+	const Kinect& getKinect() const;
 
-	Kinect& getKinect()             { return kinect; }
-	const Kinect& getKinect() const { return kinect; }
-	UserInterface& getGUI()             { return gui; }
-	const UserInterface& getGUI() const { return gui; }
+	UserInterface& getGUI();
+	const UserInterface& getGUI() const;
 
 private:
 	void mainLoop();
 	void processEvents();
 	void draw();
 
+	// TODO : fix these horrible methods
 	float getCameraRotationX();
 	float getCameraRotationY();
+
+	// TODO : make non-member function
 	std::wstring showFileChooser();
 
+	// TODO : move to opengl environment class?
 	void initOpenGL();
 	void shutdownOpenGL();
 
-	// Kinect methods -------------------------------------
 	// TODO : move these to Kinect class?
 	void updateKinectImageStreams();
 	void drawKinectImageStreams() ;
 };
+
+
+// Interface functions
+inline bool Application::isSaving()     const { return kinect.isSaving(); }
+inline bool Application::isLoaded()     const { return kinect.getSkeleton().isLoaded(); }
+inline int Application::getNumSensors() const { return kinect.getNumSensors(); }
+
+inline const sf::Vector2i Application::getMousePosition() const {
+	return sf::Mouse::getPosition(window);
+}
+
+inline Kinect& Application::getKinect()             { return kinect; }
+inline const Kinect& Application::getKinect() const { return kinect; }
+
+// TODO : still needed?
+inline UserInterface& Application::getGUI()             { return gui; }
+inline const UserInterface& Application::getGUI() const { return gui; }

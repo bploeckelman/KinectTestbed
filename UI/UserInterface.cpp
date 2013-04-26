@@ -11,7 +11,14 @@
 
 
 UserInterface::UserInterface()
-	: sfgui()
+	: showColor(false)
+	, showDepth(false)
+	, showSkeleton(true)
+	, seatedMode(false)
+	, handControl(false)
+	, autoPlay(false)
+	, lastFrameTime(0.f)
+	, sfgui()
 	, desktop()
 	, window(sfg::Window::Create())
 	, box(sfg::Box::Create(sfg::Box::HORIZONTAL, 0.f))
@@ -88,10 +95,10 @@ void UserInterface::setupWindowConfiguration()
 	infoLabel->SetText("Sensor [?] : ?");
 	infoLabel->SetLineWrap(true);
 
-	showColorButton->SetActive(false);
-	showDepthButton->SetActive(false);
-	showSkeletonButton->SetActive(true);
-	enableSeatedMode->SetActive(false);
+	showColorButton->SetActive(showColor);
+	showDepthButton->SetActive(showDepth);
+	showSkeletonButton->SetActive(showSkeleton);
+	enableSeatedMode->SetActive(seatedMode);
 
 	showJointsButton->SetActive(true);
 	showInferredButton->SetActive(false);
@@ -171,21 +178,20 @@ void UserInterface::onOpenButtonClick()  { Application::request().loadFile(); }
 void UserInterface::onCloseButtonClick() { Application::request().closeFile(); }
 void UserInterface::onLayerButtonClick() { Application::request().getKinect().startLayering(); }
 void UserInterface::onSaveButtonClick()  { Application::request().getKinect().toggleSave(); }
-void UserInterface::onShowColorButtonClick()       { Application::request().toggleShowColor(); }
-void UserInterface::onShowDepthButtonClick()       { Application::request().toggleShowDepth(); }
-void UserInterface::onShowSkeletonButtonClick()    { Application::request().toggleShowSkeleton(); }
+void UserInterface::onShowColorButtonClick()       { showColor = !showColor; }
+void UserInterface::onShowDepthButtonClick()       { showDepth = !showDepth; }
+void UserInterface::onShowSkeletonButtonClick()    { showSkeleton = !showSkeleton; }
 void UserInterface::onEnableSeatedModeClick()      { Application::request().getKinect().toggleSeatedMode(); }
 void UserInterface::onShowJointsButtonClick()      { Application::request().getKinect().getSkeleton().toggleJoints(); }
 void UserInterface::onShowInferredButtonClick()    { Application::request().getKinect().getSkeleton().toggleInferred(); }
 void UserInterface::onShowOrientationButtonClick() { Application::request().getKinect().getSkeleton().toggleOrientation(); }
 void UserInterface::onShowBonesButtonClick()       { Application::request().getKinect().getSkeleton().toggleBones(); }
 void UserInterface::onShowJointPathButtonClick()   { Application::request().getKinect().getSkeleton().toggleJointPath(); }
-void UserInterface::onEnableHandControlButtonClick() { Application::request().toggleHandControl(); }
+void UserInterface::onEnableHandControlButtonClick() { handControl = !handControl; }
 
 void UserInterface::onPlayButtonClick()  {
-	Application::request().toggleAutoPlay();
-	const bool isPlaying = Application::request().isAutoPlay();
-	playButton->SetLabel(isPlaying ? "Pause" : "Play");
+	autoPlay = !autoPlay;
+	playButton->SetLabel(autoPlay ? "Pause" : "Play");
 }
 
 void UserInterface::onProgressBarMouseMove()
@@ -222,4 +228,29 @@ void UserInterface::onPerformanceComboSelect()
 	// TODO : map combo box text to vector index of performances 
 	std::cout << "Rendering performance '" << selected.toAnsiString() << "', gui index[" << index << "]" << std::endl;
 	Application::request().getKinect().getSkeleton().setPerformance(selected);
+}
+
+void UserInterface::setIndex(int index) {
+	std::stringstream ss;
+	ss << "[" << index << "]";
+	jointFrameIndex->SetText(sf::String(ss.str()));
+}
+
+void UserInterface::addPerformance(const std::string& name) {
+	performancesCombo->AppendItem(name);
+}
+
+void UserInterface::removePerformance( const std::string& name ) {
+	// TODO : handle removing more cleanly... make it a map maybe? with unique id #s instead of vector?
+	if (name == "Live") {
+		std::cout << "Live performance can't be closed" << std::endl;
+		return;
+	} 
+
+	for (auto i = performancesCombo->GetStartItemIndex(); i < performancesCombo->GetItemCount(); ++i) {
+		if (name == performancesCombo->GetItem(i)) {
+			performancesCombo->RemoveItem(i);
+			break;
+		}
+	}
 }

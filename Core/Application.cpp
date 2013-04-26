@@ -36,10 +36,13 @@
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
 
-const sf::ContextSettings contextSettings(16, 0, 2); // depth bits, stencil bits, aa level
+// TODO : set as Config values
+// depth bits, stencil bits, aa level
+const sf::ContextSettings contextSettings(16, 0, 2);
 
 // ----------------------------------------------------------------------------
 Application::Application()
+	// TODO : set as Config values
 	: window(Application::videoMode, "Kinect Testbed")//, sf::Style::Fullscreen, contextSettings)
 	, clock()
 	, gui()
@@ -47,12 +50,6 @@ Application::Application()
 	, depthTextureId(0)
 	, colorData(new GLubyte[Kinect::COLOR_STREAM_BYTES])
 	, depthData(new GLubyte[Kinect::DEPTH_STREAM_BYTES])
-	, showColor(false)
-	, showDepth(false)
-	, showSkeleton(true)
-	, handControl(false)
-	, autoPlay(false)
-	, lastFrameTime(0.f)
 	, rightMouseDown(false)
 	, leftMouseDown(false)
 	, shiftDown(false)
@@ -77,6 +74,8 @@ Application::~Application()
 
 void Application::startup()
 {
+	// TODO : tweak output to not complain about
+	// not finding things in working directory
 	ImageManager::get().addResourceDir("../../Res/");
 
 	kinect.initialize();
@@ -133,7 +132,7 @@ void Application::closeFile()
 void Application::moveToNextFrame()
 {
 	kinect.getSkeleton().nextFrame();
-	if (autoPlay && kinect.getSkeleton().getFrameIndex() >= kinect.getSkeleton().getNumFrames() - 1) {
+	if (gui.isAutoPlayEnabled() && kinect.getSkeleton().getFrameIndex() >= kinect.getSkeleton().getNumFrames() - 1) {
 		kinect.getSkeleton().setFrameIndex(0);
 	}
 	gui.setProgress(kinect.getSkeleton().getFrameIndex() / (float) (kinect.getSkeleton().getNumFrames() - 1));
@@ -216,7 +215,7 @@ void Application::draw()
 	glm::vec3 binormal = constants::worldX;
 	glm::vec3 normal   = constants::worldY;
 	glm::vec3 tangent  = constants::worldZ;
-	if (handControl && !skeleton.getCurrentJointFrame().joints.empty()) {
+	if (gui.isHandControlEnabled() && !skeleton.getCurrentJointFrame().joints.empty()) {
 		const Joint& rightHand = skeleton.getCurrentRightHand();
 		const Joint& leftHand  = skeleton.getCurrentLeftHand();
 		//const Joint& head      = skeleton.getCurrentJointFrame().at(Skeleton::HEAD);
@@ -265,7 +264,7 @@ void Application::draw()
 
 	glPushMatrix();
 		modelview = glm::translate(glm::mat4(1), glm::vec3(-camerax, -cameray, -cameraz));
-		if (handControl) {
+		if (gui.isHandControlEnabled()) {
 			modelview[0][0] = binormal.x; modelview[0][1] = binormal.y; modelview[0][2] = binormal.z;
 			modelview[1][0] = normal.x;   modelview[1][1] = normal.y;   modelview[1][2] = normal.z;
 			modelview[2][0] = tangent.x;  modelview[2][1] = tangent.y;  modelview[2][2] = tangent.z;
@@ -279,7 +278,7 @@ void Application::draw()
 
 		kinect.update();
 
-		if (autoPlay && skeleton.isLoaded()) {
+		if (gui.isAutoPlayEnabled() && skeleton.isLoaded()) {
 			// Calculate the delta time between this frame and the next
 			// Use 60 fps as a default delta time
 			float frameDelta = 0.01667f; // 60 fps
@@ -294,9 +293,9 @@ void Application::draw()
 			}
 
 			const float thisFrameTime = clock.getElapsedTime().asSeconds();
-			const float delta = thisFrameTime - lastFrameTime;
+			const float delta = thisFrameTime - gui.getLastFrameTime();
 			if (delta >= frameDelta) {
-				lastFrameTime = thisFrameTime;
+				gui.setLastFrameTime(thisFrameTime);
 				std::stringstream ss;
 				ss << "Frame delta: " << frameDelta << ",  actual delta: " << delta << " (seconds)";
 				gui.setPlayLabel(ss.str());
@@ -305,7 +304,7 @@ void Application::draw()
 		}
 
 		// Draw reflected skeleton first
-		if (showSkeleton) {
+		if (gui.isShowingSkeleton()) {
 			glPushMatrix();
 			glScalef(1.f, -1.f, 1.f);
 			skeleton.render();
@@ -526,7 +525,7 @@ void Application::updateKinectImageStreams()
 void Application::drawKinectImageStreams()
 {
 	// Get kinect frame and update textures
-	if ((showColor || showDepth) && kinect.isInitialized()) {
+	if ((gui.isShowingColor() || gui.isShowingDepth()) && kinect.isInitialized()) {
 		updateKinectImageStreams();
 
 		glDisable(GL_DEPTH_TEST);
@@ -537,7 +536,7 @@ void Application::drawKinectImageStreams()
 		glPushMatrix();
 		glLoadIdentity();
 		glTranslatef(3.75f,2.25f,-5.f); // fix in upper right corner of window
-		if (showColor) {
+		if (gui.isShowingColor()) {
 			glBindTexture(GL_TEXTURE_2D, colorTextureId);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 1); glVertex3f(0.f, -1.f, 0.f);
@@ -546,7 +545,7 @@ void Application::drawKinectImageStreams()
 			glTexCoord2f(0, 0); glVertex3f(0.f,  1.f, 0.f);
 			glEnd();
 		}
-		if (showDepth) {
+		if (gui.isShowingDepth()) {
 			glBindTexture(GL_TEXTURE_2D, depthTextureId);
 			glBegin(GL_QUADS);
 			glTexCoord2f(0, 1); glVertex3f(0.f, -3.f, 0.f);

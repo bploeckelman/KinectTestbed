@@ -24,6 +24,7 @@
     <ClInclude Include="Core\Application.h" />
     <ClInclude Include="Core\Config.h" />
     <ClInclude Include="Core\Constants.h" />
+    <ClInclude Include="Core\prettyprint.hpp" />
     <ClInclude Include="Kinect\Kinect.h" />
     <ClInclude Include="Kinect\Performance.h" />
     <ClInclude Include="Kinect\Skeleton.h" />

@@ -180,14 +180,11 @@ void Kinect::startLayering()
 	isLayering = true;
 	layerFrames.clear();
 	clock.restart();
-
-	if (!Application::request().isAutoPlay()) {
-		Application::request().toggleAutoPlay();
-	}
 	skeleton.setFrameIndex(0);
 
 	// TODO start on screen 3..2..1 countdown to capturing layered performance
 	// TODO then start capturing current skeleton data for a time corresponding to the duration of the loaded skeleton animation
+	// TODO : set auto play
 }
 
 void Kinect::toggleSave()

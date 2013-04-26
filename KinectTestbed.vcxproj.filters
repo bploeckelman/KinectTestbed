@@ -71,5 +71,8 @@
     <ClInclude Include="Kinect\Types.h">
       <Filter>Kinect</Filter>
     </ClInclude>
+    <ClInclude Include="Core\prettyprint.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
