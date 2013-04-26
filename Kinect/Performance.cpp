@@ -1,5 +1,4 @@
 #include "Performance.h"
-//#include "Skeleton.h"
 #include "Core/Constants.h"
 
 #include <SFML/System/Clock.hpp>
@@ -7,12 +6,16 @@
 #include <iostream>
 #include <fstream>
 
+using namespace constants;
+
 
 Performance::Performance( const std::string& name )
 	: loaded(false)
 	, currentFrameIndex(0)
 	, frames()
 	, name(name)
+	, minPos(-1, -1, -1)
+	, maxPos( 1,  1,  1)
 {}
 
 Performance::Performance( const std::string& name, const AnimationFrames& frames )
@@ -20,29 +23,28 @@ Performance::Performance( const std::string& name, const AnimationFrames& frames
 	, currentFrameIndex(0)
 	, frames(frames)
 	, name(name)
+	, minPos(-1, -1, -1)
+	, maxPos( 1,  1,  1)
 {}
 
-Performance::~Performance()
-{}
+// TODO : bool Performance::load( const AnimationFrames& frames ) {}
 
-// TODO : bool Performance::loadFrames( const AnimationFrames& frames ) {}
-
-bool Performance::loadFile( const std::string& filename )
+bool Performance::load( const std::string& filename )
 {
-	if (loaded) clearLoadedFrames();
-
-	glm::vec3 mn(constants::max_float, constants::max_float, constants::max_float);
-	glm::vec3 mx(constants::min_float, constants::min_float, constants::min_float);
+	if (loaded) clear();
 
 	sf::Clock timer;
+	glm::vec3 mn(max_float, max_float, max_float);
+	glm::vec3 mx(min_float, min_float, min_float);
+
 	std::ifstream loadStream(filename, std::ios::binary | std::ios::in);
 	if (!loadStream.is_open()) {
 		std::cerr << "Warning: failed to open '" << filename.c_str() << "' for reading" << std::endl;
 		return false;
+	} else {
+		std::cout << "Opened file: '" << filename.c_str() << "'" << std::endl
+		          << "Loading joints positions..." << std::endl;
 	}
-
-	std::cout << "Opened file: '" << filename.c_str() << "'" << std::endl
-			  << "Loading joints positions..." << std::endl;
 
 	int numJointsRead = 0, totalJointsRead = 0, totalFramesRead = 0;
 	JointFrame inputFrame;    
@@ -65,6 +67,7 @@ bool Performance::loadFile( const std::string& filename )
 		// Done reading joints for current frame, save it and continue with next frame 
 		if (++numJointsRead == NUM_JOINT_TYPES) {
 			loadStream.read((char *)&inputFrame.timestamp, sizeof(float));
+			std::cerr << "read timestamp[" << totalFramesRead << "] = " << inputFrame.timestamp << std::endl;
 			frames.push_back(inputFrame);
 			numJointsRead = 0; 
 			++totalFramesRead;
@@ -79,17 +82,19 @@ bool Performance::loadFile( const std::string& filename )
 			  << timer.getElapsedTime().asSeconds() << " seconds." << std::endl;
 			  //<< "Done loading skeleton data from '" << filename.c_str() << "'." << std::endl;
 
+	minPos = mn;
+	maxPos = mx;
 	std::cout << "min,max = (" << mn.x << "," << mn.y << "," << mn.z << ")"
 			  <<        " , (" << mx.x << "," << mx.y << "," << mx.z << ")"
 			  << std::endl;
 
 	// Normalize the z values for each joint in each frame
-	for (auto& frame : frames) {
-		for (auto joints : frame.joints) {
-			Joint& joint = joints.second;
-			joint.position.z /= mx.z;
-		}
-	}
+	//for (auto& frame : frames) {
+	//	for (auto joints : frame.joints) {
+	//		Joint& joint = joints.second;
+	//		joint.position.z /= mx.z;
+	//	}
+	//}
 
 	//currentFrameIndex = 0;
 	if (loaded) {
@@ -106,7 +111,7 @@ bool Performance::loadFile( const std::string& filename )
 	return loaded;
 }
 
-void Performance::clearLoadedFrames()
+void Performance::clear()
 {
 	frames.clear();
 	currentFrameIndex = 0;
@@ -132,7 +137,6 @@ JointFrame& Performance::getFrameNearestTime( float seconds )
 	float nearestDelta = constants::max_float;
 	unsigned int nearestIndex = 0;
 	for (unsigned int i = 0; i < frames.size(); ++i) {
-		// TODO : move timestamp from individual Joint to entire JointFrame
 		const float frameTimeStamp = frames[i].timestamp;
 		const float currentDelta = fabs(frameTimeStamp - seconds);
 		if (currentDelta < nearestDelta) {

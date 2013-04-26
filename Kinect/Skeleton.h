@@ -40,9 +40,9 @@ public:
 	bool isLoaded() const { return performance != nullptr && performance->isLoaded(); }
 	bool loadFile(const std::string& filename) {
 		performances.push_back(Performance(filename));
-		return performances.back().loadFile(filename);
+		return performances.back().load(filename);
 	}
-	void clearLoadedFrames() { performance->clearLoadedFrames(); }
+	void clearLoadedFrames() { performance->clear(); }
 
 	void nextFrame();
 	void prevFrame();

@@ -89,7 +89,7 @@ void Application::loadFile()
 	std::string filename; filename.assign(wfilename.begin(), wfilename.end());
 	const std::string& name = filename.substr(filename.find_last_of("\\") + 1);
 	Performance p(name);
-	if (p.loadFile(filename)) {
+	if (p.load(filename)) {
 		kinect.getSkeleton().addPerformance(p);
 		gui.setFileName(name);
 	} else {
@@ -112,7 +112,7 @@ void Application::closeFile()
 		const auto& name = p->getName();
 		if (name == performance->getName()) {
 			gui.removePerformance(name);
-			performance->clearLoadedFrames();
+			performance->clear();
 			performances.erase(p);
 			break;
 		}

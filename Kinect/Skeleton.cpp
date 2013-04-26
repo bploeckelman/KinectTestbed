@@ -296,7 +296,6 @@ void Skeleton::setFrameIndex( const float fraction )
 
 	frameIndex = static_cast<int>(floor(fraction * performance->getNumFrames()));
 	performance->setCurrentFrameIndex(frameIndex);
-	performance->moveToFrame(frameIndex);
 	visibleJointFrame = &performance->getFrames()[frameIndex];
 }
 
