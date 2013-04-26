@@ -39,11 +39,11 @@
     <ClCompile Include="Kinect\Performance.cpp">
       <Filter>Kinect</Filter>
     </ClCompile>
+    <ClCompile Include="Core\Camera.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Core\Config.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Core\Constants.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -72,6 +72,9 @@
       <Filter>Kinect</Filter>
     </ClInclude>
     <ClInclude Include="Core\prettyprint.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Camera.h">
       <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>

@@ -13,7 +13,7 @@
 #include <fstream>
 #include <string>
 
-#include "Core/Config.h"
+#include "Camera.h"
 #include "Kinect/Kinect.h"
 #include "UI/UserInterface.h"
 
@@ -26,33 +26,22 @@ private:
 	sf::Clock clock;
 	sf::RenderWindow window;
 
+	Camera camera;
 	Kinect kinect;
 	UserInterface gui;
 
-	// TODO : move to OpenGLEnvironment class?
+	// TODO : add Performances and Skeletons
+
+	// TODO : encapsulate in OpenGLEnvironment class?
 	GLuint colorTextureId;
 	GLuint depthTextureId;
 	GLubyte *colorData;
 	GLubyte *depthData;
 
-	// TODO : add Performances and Skeletons
-
 	// TODO : encapsulate in Input class?
 	bool rightMouseDown;
 	bool leftMouseDown;
 	bool shiftDown;
-
-	// TODO : extract camera control out to its own class 
-	float camerax;
-	float cameray;
-	float cameraz;
-
-	glm::vec3 lastBinormal;
-	glm::vec3 lastNormal;
-	glm::vec3 lastTangent;
-
-	glm::mat4 projection;
-	glm::mat4 modelview;
 
 private:
 	// Singleton
@@ -79,6 +68,7 @@ public:
 	bool isLoaded() const;
 	int getNumSensors() const;
 
+	bool isRightMouseDown() const; // *sigh*
 	const sf::Vector2i getMousePosition() const;
 
 	Kinect& getKinect();
@@ -91,10 +81,6 @@ private:
 	void mainLoop();
 	void processEvents();
 	void render();
-
-	// TODO : fix these horrible methods
-	float getCameraRotationX();
-	float getCameraRotationY();
 
 	// TODO : make non-member function
 	std::wstring showFileChooser();
@@ -113,6 +99,8 @@ private:
 inline bool Application::isSaving()     const { return kinect.isSaving(); }
 inline bool Application::isLoaded()     const { return kinect.getSkeleton().isLoaded(); }
 inline int Application::getNumSensors() const { return kinect.getNumSensors(); }
+
+inline bool Application::isRightMouseDown() const { return rightMouseDown; }
 
 inline const sf::Vector2i Application::getMousePosition() const {
 	return sf::Mouse::getPosition(window);
