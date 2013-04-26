@@ -35,15 +35,11 @@
 #include "Util/ImageManager.h"
 
 const sf::VideoMode Application::videoMode = sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_BPP);
-
-// TODO : set as Config values
-// depth bits, stencil bits, aa level
-const sf::ContextSettings contextSettings(16, 0, 2);
+const sf::ContextSettings contextSettings(DEPTH_BITS, STENCIL_BITS, AA_LEVEL);
 
 // ----------------------------------------------------------------------------
 Application::Application()
-	// TODO : set as Config values
-	: window(Application::videoMode, "Kinect Testbed")//, sf::Style::Fullscreen, contextSettings)
+	: window(Application::videoMode, "Kinect Testbed", SCREEN_MODE, contextSettings)
 	, clock()
 	, gui()
 	, colorTextureId(0)
