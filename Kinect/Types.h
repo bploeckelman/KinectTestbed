@@ -94,14 +94,14 @@ typedef struct tag_render_params {
 	float jointMinRadius;
 	float jointMaxRadius;
 	float jointRadius;
-	float jointSlices;
-	float jointStacks;
+	int jointSlices;
+	int jointStacks;
 
 	float boneMinRadius;
 	float boneMaxRadius;
 	float boneRadius;
-	float boneSlices;
-	float boneStacks;
+	int boneSlices;
+	int boneStacks;
 
 	float orientationScale;
 
