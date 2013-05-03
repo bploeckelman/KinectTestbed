@@ -175,3 +175,7 @@ const AnimationFrames& Performance::getFrames() const
 	return frames;
 }
 
+Joint& Performance::getCurrentFrameJoint( unsigned int i )
+{
+	return getCurrentFrame().joints[static_cast<EJointType>(i)];
+}

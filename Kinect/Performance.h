@@ -46,6 +46,8 @@ public:
 	void setCurrentFrameIndex(unsigned int i);
 	unsigned int getCurrentFrameIndex() const;
 
+	Joint& getCurrentFrameJoint(unsigned int i);
+
 	JointFrame& getCurrentFrame();
 	JointFrame& getFrame(unsigned int i = 0);
 	JointFrame& getFrameNearestTime(float seconds);
