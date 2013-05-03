@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 
+#include "Core/Constants.h"
+
 
 enum EJointType {
 	HIP_CENTER      = 0,
@@ -78,10 +80,10 @@ typedef struct tag_render_materials {
 	const float *boneTracked;
 
 	struct tag_render_materials() {
-		jointInferred = red;
-		jointTracked  = green;
-		boneInferred  = red;
-		boneTracked   = green;
+		jointInferred = constants::red;
+		jointTracked  = constants::green;
+		boneInferred  = constants::red;
+		boneTracked   = constants::green;
 	}
 } RenderMaterials;
 

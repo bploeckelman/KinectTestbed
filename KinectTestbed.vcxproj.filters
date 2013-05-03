@@ -42,6 +42,9 @@
     <ClCompile Include="Core\Camera.cpp">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="Kinect\SkeletonViz.cpp">
+      <Filter>Kinect</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\Constants.h">
@@ -76,6 +79,9 @@
     </ClInclude>
     <ClInclude Include="Core\Camera.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Kinect\SkeletonViz.h">
+      <Filter>Kinect</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -17,6 +17,7 @@
     <ClCompile Include="Kinect\Kinect.cpp" />
     <ClCompile Include="Kinect\Performance.cpp" />
     <ClCompile Include="Kinect\Skeleton.cpp" />
+    <ClCompile Include="Kinect\SkeletonViz.cpp" />
     <ClCompile Include="UI\UserInterface.cpp" />
     <ClCompile Include="Util\ImageManager.cpp" />
     <ClCompile Include="Util\RenderUtils.cpp" />
@@ -29,6 +30,7 @@
     <ClInclude Include="Kinect\Kinect.h" />
     <ClInclude Include="Kinect\Performance.h" />
     <ClInclude Include="Kinect\Skeleton.h" />
+    <ClInclude Include="Kinect\SkeletonViz.h" />
     <ClInclude Include="Kinect\Types.h" />
     <ClInclude Include="UI\UserInterface.h" />
     <ClInclude Include="Util\ImageManager.h" />
