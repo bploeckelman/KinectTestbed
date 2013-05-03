@@ -149,51 +149,14 @@ void Application::mainLoop()
 {
 	clock.restart();    
 	while (window.isOpen()) {
-		processEvents();
+		update();
 		render();
 	}
 }
 
-void Application::processEvents()
+void Application::update()
 {
-	sf::Event event;
-	while (window.pollEvent(event)) {
-		gui.handleEvent(event);
-
-		if ((event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-		 || (event.type == sf::Event::Closed)) {
-			window.close();
-		}
-
-		if (event.type == sf::Event::KeyPressed) {
-			if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToNextFrame();
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = true;
-		}
-
-		if (event.type == sf::Event::KeyReleased) {
-			if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = false;
-		}
-
-		if (event.type == sf::Event::MouseButtonPressed) {
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = true;
-			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = true;
-		}
-		if (event.type == sf::Event::MouseButtonReleased) {
-			if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = false;
-			if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = false;
-		}
-
-		if (event.type == sf::Event::MouseWheelMoved) {
-			const int threshold = 1;
-			static int accum = 0;
-			accum += event.mouseWheel.delta;
-			if (accum < -threshold || accum > threshold) {
-				camera.position.z -= (shiftDown ? 1.f : 0.1f) * accum / threshold;
-				accum = 0;
-			}
-		}
-	}
+	processEvents();
 }
 
 void Application::render()
@@ -262,6 +225,48 @@ void Application::render()
 	gui.draw(window);
 
 	window.display();
+}
+
+void Application::processEvents()
+{
+	sf::Event event;
+	while (window.pollEvent(event)) {
+		gui.handleEvent(event);
+
+		if ((event.type == sf::Event::KeyPressed && sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+		 || (event.type == sf::Event::Closed)) {
+			window.close();
+		}
+
+		if (event.type == sf::Event::KeyPressed) {
+			if      (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) moveToNextFrame();
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))  moveToPreviousFrame();
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = true;
+		}
+
+		if (event.type == sf::Event::KeyReleased) {
+			if (!sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) shiftDown = false;
+		}
+
+		if (event.type == sf::Event::MouseButtonPressed) {
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = true;
+			if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = true;
+		}
+		if (event.type == sf::Event::MouseButtonReleased) {
+			if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) rightMouseDown = false;
+			if (!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left )) leftMouseDown  = false;
+		}
+
+		if (event.type == sf::Event::MouseWheelMoved) {
+			const int threshold = 1;
+			static int accum = 0;
+			accum += event.mouseWheel.delta;
+			if (accum < -threshold || accum > threshold) {
+				camera.position.z -= (shiftDown ? 1.f : 0.1f) * accum / threshold;
+				accum = 0;
+			}
+		}
+	}
 }
 
 // ----------------------------------------------------------------------------

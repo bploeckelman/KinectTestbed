@@ -79,8 +79,9 @@ public:
 
 private:
 	void mainLoop();
-	void processEvents();
 	void render();
+	void update();
+	void processEvents();
 
 	// TODO : move to opengl environment class?
 	void initOpenGL();
