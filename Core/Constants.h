@@ -45,6 +45,16 @@ namespace constants
 	const glm::vec3 worldZ(0,0,1);
 	const glm::vec3 origin(0,0,0);
 
+	const float red[]   = { 1.f, 0.f, 0.f, 1.f };
+	const float red2[]   = { 0.5f, 0.f, 0.f, 1.f };
+	const float green[] = { 0.f, 1.f, 0.f, 1.f };
+	const float green2[] = { 0.f, 0.5f, 0.f, 1.f };
+	const float blue[]  = { 0.f, 0.f, 1.f, 1.f };
+	const float blue2[]  = { 0.f, 0.f, 0.5f, 1.f };
+	const float gray[]  = { 0.5f, 0.5f, 0.5f, 1.f };
+	const float white[] = { 1.f, 1.f, 1.f, 1.f };
+	const float black[] = { 0.f, 0.f, 0.f, 1.f };
+
 	const float one_third    = 1.f / 3.f;
 	const float e            = 2.7182818284590452354f;
 	const float pi           = 3.1415926535897932384f;
