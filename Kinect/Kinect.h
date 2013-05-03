@@ -57,27 +57,33 @@ public:
 	void update();
 
 	void startLayering();
-
 	void toggleSave();
 	void toggleSeatedMode();
 
-	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
+	int  getNumSensors() const;
+	bool isSaving()      const;
+	bool isInitialized() const;
+	const std::string& getDeviceId() const;
 
-	Skeleton& getSkeleton()             { return skeleton; }
-	const Skeleton& getSkeleton() const { return skeleton; }
-
-	bool isInitialized() const { return initialized; }
-	bool isSaving()      const { return saving; }
-
-	int  getNumSensors() const { return sensors.size(); }
-	const std::string& getDeviceId() const { return deviceId; }
+	Skeleton& getSkeleton();
+	const Skeleton& getSkeleton() const;
 
 	INuiSensor *getSensor(unsigned int i = 0) const;
+	void getStreamData(byte *dest, const EStreamDataType& dataType, unsigned int sensorIndex = 0);
 
 private:
+	bool isSeatedModeEnabled() const;
+
 	void checkForSkeletonFrame();
 	void skeletonFrameReady(NUI_SKELETON_FRAME& skeletonFrame);
 
-	bool isSeatedModeEnabled() const { return 0 != (skeletonTrackingFlags & NUI_SKELETON_FRAME_FLAG_SEATED_SUPPORT_ENABLED); }
-
 };
+
+inline int Kinect::getNumSensors()        const { return sensors.size(); }
+inline bool Kinect::isSaving()            const { return saving; }
+inline bool Kinect::isInitialized()       const { return initialized; }
+inline bool Kinect::isSeatedModeEnabled() const { return 0 != (skeletonTrackingFlags & NUI_SKELETON_FRAME_FLAG_SEATED_SUPPORT_ENABLED); }
+
+inline const std::string& Kinect::getDeviceId() const { return deviceId; }
+inline Skeleton& Kinect::getSkeleton()                { return skeleton; }
+inline const Skeleton& Kinect::getSkeleton()    const { return skeleton; }
