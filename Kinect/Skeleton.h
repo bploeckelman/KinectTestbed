@@ -29,7 +29,7 @@ private:
 	unsigned int frameIndex;
 	GLUquadric *quadric;
 
-	RenderingFlags renderingFlags;
+	RenderFlags renderingFlags;
 	EFilteringLevel filteringLevel;
 
 public:
@@ -92,8 +92,8 @@ public:
 	void toggleJointPath()                { renderingFlags ^= R_PATH;   }
 
 	void clearRenderFlags()               { renderingFlags  = 0;   }
-	void setRenderFlags(RenderingFlags f) { renderingFlags  = f;   }
-	RenderingFlags getRenderFlags() const { return renderingFlags; }
+	void setRenderFlags(RenderFlags f) { renderingFlags  = f;   }
+	RenderFlags getRenderFlags() const { return renderingFlags; }
 
 	void setFilterLevel(EFilteringLevel level) { filteringLevel = level; }
 	EFilteringLevel getFilterLevel() const     { return filteringLevel;  }

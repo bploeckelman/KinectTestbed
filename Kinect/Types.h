@@ -69,4 +69,55 @@ static const unsigned char R_INFER  = 0x02;
 static const unsigned char R_ORIENT = 0x04;
 static const unsigned char R_BONES  = 0x08;
 static const unsigned char R_PATH   = 0x10;
-typedef unsigned char RenderingFlags;
+typedef unsigned char RenderFlags;
+
+typedef struct tag_render_materials {
+	const float *jointInferred;
+	const float *jointTracked;
+	const float *boneInferred;
+	const float *boneTracked;
+
+	struct tag_render_materials() {
+		jointInferred = red;
+		jointTracked  = green;
+		boneInferred  = red;
+		boneTracked   = green;
+	}
+} RenderMaterials;
+
+typedef struct tag_render_params {
+	RenderMaterials materials;
+	RenderFlags flags;
+
+	float jointMinRadius;
+	float jointMaxRadius;
+	float jointRadius;
+	float jointSlices;
+	float jointStacks;
+
+	float boneMinRadius;
+	float boneMaxRadius;
+	float boneRadius;
+	float boneSlices;
+	float boneStacks;
+
+	float orientationScale;
+
+	struct tag_render_params() {
+		flags = R_JOINTS | R_BONES;
+
+		jointMinRadius = 0.01f;
+		jointMaxRadius = 0.03f;
+		jointRadius = jointMaxRadius;
+		jointSlices = 10;
+		jointStacks = 10;
+
+		boneMinRadius = 0.02f;
+		boneMaxRadius = 0.04f;
+		boneRadius = boneMaxRadius;
+		boneSlices = 16;
+		boneStacks = 8;
+
+		orientationScale = 0.075f;
+	}
+} RenderParams;
